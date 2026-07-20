@@ -4,8 +4,37 @@ export const queryKeys = {
     categories: () => [...queryKeys.catalog.all, "categories"] as const,
     products: (params?: Record<string, unknown>) =>
       [...queryKeys.catalog.all, "products", params ?? {}] as const,
+    productsByCategories: (
+      categoryIds: string[],
+      params?: Record<string, unknown>,
+    ) =>
+      [
+        ...queryKeys.catalog.all,
+        "products-by-categories",
+        [...categoryIds].sort(),
+        params ?? {},
+      ] as const,
     product: (slug: string) =>
       [...queryKeys.catalog.all, "product", slug] as const,
+  },
+  cms: {
+    all: ["cms"] as const,
+    banners: () => [...queryKeys.cms.all, "banners"] as const,
+    bannerImages: (keys: string[]) =>
+      [...queryKeys.cms.all, "banner-images", [...keys].sort()] as const,
+    page: (slug: string) => [...queryKeys.cms.all, "page", slug] as const,
+    promotions: () => [...queryKeys.cms.all, "promotions"] as const,
+    promotion: (slug: string) =>
+      [...queryKeys.cms.all, "promotion", slug] as const,
+    promotionImages: (keys: string[]) =>
+      [...queryKeys.cms.all, "promotion-images", [...keys].sort()] as const,
+    contacts: () => [...queryKeys.cms.all, "contacts"] as const,
+  },
+  rfq: {
+    all: ["rfq"] as const,
+    list: () => [...queryKeys.rfq.all, "list"] as const,
+    detail: (id: string) => [...queryKeys.rfq.all, "detail", id] as const,
+    invoice: (id: string) => [...queryKeys.rfq.all, "invoice", id] as const,
   },
   profile: {
     all: ["profile"] as const,
@@ -15,5 +44,12 @@ export const queryKeys = {
     all: ["orders"] as const,
     list: (params?: Record<string, unknown>) =>
       [...queryKeys.orders.all, "list", params ?? {}] as const,
+    detail: (id: string) => [...queryKeys.orders.all, "detail", id] as const,
+    invoice: (id: string) => [...queryKeys.orders.all, "invoice", id] as const,
+  },
+  service: {
+    all: ["service"] as const,
+    list: () => [...queryKeys.service.all, "list"] as const,
+    detail: (id: string) => [...queryKeys.service.all, "detail", id] as const,
   },
 } as const;

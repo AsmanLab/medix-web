@@ -13,6 +13,7 @@ import {
   setAccessTokenGetter,
   setAccessTokenRefreshHandler,
 } from "@/api/client";
+import { writeLastPhone } from "@/features/profile/labels";
 import { decodeAccessToken } from "@/lib/jwt";
 import {
   initialSessionState,
@@ -137,6 +138,7 @@ export async function bootstrapSession(): Promise<SessionState> {
 export async function loginWithPassword(phone: string, password: string) {
   const tokens = await authApi.login(phone, password);
   applyTokens(tokens.access_token, tokens.refresh_token);
+  writeLastPhone(phone);
   return getSessionSnapshot();
 }
 
@@ -148,6 +150,7 @@ export async function registerWithOtp(input: {
 }) {
   const tokens = await authApi.register(input);
   applyTokens(tokens.access_token, tokens.refresh_token);
+  writeLastPhone(input.phone);
   return getSessionSnapshot();
 }
 

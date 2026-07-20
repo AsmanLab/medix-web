@@ -44,3 +44,28 @@ export function fetchProductBySlug(
     signal,
   });
 }
+
+/** Fetch products for several categories and dedupe (exact category_id on API). */
+export async function fetchProductsForCategories(
+  categoryIds: string[],
+  params: Omit<FetchProductsParams, "category_id"> = {},
+  signal?: AbortSignal,
+): Promise<ProductListOut[]> {
+  if (categoryIds.length === 0) {
+    return fetchProducts(params, signal);
+  }
+
+  const lists = await Promise.all(
+    categoryIds.map((category_id) =>
+      fetchProducts({ ...params, category_id }, signal),
+    ),
+  );
+
+  const byId = new Map<string, ProductListOut>();
+  for (const list of lists) {
+    for (const product of list) {
+      byId.set(product.id, product);
+    }
+  }
+  return [...byId.values()];
+}
