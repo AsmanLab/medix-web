@@ -25,6 +25,54 @@ export interface components {
       seo_title: string;
       seo_description: string;
     };
+    ProductListOut: {
+      id: string;
+      sku: string;
+      name_ru: string;
+      name_en: string;
+      slug: string;
+      manufacturer: string;
+      country: string;
+      availability: string;
+      price: string | null;
+      is_published: boolean;
+    };
+    ProductImageOut: {
+      id: string;
+      s3_key: string;
+      url: string | null;
+      sort: number;
+      is_primary: boolean;
+    };
+    ProductDocumentOut: {
+      id: string;
+      name: string;
+      s3_key: string;
+      url: string | null;
+    };
+    ProductOptionOut: {
+      id: string;
+      name_ru: string;
+      name_en: string;
+      option_type: string;
+      price: string | null;
+      is_required: boolean;
+      is_active: boolean;
+      sort: number;
+    };
+    OptionGroupOut: {
+      id: string;
+      name_ru: string;
+      sort: number;
+      options: components["schemas"]["ProductOptionOut"][];
+    };
+    ProductDetailOut: components["schemas"]["ProductListOut"] & {
+      description_ru: string;
+      category_ids: string[];
+      images: components["schemas"]["ProductImageOut"][];
+      documents: components["schemas"]["ProductDocumentOut"][];
+      option_groups: components["schemas"]["OptionGroupOut"][];
+    };
     ProfileResponse: {
       id: string;
       user_id: string;
@@ -47,6 +95,7 @@ export interface components {
 export type TokenResponse = components["schemas"]["TokenResponse"];
 export type SendOtpResponse = components["schemas"]["SendOtpResponse"];
 export type CategoryOut = components["schemas"]["CategoryOut"];
+export type ProductListOut = components["schemas"]["ProductListOut"];
+export type ProductDetailOut = components["schemas"]["ProductDetailOut"];
 export type ProfileResponse = components["schemas"]["ProfileResponse"];
-export type UpdateProfileRequest =
-  components["schemas"]["UpdateProfileRequest"];
+export type UpdateProfileRequest = components["schemas"]["UpdateProfileRequest"];

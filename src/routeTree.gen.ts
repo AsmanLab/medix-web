@@ -21,6 +21,7 @@ import { Route as ProfileRouteRouteImport } from './routes/profile/route'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
+import { Route as CatalogSlugRouteImport } from './routes/catalog/$slug'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 
@@ -84,6 +85,11 @@ const CatalogIndexRoute = CatalogIndexRouteImport.update({
   path: '/catalog/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CatalogSlugRoute = CatalogSlugRouteImport.update({
+  id: '/catalog/$slug',
+  path: '/catalog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrdersIndexRoute = OrdersIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/manager': typeof ManagerRoute
   '/password-reset': typeof PasswordResetRoute
   '/register': typeof RegisterRoute
+  '/catalog/$slug': typeof CatalogSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/orders/': typeof OrdersIndexRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/manager': typeof ManagerRoute
   '/password-reset': typeof PasswordResetRoute
   '/register': typeof RegisterRoute
+  '/catalog/$slug': typeof CatalogSlugRoute
   '/admin': typeof AdminIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/orders': typeof OrdersIndexRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/manager': typeof ManagerRoute
   '/password-reset': typeof PasswordResetRoute
   '/register': typeof RegisterRoute
+  '/catalog/$slug': typeof CatalogSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/orders/': typeof OrdersIndexRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/password-reset'
     | '/register'
+    | '/catalog/$slug'
     | '/admin/'
     | '/catalog/'
     | '/orders/'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/password-reset'
     | '/register'
+    | '/catalog/$slug'
     | '/admin'
     | '/catalog'
     | '/orders'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/password-reset'
     | '/register'
+    | '/catalog/$slug'
     | '/admin/'
     | '/catalog/'
     | '/orders/'
@@ -200,6 +212,7 @@ export interface RootRouteChildren {
   ManagerRoute: typeof ManagerRoute
   PasswordResetRoute: typeof PasswordResetRoute
   RegisterRoute: typeof RegisterRoute
+  CatalogSlugRoute: typeof CatalogSlugRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
 }
 
@@ -289,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/catalog/$slug': {
+      id: '/catalog/$slug'
+      path: '/catalog/$slug'
+      fullPath: '/catalog/$slug'
+      preLoaderRoute: typeof CatalogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/orders/': {
       id: '/orders/'
       path: '/'
@@ -353,6 +373,7 @@ const rootRouteChildren: RootRouteChildren = {
   ManagerRoute: ManagerRoute,
   PasswordResetRoute: PasswordResetRoute,
   RegisterRoute: RegisterRoute,
+  CatalogSlugRoute: CatalogSlugRoute,
   CatalogIndexRoute: CatalogIndexRoute,
 }
 export const routeTree = rootRouteImport
