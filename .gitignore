@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+
+# Build
+dist
+dist-ssr
+*.local
+
+# Env
+.env
+.env.*.local
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+.idea
+.vscode
+
+# Test / coverage
+coverage
+playwright-report
+test-results
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Generated (keep routeTree in git for CI convenience)
+# src/routeTree.gen.ts is committed after generate
