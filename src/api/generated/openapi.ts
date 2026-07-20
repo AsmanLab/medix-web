@@ -25,6 +25,15 @@ export interface components {
       seo_title: string;
       seo_description: string;
     };
+    BannerOut: {
+      id: string;
+      image_key: string;
+      title: string;
+      subtitle: string;
+      cta_text: string;
+      link_url: string;
+      deep_link: string;
+    };
     ProductListOut: {
       id: string;
       sku: string;
@@ -82,12 +91,14 @@ export interface components {
       address: string;
       client_type: string;
       verification_status: string;
+      phone: string;
     };
     UpdateProfileRequest: {
       full_name?: string | null;
       organization?: string | null;
       city?: string | null;
       address?: string | null;
+      client_type?: string | null;
     };
   };
 }
@@ -95,7 +106,10 @@ export interface components {
 export type TokenResponse = components["schemas"]["TokenResponse"];
 export type SendOtpResponse = components["schemas"]["SendOtpResponse"];
 export type CategoryOut = components["schemas"]["CategoryOut"];
+export type BannerOut = components["schemas"]["BannerOut"];
 export type ProductListOut = components["schemas"]["ProductListOut"];
 export type ProductDetailOut = components["schemas"]["ProductDetailOut"];
+export type ProductOptionOut = components["schemas"]["ProductOptionOut"];
+export type OptionGroupOut = components["schemas"]["OptionGroupOut"];
 export type ProfileResponse = components["schemas"]["ProfileResponse"];
 export type UpdateProfileRequest = components["schemas"]["UpdateProfileRequest"];

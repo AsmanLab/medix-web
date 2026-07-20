@@ -1,18 +1,37 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { toast } from "sonner";
 import { fetchProductBySlug } from "@/api/catalog";
 import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { Button } from "@/components/ui/button";
+import { availabilityLabel } from "@/features/catalog/availability";
+import {
+  buildConfigKey,
+  emptySelection,
+  missingRequiredGroups,
+  selectedOptionsFromState,
+  summarizeConfigPrice,
+  type ConfigSelection,
+} from "@/features/catalog/configurator-logic";
+import { ProductConfigurator } from "@/features/catalog/ProductConfigurator";
+import {
+  parseUnitPriceAmount,
+  rfqCartStore,
+  type RfqCartOption,
+} from "@/features/rfq/cart-store";
 
-export const Route = createFileRoute("/catalog/$slug")({
+export const Route = createFileRoute("/product/$slug")({
   component: ProductDetailPage,
 });
 
 function ProductDetailPage() {
   const { slug } = Route.useParams();
+  const navigate = useNavigate();
   const query = useQuery({
     queryKey: queryKeys.catalog.product(slug),
     queryFn: ({ signal }) => fetchProductBySlug(slug, signal),
@@ -23,14 +42,74 @@ function ProductDetailPage() {
   });
 
   const product = query.data;
+  const groups = product?.option_groups ?? [];
+  const [selection, setSelection] = useState<ConfigSelection>(emptySelection);
+
+  useEffect(() => {
+    setSelection(emptySelection());
+  }, [slug]);
+
+  const selected = useMemo(
+    () => selectedOptionsFromState(groups, selection),
+    [groups, selection],
+  );
+  const missing = useMemo(
+    () => missingRequiredGroups(groups, selection),
+    [groups, selection],
+  );
+  const summary = useMemo(
+    () => summarizeConfigPrice(product?.price ?? null, selected),
+    [product?.price, selected],
+  );
+
   const primaryImage =
     product?.images?.find((i) => i.is_primary) ?? product?.images?.[0];
+
+  function addToRfq() {
+    if (!product) return;
+
+    if (missing.length > 0) {
+      toast.error(
+        `Выберите обязательные опции: ${missing.map((g) => g.name_ru).join(", ")}`,
+      );
+      return;
+    }
+
+    const options: RfqCartOption[] = selected.map((o) => ({
+      optionId: o.id,
+      name: o.name_ru,
+      sku: `${product.sku}::${o.id.slice(0, 8)}`,
+      optionType: o.option_type,
+      priceLabel: o.price,
+      unitPriceAmount: parseUnitPriceAmount(o.price),
+    }));
+
+    rfqCartStore.add({
+      lineKey: buildConfigKey(product.id, selected),
+      productId: product.id,
+      slug: product.slug,
+      sku: product.sku,
+      name: product.name_ru,
+      // Display: configured total; API base line uses unitPriceAmount only.
+      priceLabel: summary.label,
+      unitPriceAmount: parseUnitPriceAmount(product.price),
+      options,
+    });
+    toast.success("Добавлено в запрос", {
+      action: {
+        label: "Корзина",
+        onClick: () => {
+          void navigate({ to: "/cart" });
+        },
+      },
+    });
+  }
 
   return (
     <AppShell>
       <Link
         to="/catalog"
-        search={{ q: undefined, category: undefined }}
+        search={{ q: undefined }}
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
       >
         <ArrowLeft className="h-4 w-4" />К каталогу
@@ -71,49 +150,37 @@ function ProductDetailPage() {
                   </p>
                   <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
                     <p className="text-2xl font-bold text-primary">
-                      {product.price
-                        ? `${product.price} сом`
-                        : "Цена по запросу"}
+                      {groups.length > 0
+                        ? summary.label
+                        : product.price
+                          ? product.price
+                          : "Цена по запросу"}
                     </p>
                     <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">
                       {availabilityLabel(product.availability)}
                     </span>
                   </div>
+                  <Button className="mt-5 w-full sm:w-auto" onClick={addToRfq}>
+                    <ShoppingCart className="h-4 w-4" />
+                    В запрос (RFQ)
+                  </Button>
                 </div>
               </div>
+
+              {groups.length > 0 ? (
+                <ProductConfigurator
+                  groups={groups}
+                  basePrice={product.price}
+                  selection={selection}
+                  onSelectionChange={setSelection}
+                />
+              ) : null}
 
               {product.description_ru ? (
                 <section className="rounded-3xl border border-border bg-card p-5">
                   <h2 className="font-semibold">Описание</h2>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
                     {product.description_ru}
-                  </p>
-                </section>
-              ) : null}
-
-              {product.option_groups?.length ? (
-                <section className="rounded-3xl border border-border bg-card p-5">
-                  <h2 className="font-semibold">Опции конфигурации</h2>
-                  <ul className="mt-3 space-y-4">
-                    {product.option_groups.map((group) => (
-                      <li key={group.id}>
-                        <p className="text-sm font-medium">{group.name_ru}</p>
-                        <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-                          {group.options
-                            .filter((o) => o.is_active)
-                            .map((o) => (
-                              <li key={o.id}>
-                                {o.name_ru}
-                                {o.price ? ` — ${o.price} сом` : ""}
-                                {o.is_required ? " (обяз.)" : ""}
-                              </li>
-                            ))}
-                        </ul>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Полный конфигуратор и RFQ — в следующих задачах.
                   </p>
                 </section>
               ) : null}
@@ -149,17 +216,4 @@ function ProductDetailPage() {
       </div>
     </AppShell>
   );
-}
-
-function availabilityLabel(value: string): string {
-  switch (value) {
-    case "in_stock":
-      return "В наличии";
-    case "on_order":
-      return "Под заказ";
-    case "out_of_stock":
-      return "Нет в наличии";
-    default:
-      return value;
-  }
 }

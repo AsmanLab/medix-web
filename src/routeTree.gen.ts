@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as EngineerRouteImport } from './routes/engineer'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ManagerRouteImport } from './routes/manager'
@@ -19,11 +20,29 @@ import { Route as OrdersRouteRouteImport } from './routes/orders/route'
 import { Route as PasswordResetRouteImport } from './routes/password-reset'
 import { Route as ProfileRouteRouteImport } from './routes/profile/route'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as RequestsRouteRouteImport } from './routes/requests/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as CartIndexRouteImport } from './routes/cart/index'
+import { Route as CartSuccessRouteImport } from './routes/cart/success'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
-import { Route as CatalogSlugRouteImport } from './routes/catalog/$slug'
+import { Route as CatalogCategoryIdRouteImport } from './routes/catalog/$categoryId'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
+import { Route as OrdersOrderIdRouteImport } from './routes/orders/$orderId'
+import { Route as PagesSlugRouteImport } from './routes/pages/$slug'
+import { Route as ProductSlugRouteImport } from './routes/product/$slug'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
+import { Route as ProfileEditRouteImport } from './routes/profile/edit'
+import { Route as ProfileOrganizationRouteImport } from './routes/profile/organization'
+import { Route as ProfileSecurityRouteImport } from './routes/profile/security'
+import { Route as PromotionsIndexRouteImport } from './routes/promotions/index'
+import { Route as PromotionsSlugRouteImport } from './routes/promotions/$slug'
+import { Route as RequestsIndexRouteImport } from './routes/requests/index'
+import { Route as RequestsRfqIdRouteImport } from './routes/requests/$rfqId'
+import { Route as ServiceIndexRouteImport } from './routes/service/index'
+import { Route as ServiceRequestsRouteRouteImport } from './routes/service/requests/route'
+import { Route as ServiceSuccessRouteImport } from './routes/service/success'
+import { Route as ServiceRequestsIndexRouteImport } from './routes/service/requests/index'
+import { Route as ServiceRequestsRequestIdRouteImport } from './routes/service/requests/$requestId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -38,6 +57,11 @@ const AboutRoute = AboutRouteImport.update({
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactsRoute = ContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EngineerRoute = EngineerRouteImport.update({
@@ -75,19 +99,34 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RequestsRouteRoute = RequestsRouteRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const CartIndexRoute = CartIndexRouteImport.update({
+  id: '/cart/',
+  path: '/cart/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartSuccessRoute = CartSuccessRouteImport.update({
+  id: '/cart/success',
+  path: '/cart/success',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CatalogIndexRoute = CatalogIndexRouteImport.update({
   id: '/catalog/',
   path: '/catalog/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CatalogSlugRoute = CatalogSlugRouteImport.update({
-  id: '/catalog/$slug',
-  path: '/catalog/$slug',
+const CatalogCategoryIdRoute = CatalogCategoryIdRouteImport.update({
+  id: '/catalog/$categoryId',
+  path: '/catalog/$categoryId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersIndexRoute = OrdersIndexRouteImport.update({
@@ -95,42 +134,154 @@ const OrdersIndexRoute = OrdersIndexRouteImport.update({
   path: '/',
   getParentRoute: () => OrdersRouteRoute,
 } as any)
+const OrdersOrderIdRoute = OrdersOrderIdRouteImport.update({
+  id: '/$orderId',
+  path: '/$orderId',
+  getParentRoute: () => OrdersRouteRoute,
+} as any)
+const PagesSlugRoute = PagesSlugRouteImport.update({
+  id: '/pages/$slug',
+  path: '/pages/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductSlugRoute = ProductSlugRouteImport.update({
+  id: '/product/$slug',
+  path: '/product/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileIndexRoute = ProfileIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ProfileRouteRoute,
 } as any)
+const ProfileEditRoute = ProfileEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => ProfileRouteRoute,
+} as any)
+const ProfileOrganizationRoute = ProfileOrganizationRouteImport.update({
+  id: '/organization',
+  path: '/organization',
+  getParentRoute: () => ProfileRouteRoute,
+} as any)
+const ProfileSecurityRoute = ProfileSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => ProfileRouteRoute,
+} as any)
+const PromotionsIndexRoute = PromotionsIndexRouteImport.update({
+  id: '/promotions/',
+  path: '/promotions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromotionsSlugRoute = PromotionsSlugRouteImport.update({
+  id: '/promotions/$slug',
+  path: '/promotions/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestsIndexRoute = RequestsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RequestsRouteRoute,
+} as any)
+const RequestsRfqIdRoute = RequestsRfqIdRouteImport.update({
+  id: '/$rfqId',
+  path: '/$rfqId',
+  getParentRoute: () => RequestsRouteRoute,
+} as any)
+const ServiceIndexRoute = ServiceIndexRouteImport.update({
+  id: '/service/',
+  path: '/service/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServiceRequestsRouteRoute = ServiceRequestsRouteRouteImport.update({
+  id: '/service/requests',
+  path: '/service/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServiceSuccessRoute = ServiceSuccessRouteImport.update({
+  id: '/service/success',
+  path: '/service/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServiceRequestsIndexRoute = ServiceRequestsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ServiceRequestsRouteRoute,
+} as any)
+const ServiceRequestsRequestIdRoute =
+  ServiceRequestsRequestIdRouteImport.update({
+    id: '/$requestId',
+    path: '/$requestId',
+    getParentRoute: () => ServiceRequestsRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/orders': typeof OrdersRouteRouteWithChildren
   '/profile': typeof ProfileRouteRouteWithChildren
+  '/requests': typeof RequestsRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/contacts': typeof ContactsRoute
   '/engineer': typeof EngineerRoute
   '/login': typeof LoginRoute
   '/manager': typeof ManagerRoute
   '/password-reset': typeof PasswordResetRoute
   '/register': typeof RegisterRoute
-  '/catalog/$slug': typeof CatalogSlugRoute
+  '/service/requests': typeof ServiceRequestsRouteRouteWithChildren
+  '/cart/success': typeof CartSuccessRoute
+  '/catalog/$categoryId': typeof CatalogCategoryIdRoute
+  '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/pages/$slug': typeof PagesSlugRoute
+  '/product/$slug': typeof ProductSlugRoute
+  '/profile/edit': typeof ProfileEditRoute
+  '/profile/organization': typeof ProfileOrganizationRoute
+  '/profile/security': typeof ProfileSecurityRoute
+  '/promotions/$slug': typeof PromotionsSlugRoute
+  '/requests/$rfqId': typeof RequestsRfqIdRoute
+  '/service/success': typeof ServiceSuccessRoute
   '/admin/': typeof AdminIndexRoute
+  '/cart/': typeof CartIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/profile/': typeof ProfileIndexRoute
+  '/promotions/': typeof PromotionsIndexRoute
+  '/requests/': typeof RequestsIndexRoute
+  '/service/': typeof ServiceIndexRoute
+  '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
+  '/service/requests/': typeof ServiceRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contacts': typeof ContactsRoute
   '/engineer': typeof EngineerRoute
   '/login': typeof LoginRoute
   '/manager': typeof ManagerRoute
   '/password-reset': typeof PasswordResetRoute
   '/register': typeof RegisterRoute
-  '/catalog/$slug': typeof CatalogSlugRoute
+  '/cart/success': typeof CartSuccessRoute
+  '/catalog/$categoryId': typeof CatalogCategoryIdRoute
+  '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/pages/$slug': typeof PagesSlugRoute
+  '/product/$slug': typeof ProductSlugRoute
+  '/profile/edit': typeof ProfileEditRoute
+  '/profile/organization': typeof ProfileOrganizationRoute
+  '/profile/security': typeof ProfileSecurityRoute
+  '/promotions/$slug': typeof PromotionsSlugRoute
+  '/requests/$rfqId': typeof RequestsRfqIdRoute
+  '/service/success': typeof ServiceSuccessRoute
   '/admin': typeof AdminIndexRoute
+  '/cart': typeof CartIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/profile': typeof ProfileIndexRoute
+  '/promotions': typeof PromotionsIndexRoute
+  '/requests': typeof RequestsIndexRoute
+  '/service': typeof ServiceIndexRoute
+  '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
+  '/service/requests': typeof ServiceRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -138,17 +289,36 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/orders': typeof OrdersRouteRouteWithChildren
   '/profile': typeof ProfileRouteRouteWithChildren
+  '/requests': typeof RequestsRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/contacts': typeof ContactsRoute
   '/engineer': typeof EngineerRoute
   '/login': typeof LoginRoute
   '/manager': typeof ManagerRoute
   '/password-reset': typeof PasswordResetRoute
   '/register': typeof RegisterRoute
-  '/catalog/$slug': typeof CatalogSlugRoute
+  '/service/requests': typeof ServiceRequestsRouteRouteWithChildren
+  '/cart/success': typeof CartSuccessRoute
+  '/catalog/$categoryId': typeof CatalogCategoryIdRoute
+  '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/pages/$slug': typeof PagesSlugRoute
+  '/product/$slug': typeof ProductSlugRoute
+  '/profile/edit': typeof ProfileEditRoute
+  '/profile/organization': typeof ProfileOrganizationRoute
+  '/profile/security': typeof ProfileSecurityRoute
+  '/promotions/$slug': typeof PromotionsSlugRoute
+  '/requests/$rfqId': typeof RequestsRfqIdRoute
+  '/service/success': typeof ServiceSuccessRoute
   '/admin/': typeof AdminIndexRoute
+  '/cart/': typeof CartIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/profile/': typeof ProfileIndexRoute
+  '/promotions/': typeof PromotionsIndexRoute
+  '/requests/': typeof RequestsIndexRoute
+  '/service/': typeof ServiceIndexRoute
+  '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
+  '/service/requests/': typeof ServiceRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,48 +327,103 @@ export interface FileRouteTypes {
     | '/admin'
     | '/orders'
     | '/profile'
+    | '/requests'
     | '/about'
+    | '/contacts'
     | '/engineer'
     | '/login'
     | '/manager'
     | '/password-reset'
     | '/register'
-    | '/catalog/$slug'
+    | '/service/requests'
+    | '/cart/success'
+    | '/catalog/$categoryId'
+    | '/orders/$orderId'
+    | '/pages/$slug'
+    | '/product/$slug'
+    | '/profile/edit'
+    | '/profile/organization'
+    | '/profile/security'
+    | '/promotions/$slug'
+    | '/requests/$rfqId'
+    | '/service/success'
     | '/admin/'
+    | '/cart/'
     | '/catalog/'
     | '/orders/'
     | '/profile/'
+    | '/promotions/'
+    | '/requests/'
+    | '/service/'
+    | '/service/requests/$requestId'
+    | '/service/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/contacts'
     | '/engineer'
     | '/login'
     | '/manager'
     | '/password-reset'
     | '/register'
-    | '/catalog/$slug'
+    | '/cart/success'
+    | '/catalog/$categoryId'
+    | '/orders/$orderId'
+    | '/pages/$slug'
+    | '/product/$slug'
+    | '/profile/edit'
+    | '/profile/organization'
+    | '/profile/security'
+    | '/promotions/$slug'
+    | '/requests/$rfqId'
+    | '/service/success'
     | '/admin'
+    | '/cart'
     | '/catalog'
     | '/orders'
     | '/profile'
+    | '/promotions'
+    | '/requests'
+    | '/service'
+    | '/service/requests/$requestId'
+    | '/service/requests'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/orders'
     | '/profile'
+    | '/requests'
     | '/about'
+    | '/contacts'
     | '/engineer'
     | '/login'
     | '/manager'
     | '/password-reset'
     | '/register'
-    | '/catalog/$slug'
+    | '/service/requests'
+    | '/cart/success'
+    | '/catalog/$categoryId'
+    | '/orders/$orderId'
+    | '/pages/$slug'
+    | '/product/$slug'
+    | '/profile/edit'
+    | '/profile/organization'
+    | '/profile/security'
+    | '/promotions/$slug'
+    | '/requests/$rfqId'
+    | '/service/success'
     | '/admin/'
+    | '/cart/'
     | '/catalog/'
     | '/orders/'
     | '/profile/'
+    | '/promotions/'
+    | '/requests/'
+    | '/service/'
+    | '/service/requests/$requestId'
+    | '/service/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -206,14 +431,25 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   OrdersRouteRoute: typeof OrdersRouteRouteWithChildren
   ProfileRouteRoute: typeof ProfileRouteRouteWithChildren
+  RequestsRouteRoute: typeof RequestsRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  ContactsRoute: typeof ContactsRoute
   EngineerRoute: typeof EngineerRoute
   LoginRoute: typeof LoginRoute
   ManagerRoute: typeof ManagerRoute
   PasswordResetRoute: typeof PasswordResetRoute
   RegisterRoute: typeof RegisterRoute
-  CatalogSlugRoute: typeof CatalogSlugRoute
+  ServiceRequestsRouteRoute: typeof ServiceRequestsRouteRouteWithChildren
+  CartSuccessRoute: typeof CartSuccessRoute
+  CatalogCategoryIdRoute: typeof CatalogCategoryIdRoute
+  PagesSlugRoute: typeof PagesSlugRoute
+  ProductSlugRoute: typeof ProductSlugRoute
+  PromotionsSlugRoute: typeof PromotionsSlugRoute
+  ServiceSuccessRoute: typeof ServiceSuccessRoute
+  CartIndexRoute: typeof CartIndexRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
+  PromotionsIndexRoute: typeof PromotionsIndexRoute
+  ServiceIndexRoute: typeof ServiceIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -237,6 +473,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/engineer': {
@@ -288,12 +531,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/requests': {
+      id: '/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof RequestsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/cart/': {
+      id: '/cart/'
+      path: '/cart'
+      fullPath: '/cart/'
+      preLoaderRoute: typeof CartIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart/success': {
+      id: '/cart/success'
+      path: '/cart/success'
+      fullPath: '/cart/success'
+      preLoaderRoute: typeof CartSuccessRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/catalog/': {
       id: '/catalog/'
@@ -302,11 +566,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/catalog/$slug': {
-      id: '/catalog/$slug'
-      path: '/catalog/$slug'
-      fullPath: '/catalog/$slug'
-      preLoaderRoute: typeof CatalogSlugRouteImport
+    '/catalog/$categoryId': {
+      id: '/catalog/$categoryId'
+      path: '/catalog/$categoryId'
+      fullPath: '/catalog/$categoryId'
+      preLoaderRoute: typeof CatalogCategoryIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders/': {
@@ -316,12 +580,117 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersIndexRouteImport
       parentRoute: typeof OrdersRouteRoute
     }
+    '/orders/$orderId': {
+      id: '/orders/$orderId'
+      path: '/$orderId'
+      fullPath: '/orders/$orderId'
+      preLoaderRoute: typeof OrdersOrderIdRouteImport
+      parentRoute: typeof OrdersRouteRoute
+    }
+    '/pages/$slug': {
+      id: '/pages/$slug'
+      path: '/pages/$slug'
+      fullPath: '/pages/$slug'
+      preLoaderRoute: typeof PagesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/product/$slug': {
+      id: '/product/$slug'
+      path: '/product/$slug'
+      fullPath: '/product/$slug'
+      preLoaderRoute: typeof ProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/': {
       id: '/profile/'
       path: '/'
       fullPath: '/profile/'
       preLoaderRoute: typeof ProfileIndexRouteImport
       parentRoute: typeof ProfileRouteRoute
+    }
+    '/profile/edit': {
+      id: '/profile/edit'
+      path: '/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof ProfileEditRouteImport
+      parentRoute: typeof ProfileRouteRoute
+    }
+    '/profile/organization': {
+      id: '/profile/organization'
+      path: '/organization'
+      fullPath: '/profile/organization'
+      preLoaderRoute: typeof ProfileOrganizationRouteImport
+      parentRoute: typeof ProfileRouteRoute
+    }
+    '/profile/security': {
+      id: '/profile/security'
+      path: '/security'
+      fullPath: '/profile/security'
+      preLoaderRoute: typeof ProfileSecurityRouteImport
+      parentRoute: typeof ProfileRouteRoute
+    }
+    '/promotions/': {
+      id: '/promotions/'
+      path: '/promotions'
+      fullPath: '/promotions/'
+      preLoaderRoute: typeof PromotionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/promotions/$slug': {
+      id: '/promotions/$slug'
+      path: '/promotions/$slug'
+      fullPath: '/promotions/$slug'
+      preLoaderRoute: typeof PromotionsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/requests/': {
+      id: '/requests/'
+      path: '/'
+      fullPath: '/requests/'
+      preLoaderRoute: typeof RequestsIndexRouteImport
+      parentRoute: typeof RequestsRouteRoute
+    }
+    '/requests/$rfqId': {
+      id: '/requests/$rfqId'
+      path: '/$rfqId'
+      fullPath: '/requests/$rfqId'
+      preLoaderRoute: typeof RequestsRfqIdRouteImport
+      parentRoute: typeof RequestsRouteRoute
+    }
+    '/service/': {
+      id: '/service/'
+      path: '/service'
+      fullPath: '/service/'
+      preLoaderRoute: typeof ServiceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/service/requests': {
+      id: '/service/requests'
+      path: '/service/requests'
+      fullPath: '/service/requests'
+      preLoaderRoute: typeof ServiceRequestsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/service/success': {
+      id: '/service/success'
+      path: '/service/success'
+      fullPath: '/service/success'
+      preLoaderRoute: typeof ServiceSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/service/requests/': {
+      id: '/service/requests/'
+      path: '/'
+      fullPath: '/service/requests/'
+      preLoaderRoute: typeof ServiceRequestsIndexRouteImport
+      parentRoute: typeof ServiceRequestsRouteRoute
+    }
+    '/service/requests/$requestId': {
+      id: '/service/requests/$requestId'
+      path: '/$requestId'
+      fullPath: '/service/requests/$requestId'
+      preLoaderRoute: typeof ServiceRequestsRequestIdRouteImport
+      parentRoute: typeof ServiceRequestsRouteRoute
     }
   }
 }
@@ -339,10 +708,12 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 )
 
 interface OrdersRouteRouteChildren {
+  OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
 }
 
 const OrdersRouteRouteChildren: OrdersRouteRouteChildren = {
+  OrdersOrderIdRoute: OrdersOrderIdRoute,
   OrdersIndexRoute: OrdersIndexRoute,
 }
 
@@ -351,10 +722,16 @@ const OrdersRouteRouteWithChildren = OrdersRouteRoute._addFileChildren(
 )
 
 interface ProfileRouteRouteChildren {
+  ProfileEditRoute: typeof ProfileEditRoute
+  ProfileOrganizationRoute: typeof ProfileOrganizationRoute
+  ProfileSecurityRoute: typeof ProfileSecurityRoute
   ProfileIndexRoute: typeof ProfileIndexRoute
 }
 
 const ProfileRouteRouteChildren: ProfileRouteRouteChildren = {
+  ProfileEditRoute: ProfileEditRoute,
+  ProfileOrganizationRoute: ProfileOrganizationRoute,
+  ProfileSecurityRoute: ProfileSecurityRoute,
   ProfileIndexRoute: ProfileIndexRoute,
 }
 
@@ -362,19 +739,57 @@ const ProfileRouteRouteWithChildren = ProfileRouteRoute._addFileChildren(
   ProfileRouteRouteChildren,
 )
 
+interface RequestsRouteRouteChildren {
+  RequestsRfqIdRoute: typeof RequestsRfqIdRoute
+  RequestsIndexRoute: typeof RequestsIndexRoute
+}
+
+const RequestsRouteRouteChildren: RequestsRouteRouteChildren = {
+  RequestsRfqIdRoute: RequestsRfqIdRoute,
+  RequestsIndexRoute: RequestsIndexRoute,
+}
+
+const RequestsRouteRouteWithChildren = RequestsRouteRoute._addFileChildren(
+  RequestsRouteRouteChildren,
+)
+
+interface ServiceRequestsRouteRouteChildren {
+  ServiceRequestsRequestIdRoute: typeof ServiceRequestsRequestIdRoute
+  ServiceRequestsIndexRoute: typeof ServiceRequestsIndexRoute
+}
+
+const ServiceRequestsRouteRouteChildren: ServiceRequestsRouteRouteChildren = {
+  ServiceRequestsRequestIdRoute: ServiceRequestsRequestIdRoute,
+  ServiceRequestsIndexRoute: ServiceRequestsIndexRoute,
+}
+
+const ServiceRequestsRouteRouteWithChildren =
+  ServiceRequestsRouteRoute._addFileChildren(ServiceRequestsRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   OrdersRouteRoute: OrdersRouteRouteWithChildren,
   ProfileRouteRoute: ProfileRouteRouteWithChildren,
+  RequestsRouteRoute: RequestsRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  ContactsRoute: ContactsRoute,
   EngineerRoute: EngineerRoute,
   LoginRoute: LoginRoute,
   ManagerRoute: ManagerRoute,
   PasswordResetRoute: PasswordResetRoute,
   RegisterRoute: RegisterRoute,
-  CatalogSlugRoute: CatalogSlugRoute,
+  ServiceRequestsRouteRoute: ServiceRequestsRouteRouteWithChildren,
+  CartSuccessRoute: CartSuccessRoute,
+  CatalogCategoryIdRoute: CatalogCategoryIdRoute,
+  PagesSlugRoute: PagesSlugRoute,
+  ProductSlugRoute: ProductSlugRoute,
+  PromotionsSlugRoute: PromotionsSlugRoute,
+  ServiceSuccessRoute: ServiceSuccessRoute,
+  CartIndexRoute: CartIndexRoute,
   CatalogIndexRoute: CatalogIndexRoute,
+  PromotionsIndexRoute: PromotionsIndexRoute,
+  ServiceIndexRoute: ServiceIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

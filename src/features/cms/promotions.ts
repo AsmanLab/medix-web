@@ -1,0 +1,57 @@
+import type { PromotionListItem } from "@/api/cms";
+
+export type PromotionPeriodStatus = "active" | "upcoming" | "expired";
+
+export function promotionPeriodStatus(
+  item: Pick<PromotionListItem, "starts_at" | "ends_at">,
+  now = new Date(),
+): PromotionPeriodStatus {
+  const start = item.starts_at ? new Date(item.starts_at) : null;
+  const end = item.ends_at ? new Date(item.ends_at) : null;
+
+  if (start && !Number.isNaN(start.getTime()) && now < start) {
+    return "upcoming";
+  }
+  if (end && !Number.isNaN(end.getTime()) && now > end) {
+    return "expired";
+  }
+  return "active";
+}
+
+export function promotionStatusLabel(status: PromotionPeriodStatus): string {
+  switch (status) {
+    case "active":
+      return "Активна";
+    case "upcoming":
+      return "Скоро";
+    case "expired":
+      return "Истекла";
+  }
+}
+
+export function formatPromotionDate(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+export function promotionDateRange(
+  startsAt: string | null | undefined,
+  endsAt: string | null | undefined,
+): string {
+  const start = formatPromotionDate(startsAt);
+  const end = formatPromotionDate(endsAt);
+  if (start && end) return `${start} — ${end}`;
+  if (start) return `с ${start}`;
+  if (end) return `до ${end}`;
+  return "Сроки не указаны";
+}
+
+export function mapsSearchUrl(address: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}
