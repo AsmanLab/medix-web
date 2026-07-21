@@ -34,6 +34,7 @@
     0 1px 2px rgba(15, 51, 80, 0.04), 0 8px 24px -12px rgba(15, 51, 80, 0.12);
   --shadow-card:
     0 1px 0 rgba(15, 51, 80, 0.04), 0 12px 32px -16px rgba(15, 51, 80, 0.18);
+  --shadow-nav: 0 -8px 24px -12px rgba(15, 51, 80, 0.18);
 }
 
 :root {
@@ -57,7 +58,7 @@
   --mint: oklch(0.86 0.09 165);
 
   --muted: oklch(0.96 0.012 220);
-  --muted-foreground: oklch(0.52 0.03 235);
+  --muted-foreground: oklch(0.46 0.03 235);
 
   --accent: oklch(0.93 0.05 195);
   --accent-foreground: oklch(0.28 0.06 220);
@@ -75,6 +76,10 @@
     border-color: var(--color-border);
   }
 
+  html {
+    overflow-x: clip;
+  }
+
   html,
   body {
     background-color: var(--color-background);
@@ -82,6 +87,15 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
   }
 
   #root {
@@ -113,6 +127,14 @@
   color: var(--color-foreground);
 }
 
+@utility tab-pill {
+  background: linear-gradient(
+    180deg,
+    var(--color-primary-soft),
+    color-mix(in oklab, var(--color-primary-soft) 60%, white)
+  );
+}
+
 @utility field-control {
   width: 100%;
   min-height: 2.75rem;
@@ -124,7 +146,8 @@
   outline: none;
   transition: border-color 150ms ease;
 
-  &:focus {
+  &:focus-visible {
     border-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ring) 30%, transparent);
   }
 }

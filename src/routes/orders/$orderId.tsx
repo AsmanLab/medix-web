@@ -92,6 +92,7 @@ function OrderDetailPage() {
           isError={detailQuery.isError}
           error={detailQuery.error}
           onRetry={() => void detailQuery.refetch()}
+          loadingVariant="detail"
         >
           {order ? (
             <div className="space-y-6">

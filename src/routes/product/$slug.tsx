@@ -121,6 +121,7 @@ function ProductDetailPage() {
           isError={query.isError}
           error={query.error}
           onRetry={() => void query.refetch()}
+          loadingVariant="detail"
         >
           {product ? (
             <article className="space-y-6">

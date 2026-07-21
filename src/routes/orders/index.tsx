@@ -46,20 +46,17 @@ function OrdersListPage() {
           error={query.error}
           isEmpty={query.isSuccess && items.length === 0}
           onRetry={() => void query.refetch()}
-          emptyFallback={
-            <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center">
-              <Package className="mx-auto h-8 w-8 text-primary" />
-              <p className="mt-3 font-semibold">Заказов пока нет</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Заказы появятся после принятия коммерческого предложения.
-              </p>
-              <Link
-                to="/requests"
-                className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
-              >
-                К заявкам <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+          loadingVariant="list"
+          emptyIcon={Package}
+          emptyTitle="Заказов пока нет"
+          emptyDescription="Заказы появятся после принятия коммерческого предложения."
+          emptyAction={
+            <Link
+              to="/requests"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+            >
+              К заявкам <ArrowRight className="h-4 w-4" />
+            </Link>
           }
         >
           <ul className="space-y-3">

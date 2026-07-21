@@ -144,6 +144,7 @@ function CategoryPage() {
         error={categoriesQuery.error}
         isEmpty={notFound}
         onRetry={() => void categoriesQuery.refetch()}
+        loadingVariant="detail"
         emptyTitle="Категория не найдена"
         emptyDescription="Проверьте ссылку или вернитесь в каталог."
       >
@@ -216,16 +217,27 @@ function CategoryPage() {
                     {selectedChild?.name ?? "Все товары раздела"}
                   </p>
                 </div>
-                <form onSubmit={onSearchSubmit} className="flex w-full gap-2 sm:max-w-md">
-                  <label className="relative min-w-0 flex-1">
-                    <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <form
+                  onSubmit={onSearchSubmit}
+                  role="search"
+                  className="flex w-full gap-2 sm:max-w-md"
+                >
+                  <label htmlFor="category-product-search" className="sr-only">
+                    Поиск в разделе
+                  </label>
+                  <div className="relative min-w-0 flex-1">
+                    <Search
+                      className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                      aria-hidden
+                    />
                     <input
+                      id="category-product-search"
                       value={draftQ}
                       onChange={(e) => setDraftQ(e.target.value)}
                       placeholder="Поиск в разделе"
                       className="field-control pl-10"
                     />
-                  </label>
+                  </div>
                   <button
                     type="submit"
                     className="h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
@@ -242,6 +254,9 @@ function CategoryPage() {
                   error={productsQuery.error}
                   isEmpty={productsQuery.isSuccess && products.length === 0}
                   onRetry={() => void productsQuery.refetch()}
+                  loadingVariant="card-grid"
+                  cardGridVariant="catalog"
+                  loadingCount={6}
                   emptyTitle="Товары не найдены"
                   emptyDescription="Измените поиск или выберите другую подкатегорию."
                 >

@@ -61,6 +61,7 @@ function ServiceRequestDetailPage() {
           isError={detailQuery.isError}
           error={detailQuery.error}
           onRetry={() => void detailQuery.refetch()}
+          loadingVariant="detail"
         >
           {sr ? (
             <div className="space-y-6">
