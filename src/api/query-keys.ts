@@ -52,4 +52,11 @@ export const queryKeys = {
     list: () => [...queryKeys.service.all, "list"] as const,
     detail: (id: string) => [...queryKeys.service.all, "detail", id] as const,
   },
+  adminCustomers: {
+    all: ["admin-customers"] as const,
+    list: (status?: string | null) =>
+      [...queryKeys.adminCustomers.all, "list", status ?? "all"] as const,
+    audit: (customerId: string) =>
+      [...queryKeys.adminCustomers.all, "audit", customerId] as const,
+  },
 } as const;
