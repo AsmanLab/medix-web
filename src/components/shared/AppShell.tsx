@@ -131,6 +131,7 @@ function CatalogMegaMenu({
       <Link
         to="/catalog"
         search={{ q: undefined }}
+        aria-haspopup="true"
         className={cn(
           "inline-flex items-center gap-1.5 py-3",
           catalogActive
@@ -138,11 +139,16 @@ function CatalogMegaMenu({
             : "text-foreground/75 hover:text-primary",
         )}
       >
-        Каталог <ChevronDown className="h-3.5 w-3.5" />
+        Каталог <ChevronDown className="h-3.5 w-3.5" aria-hidden />
       </Link>
 
-      <div className="invisible absolute top-full left-[-175px] w-[900px] pt-[19px] opacity-0 transition group-hover/catalog:visible group-hover/catalog:opacity-100 group-focus-within/catalog:visible group-focus-within/catalog:opacity-100">
-        <div className="grid grid-cols-[280px_1fr] overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_26px_70px_-28px_rgba(15,51,80,.45)]">
+      <div
+        id="catalog-mega-menu"
+        role="navigation"
+        aria-label="Каталог — категории"
+        className="invisible absolute top-full left-1/2 z-50 w-[min(900px,calc(100vw-2rem))] max-w-[900px] -translate-x-1/2 pt-[19px] opacity-0 transition group-hover/catalog:visible group-hover/catalog:opacity-100 group-focus-within/catalog:visible group-focus-within/catalog:opacity-100 xl:left-[-175px] xl:w-[900px] xl:translate-x-0"
+      >
+        <div className="grid overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_26px_70px_-28px_rgba(15,51,80,.45)] lg:grid-cols-[240px_1fr] xl:grid-cols-[280px_1fr]">
           <div className="border-r border-border bg-background/70 p-3">
             <div className="px-3 pt-1 pb-2 text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
               Категории
@@ -294,6 +300,13 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-surface text-foreground">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-lg"
+      >
+        Перейти к содержимому
+      </a>
+
       <div className="hidden border-b border-border/70 bg-card text-[12px] text-muted-foreground lg:block">
         <div className="mx-auto flex h-9 max-w-[1320px] items-center justify-between px-6">
           <div className="flex items-center gap-5">
@@ -326,10 +339,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <header className="sticky top-0 z-50 hidden border-b border-border/80 bg-card/95 backdrop-blur-xl lg:block">
-        <div className="mx-auto flex h-[82px] max-w-[1320px] items-center gap-8 px-6">
+        <div className="mx-auto flex h-[82px] max-w-[1320px] items-center gap-4 px-4 xl:gap-8 xl:px-6">
           <Logo />
 
-          <nav className="flex items-center gap-7 text-sm font-medium">
+          <nav
+            aria-label="Основная навигация"
+            className="flex items-center gap-4 text-sm font-medium xl:gap-7"
+          >
             <Link
               to="/"
               className={
@@ -368,10 +384,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <form
             onSubmit={onHeaderSearch}
-            className="ml-auto flex h-11 max-w-[280px] min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-background px-4 transition-colors focus-within:border-primary/60"
+            className="ml-auto flex h-11 max-w-[200px] min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-background px-4 transition-colors focus-within:border-primary/60 xl:max-w-[280px]"
+            role="search"
           >
-            <button type="submit" aria-label="Найти">
-              <Search className="h-4 w-4 text-muted-foreground" />
+            <button type="submit" aria-label="Найти в каталоге">
+              <Search className="h-4 w-4 text-muted-foreground" aria-hidden />
             </button>
             <input
               value={headerQuery}
@@ -384,18 +401,22 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <Link
             to={profileTo}
-            className="relative grid h-11 w-11 place-items-center rounded-full border border-border text-muted-foreground transition hover:text-primary"
-            aria-label="Уведомления"
+            className="relative hidden h-11 w-11 place-items-center rounded-full border border-border text-muted-foreground transition hover:text-primary xl:grid"
+            aria-label="Уведомления — скоро"
             title="Уведомления — скоро"
           >
-            <Bell className="h-[18px] w-[18px]" />
+            <Bell className="h-[18px] w-[18px]" aria-hidden />
           </Link>
 
           <Link
             to="/cart"
-            className="relative inline-flex h-11 items-center gap-2 rounded-full border border-border px-4 text-sm font-semibold transition-colors hover:border-primary/40 hover:text-primary"
+            aria-label={
+              cartCount > 0 ? `Корзина, ${cartCount} поз.` : "Корзина"
+            }
+            className="relative inline-flex h-11 items-center gap-2 rounded-full border border-border px-3 text-sm font-semibold transition-colors hover:border-primary/40 hover:text-primary xl:px-4"
           >
-            <ShoppingCart className="h-[18px] w-[18px]" /> Корзина
+            <ShoppingCart className="h-[18px] w-[18px]" aria-hidden />
+            <span className="hidden xl:inline">Корзина</span>
             {cartCount > 0 ? (
               <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] text-white">
                 {cartCount}
@@ -418,8 +439,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <main
+        id="main-content"
+        tabIndex={-1}
         className={cn(
-          "mx-auto min-h-[70vh] w-full px-5 py-8 pb-24 lg:px-6 lg:pb-8",
+          "mx-auto min-h-[70vh] w-full max-w-full px-5 py-8 pb-24 lg:px-6 lg:pb-8",
           accountPage ? "max-w-[820px]" : "max-w-[1320px]",
         )}
       >
@@ -429,7 +452,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       <footer className="border-t border-border bg-card pb-20 lg:pb-0">
         <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm lg:px-6">
           <Logo compact />
-          <nav className="flex flex-wrap gap-x-4 gap-y-2 text-muted-foreground">
+          <nav
+            aria-label="Ссылки в подвале"
+            className="flex flex-wrap gap-x-4 gap-y-2 text-muted-foreground"
+          >
             <Link to="/about" className="hover:text-foreground">
               О компании
             </Link>
@@ -454,6 +480,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </footer>
 
       <nav
+        aria-label="Мобильная навигация"
         className="fixed inset-x-0 bottom-0 z-50 w-full border-t border-border bg-card/95 backdrop-blur lg:hidden"
         style={{ boxShadow: "var(--shadow-nav)" }}
       >
@@ -464,11 +491,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             const profileTab = tab.to === "/profile";
             const href = profileTab ? profileTo : tab.to;
             const badge = tab.to === "/cart" && cartCount > 0;
+            const label = profileTab && !authenticated ? "Вход" : tab.label;
 
             return (
               <li key={tab.to}>
                 <Link
                   to={href}
+                  aria-current={active ? "page" : undefined}
+                  aria-label={
+                    badge ? `${label}, ${cartCount} в корзине` : label
+                  }
                   className="flex flex-col items-center gap-1 rounded-xl py-1.5"
                 >
                   <span
@@ -483,9 +515,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                         active ? "text-primary" : "text-muted-foreground",
                       )}
                       strokeWidth={active ? 2.4 : 1.8}
+                      aria-hidden
                     />
                     {badge ? (
-                      <span className="absolute -top-0.5 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-white">
+                      <span
+                        className="absolute -top-0.5 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-white"
+                        aria-hidden
+                      >
                         {cartCount}
                       </span>
                     ) : null}
@@ -495,8 +531,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                       "text-[11px] font-medium",
                       active ? "text-primary" : "text-muted-foreground",
                     )}
+                    aria-hidden
                   >
-                    {profileTab && !authenticated ? "Вход" : tab.label}
+                    {label}
                   </span>
                 </Link>
               </li>

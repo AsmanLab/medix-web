@@ -75,16 +75,23 @@ function CatalogIndexPage() {
         Выберите направление, затем нужную подкатегорию.
       </p>
 
-      <form onSubmit={onSearchSubmit} className="mt-6 flex gap-2">
-        <label className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <form onSubmit={onSearchSubmit} className="mt-6 flex gap-2" role="search">
+        <label htmlFor="catalog-index-search" className="sr-only">
+          Поиск категории или подкатегории
+        </label>
+        <div className="relative min-w-0 flex-1">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
           <input
+            id="catalog-index-search"
             value={draftQ}
             onChange={(e) => setDraftQ(e.target.value)}
             placeholder="Найти категорию или подкатегорию"
             className="field-control pl-10"
           />
-        </label>
+        </div>
         <button
           type="submit"
           className="h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
