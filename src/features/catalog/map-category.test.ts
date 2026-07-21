@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CategoryOut } from "@/api/catalog";
 import {
+  buildAdminCategoryTree,
   buildCategoryTree,
   collectCategoryIds,
   findCategoryNode,
@@ -52,6 +53,13 @@ describe("buildCategoryTree", () => {
     expect(tree[0]?.slug).toBe("diagnostic");
     expect(tree[0]?.children).toHaveLength(1);
     expect(tree[0]?.children[0]?.slug).toBe("ultrasound");
+  });
+});
+
+describe("buildAdminCategoryTree", () => {
+  it("includes inactive roots", () => {
+    const tree = buildAdminCategoryTree(sample);
+    expect(tree.map((n) => n.slug).sort()).toEqual(["diagnostic", "hidden"]);
   });
 });
 

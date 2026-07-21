@@ -2,6 +2,8 @@ export const queryKeys = {
   catalog: {
     all: ["catalog"] as const,
     categories: () => [...queryKeys.catalog.all, "categories"] as const,
+    adminCategories: () =>
+      [...queryKeys.catalog.all, "admin-categories"] as const,
     products: (params?: Record<string, unknown>) =>
       [...queryKeys.catalog.all, "products", params ?? {}] as const,
     productsByCategories: (

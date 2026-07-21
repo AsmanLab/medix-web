@@ -6,16 +6,16 @@ export type CatalogCategoryNode = {
   name: string;
   sort: number;
   imageKey: string;
+  isActive: boolean;
   children: CatalogCategoryNode[];
 };
 
-export function buildCategoryTree(
+function buildTreeFromList(
   categories: CategoryOut[],
 ): CatalogCategoryNode[] {
-  const active = categories.filter((c) => c.is_active);
   const byParent = new Map<string | null, CategoryOut[]>();
 
-  for (const category of active) {
+  for (const category of categories) {
     const key = category.parent_id;
     const list = byParent.get(key) ?? [];
     list.push(category);
@@ -33,11 +33,26 @@ export function buildCategoryTree(
       name: node.name_ru,
       sort: node.sort,
       imageKey: node.image_key || "",
+      isActive: node.is_active,
       children: build(node.id),
     }));
   }
 
   return build(null);
+}
+
+/** Storefront tree: active categories only. */
+export function buildCategoryTree(
+  categories: CategoryOut[],
+): CatalogCategoryNode[] {
+  return buildTreeFromList(categories.filter((c) => c.is_active));
+}
+
+/** Admin tree: includes hidden categories. */
+export function buildAdminCategoryTree(
+  categories: CategoryOut[],
+): CatalogCategoryNode[] {
+  return buildTreeFromList(categories);
 }
 
 export function findCategoryNode(
