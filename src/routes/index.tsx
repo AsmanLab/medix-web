@@ -196,7 +196,10 @@ function HomePage() {
             emptyTitle="Товары пока не опубликованы"
             emptyDescription="Позиции появятся после публикации каталога."
           >
-            <ul className="mt-5 flex gap-3 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible">
+            <ul
+              aria-label="Товары в каталоге"
+              className="mt-5 flex gap-3 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible"
+            >
               {products.map((p) => (
                 <li
                   key={p.id}

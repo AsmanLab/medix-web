@@ -16,7 +16,6 @@ import {
   useEffect,
   useState,
   type FormEvent,
-  type ReactNode,
 } from "react";
 import { toast } from "sonner";
 import { isAppError } from "@/api/errors";
@@ -25,6 +24,7 @@ import { listOrders } from "@/api/orders";
 import { fetchProfile } from "@/api/profile";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
+import { FormField } from "@/components/shared/FormField";
 import { Button } from "@/components/ui/button";
 import { CmsHtml } from "@/features/cms/CmsHtml";
 import {
@@ -315,7 +315,7 @@ function ServicePage() {
           className="rounded-[28px] border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-7"
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Тип оборудования *">
+            <FormField label="Тип оборудования *">
               <select
                 required
                 className="field-control"
@@ -329,24 +329,24 @@ function ServicePage() {
                   </option>
                 ))}
               </select>
-            </Field>
-            <Field label="Модель или артикул">
+            </FormField>
+            <FormField label="Модель или артикул">
               <input
                 className="field-control"
                 placeholder="Например, OMRON M3"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
               />
-            </Field>
-            <Field label="Серийный номер">
+            </FormField>
+            <FormField label="Серийный номер">
               <input
                 className="field-control"
                 placeholder="Если известен"
                 value={serialNumber}
                 onChange={(e) => setSerialNumber(e.target.value)}
               />
-            </Field>
-            <Field label="Желаемая дата визита">
+            </FormField>
+            <FormField label="Желаемая дата визита">
               <div className="relative">
                 <CalendarDays className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                 <input
@@ -356,10 +356,10 @@ function ServicePage() {
                   onChange={(e) => setDesiredDate(e.target.value)}
                 />
               </div>
-            </Field>
+            </FormField>
           </div>
 
-          <Field label="Описание проблемы *" className="mt-4">
+          <FormField label="Описание проблемы *" className="mt-4">
             <textarea
               required
               rows={4}
@@ -368,9 +368,9 @@ function ServicePage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-          </Field>
+          </FormField>
 
-          <Field label="Адрес или объект *" className="mt-4">
+          <FormField label="Адрес или объект *" className="mt-4">
             <input
               required
               className="field-control"
@@ -378,10 +378,10 @@ function ServicePage() {
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
-          </Field>
+          </FormField>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field label="Контактное лицо *">
+            <FormField label="Контактное лицо *">
               <input
                 required
                 className="field-control"
@@ -389,8 +389,8 @@ function ServicePage() {
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
               />
-            </Field>
-            <Field label="Телефон *">
+            </FormField>
+            <FormField label="Телефон *">
               <input
                 required
                 className="field-control"
@@ -398,11 +398,11 @@ function ServicePage() {
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
               />
-            </Field>
+            </FormField>
           </div>
 
           {authenticated && (ordersQuery.data?.length ?? 0) > 0 ? (
-            <Field label="Связать с заказом (необязательно)" className="mt-4">
+            <FormField label="Связать с заказом (необязательно)" className="mt-4">
               <select
                 className="field-control"
                 value={orderId}
@@ -415,13 +415,16 @@ function ServicePage() {
                   </option>
                 ))}
               </select>
-            </Field>
+            </FormField>
           ) : null}
 
           <div className="mt-4">
-            <span className="mb-1.5 block text-xs font-semibold">
+            <label
+              htmlFor="service-photos"
+              className="mb-1.5 block text-xs font-semibold"
+            >
               Фото ({photos.length}/{MAX_SERVICE_PHOTOS})
-            </span>
+            </label>
             {photos.length > 0 ? (
               <ul className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {photos.map((photo) => (
@@ -456,10 +459,11 @@ function ServicePage() {
                   До {MAX_SERVICE_PHOTOS} файлов, JPG или PNG, до 5 МБ
                 </span>
                 <input
+                  id="service-photos"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   multiple
-                  className="hidden"
+                  className="sr-only"
                   onChange={(e) => {
                     onPickPhotos(e.target.files);
                     e.target.value = "";
@@ -485,22 +489,5 @@ function ServicePage() {
         </form>
       </section>
     </AppShell>
-  );
-}
-
-function Field({
-  label,
-  className = "",
-  children,
-}: {
-  label: string;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-xs font-semibold">{label}</span>
-      {children}
-    </label>
   );
 }

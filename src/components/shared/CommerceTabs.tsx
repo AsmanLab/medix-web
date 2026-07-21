@@ -17,6 +17,7 @@ export function CommerceTabs({ active }: CommerceTabsProps) {
         to="/requests"
         role="tab"
         aria-selected={active === "requests"}
+        tabIndex={active === "requests" ? 0 : -1}
         className={cn(
           "rounded-lg px-3 py-2.5 text-center text-sm font-semibold transition",
           active === "requests"
@@ -30,6 +31,7 @@ export function CommerceTabs({ active }: CommerceTabsProps) {
         to="/orders"
         role="tab"
         aria-selected={active === "orders"}
+        tabIndex={active === "orders" ? 0 : -1}
         className={cn(
           "rounded-lg px-3 py-2.5 text-center text-sm font-semibold transition",
           active === "orders"

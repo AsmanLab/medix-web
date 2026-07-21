@@ -90,6 +90,8 @@ export function ProductConfigurator({
           const single = isSingleChoiceGroup(group);
           const required = missing.some((g) => g.id === group.id);
 
+          const panelId = `config-group-${group.id}`;
+
           return (
             <li
               key={group.id}
@@ -97,9 +99,11 @@ export function ProductConfigurator({
             >
               <button
                 type="button"
+                id={`${panelId}-trigger`}
                 onClick={() => toggleOpen(group.id)}
                 className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
                 aria-expanded={open}
+                aria-controls={panelId}
               >
                 <span>
                   <span className="block text-sm font-semibold">
@@ -125,7 +129,12 @@ export function ProductConfigurator({
               </button>
 
               {open ? (
-                <div className="space-y-2 border-t border-border px-4 py-3">
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={`${panelId}-trigger`}
+                  className="space-y-2 border-t border-border px-4 py-3"
+                >
                   {opts.map((opt) => {
                     const priceLabel = opt.price?.trim() || "По запросу";
                     if (single) {
