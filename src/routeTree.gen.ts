@@ -45,6 +45,7 @@ import { Route as AdminBannersIndexRouteImport } from './routes/admin/banners/in
 import { Route as AdminCatalogIndexRouteImport } from './routes/admin/catalog/index'
 import { Route as AdminCmsIndexRouteImport } from './routes/admin/cms/index'
 import { Route as AdminCommerceIndexRouteImport } from './routes/admin/commerce/index'
+import { Route as AdminCommerceRfqIdRouteImport } from './routes/admin/commerce/$rfqId'
 import { Route as AdminReportsIndexRouteImport } from './routes/admin/reports/index'
 import { Route as AdminServiceDeskIndexRouteImport } from './routes/admin/service-desk/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
@@ -238,6 +239,11 @@ const AdminCommerceIndexRoute = AdminCommerceIndexRouteImport.update({
   path: '/commerce/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminCommerceRfqIdRoute = AdminCommerceRfqIdRouteImport.update({
+  id: '/commerce/$rfqId',
+  path: '/commerce/$rfqId',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminReportsIndexRoute = AdminReportsIndexRouteImport.update({
   id: '/reports/',
   path: '/reports/',
@@ -338,6 +344,7 @@ export interface FileRoutesByFullPath {
   '/promotions/': typeof PromotionsIndexRoute
   '/requests/': typeof RequestsIndexRoute
   '/service/': typeof ServiceIndexRoute
+  '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
   '/admin/banners/': typeof AdminBannersIndexRoute
@@ -383,6 +390,7 @@ export interface FileRoutesByTo {
   '/promotions': typeof PromotionsIndexRoute
   '/requests': typeof RequestsIndexRoute
   '/service': typeof ServiceIndexRoute
+  '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
   '/admin/banners': typeof AdminBannersIndexRoute
@@ -434,6 +442,7 @@ export interface FileRoutesById {
   '/promotions/': typeof PromotionsIndexRoute
   '/requests/': typeof RequestsIndexRoute
   '/service/': typeof ServiceIndexRoute
+  '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
   '/admin/banners/': typeof AdminBannersIndexRoute
@@ -486,6 +495,7 @@ export interface FileRouteTypes {
     | '/promotions/'
     | '/requests/'
     | '/service/'
+    | '/admin/commerce/$rfqId'
     | '/admin/users/$customerId'
     | '/service/requests/$requestId'
     | '/admin/banners/'
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
     | '/promotions'
     | '/requests'
     | '/service'
+    | '/admin/commerce/$rfqId'
     | '/admin/users/$customerId'
     | '/service/requests/$requestId'
     | '/admin/banners'
@@ -581,6 +592,7 @@ export interface FileRouteTypes {
     | '/promotions/'
     | '/requests/'
     | '/service/'
+    | '/admin/commerce/$rfqId'
     | '/admin/users/$customerId'
     | '/service/requests/$requestId'
     | '/admin/banners/'
@@ -879,6 +891,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCommerceIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/commerce/$rfqId': {
+      id: '/admin/commerce/$rfqId'
+      path: '/commerce/$rfqId'
+      fullPath: '/admin/commerce/$rfqId'
+      preLoaderRoute: typeof AdminCommerceRfqIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/reports/': {
       id: '/admin/reports/'
       path: '/reports'
@@ -968,6 +987,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminCommerceRfqIdRoute: typeof AdminCommerceRfqIdRoute
   AdminUsersCustomerIdRoute: typeof AdminUsersCustomerIdRoute
   AdminBannersIndexRoute: typeof AdminBannersIndexRoute
   AdminCatalogIndexRoute: typeof AdminCatalogIndexRoute
@@ -986,6 +1006,7 @@ interface AdminRouteRouteChildren {
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
+  AdminCommerceRfqIdRoute: AdminCommerceRfqIdRoute,
   AdminUsersCustomerIdRoute: AdminUsersCustomerIdRoute,
   AdminBannersIndexRoute: AdminBannersIndexRoute,
   AdminCatalogIndexRoute: AdminCatalogIndexRoute,
