@@ -15,6 +15,7 @@ export type GuardOptions = {
 function redirectToLanding(role: UserRole): never {
   const path = landingPathForRole(role);
   if (path === "/admin") throw redirect({ to: "/admin" });
+  if (path === "/admin/commerce") throw redirect({ to: "/admin/commerce" });
   if (path === "/manager") throw redirect({ to: "/manager" });
   if (path === "/engineer") throw redirect({ to: "/engineer" });
   throw redirect({ to: "/profile" });

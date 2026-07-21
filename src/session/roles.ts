@@ -28,7 +28,7 @@ export function landingPathForRole(role: UserRole): string {
     case "admin":
       return "/admin";
     case "manager":
-      return "/manager";
+      return "/admin/commerce";
     case "service_engineer":
       return "/engineer";
     default:
