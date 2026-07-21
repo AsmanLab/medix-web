@@ -1,16 +1,17 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { StaffShell } from "@/components/shared/StaffShell";
-import { requireAdmin } from "@/session/guards";
+import { AdminShell } from "@/components/shared/AdminShell";
+import { requireStaffPanel } from "@/session/guards";
 
 export const Route = createFileRoute("/admin")({
-  beforeLoad: () => requireAdmin(),
+  beforeLoad: () =>
+    requireStaffPanel({ roles: ["admin", "manager", "service_engineer"] }),
   component: AdminLayout,
 });
 
 function AdminLayout() {
   return (
-    <StaffShell title="Админ" homeTo="/admin">
+    <AdminShell>
       <Outlet />
-    </StaffShell>
+    </AdminShell>
   );
 }
