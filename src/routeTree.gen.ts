@@ -48,6 +48,7 @@ import { Route as AdminCommerceIndexRouteImport } from './routes/admin/commerce/
 import { Route as AdminReportsIndexRouteImport } from './routes/admin/reports/index'
 import { Route as AdminServiceDeskIndexRouteImport } from './routes/admin/service-desk/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminUsersCustomerIdRouteImport } from './routes/admin/users/$customerId'
 import { Route as ServiceRequestsIndexRouteImport } from './routes/service/requests/index'
 import { Route as ServiceRequestsRequestIdRouteImport } from './routes/service/requests/$requestId'
 
@@ -246,6 +247,11 @@ const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   path: '/users/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminUsersCustomerIdRoute = AdminUsersCustomerIdRouteImport.update({
+  id: '/users/$customerId',
+  path: '/users/$customerId',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const ServiceRequestsIndexRoute = ServiceRequestsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/promotions/': typeof PromotionsIndexRoute
   '/requests/': typeof RequestsIndexRoute
   '/service/': typeof ServiceIndexRoute
+  '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
   '/admin/banners/': typeof AdminBannersIndexRoute
   '/admin/catalog/': typeof AdminCatalogIndexRoute
@@ -329,6 +336,7 @@ export interface FileRoutesByTo {
   '/promotions': typeof PromotionsIndexRoute
   '/requests': typeof RequestsIndexRoute
   '/service': typeof ServiceIndexRoute
+  '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
   '/admin/banners': typeof AdminBannersIndexRoute
   '/admin/catalog': typeof AdminCatalogIndexRoute
@@ -373,6 +381,7 @@ export interface FileRoutesById {
   '/promotions/': typeof PromotionsIndexRoute
   '/requests/': typeof RequestsIndexRoute
   '/service/': typeof ServiceIndexRoute
+  '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
   '/admin/banners/': typeof AdminBannersIndexRoute
   '/admin/catalog/': typeof AdminCatalogIndexRoute
@@ -418,6 +427,7 @@ export interface FileRouteTypes {
     | '/promotions/'
     | '/requests/'
     | '/service/'
+    | '/admin/users/$customerId'
     | '/service/requests/$requestId'
     | '/admin/banners/'
     | '/admin/catalog/'
@@ -456,6 +466,7 @@ export interface FileRouteTypes {
     | '/promotions'
     | '/requests'
     | '/service'
+    | '/admin/users/$customerId'
     | '/service/requests/$requestId'
     | '/admin/banners'
     | '/admin/catalog'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/promotions/'
     | '/requests/'
     | '/service/'
+    | '/admin/users/$customerId'
     | '/service/requests/$requestId'
     | '/admin/banners/'
     | '/admin/catalog/'
@@ -811,6 +823,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/users/$customerId': {
+      id: '/admin/users/$customerId'
+      path: '/users/$customerId'
+      fullPath: '/admin/users/$customerId'
+      preLoaderRoute: typeof AdminUsersCustomerIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/service/requests/': {
       id: '/service/requests/'
       path: '/'
@@ -830,6 +849,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminUsersCustomerIdRoute: typeof AdminUsersCustomerIdRoute
   AdminBannersIndexRoute: typeof AdminBannersIndexRoute
   AdminCatalogIndexRoute: typeof AdminCatalogIndexRoute
   AdminCmsIndexRoute: typeof AdminCmsIndexRoute
@@ -841,6 +861,7 @@ interface AdminRouteRouteChildren {
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
+  AdminUsersCustomerIdRoute: AdminUsersCustomerIdRoute,
   AdminBannersIndexRoute: AdminBannersIndexRoute,
   AdminCatalogIndexRoute: AdminCatalogIndexRoute,
   AdminCmsIndexRoute: AdminCmsIndexRoute,
