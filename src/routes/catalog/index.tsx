@@ -100,21 +100,14 @@ function CatalogIndexPage() {
           error={categoriesQuery.error}
           isEmpty={categoriesQuery.isSuccess && filtered.length === 0}
           onRetry={() => void categoriesQuery.refetch()}
+          loadingVariant="card-grid"
+          cardGridVariant="catalog"
+          loadingCount={4}
           emptyTitle={normalized ? "Разделы не найдены" : "Категории пока не опубликованы"}
           emptyDescription={
             normalized
               ? "Измените запрос или откройте раздел без фильтра."
               : "Добавьте категории в админ-панели."
-          }
-          loadingFallback={
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-36 animate-pulse rounded-2xl border border-border bg-muted/40"
-                />
-              ))}
-            </div>
           }
         >
           <ul className="grid gap-4 sm:grid-cols-2">

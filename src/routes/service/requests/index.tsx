@@ -52,22 +52,17 @@ function ServiceRequestsListPage() {
           error={query.error}
           isEmpty={query.isSuccess && items.length === 0}
           onRetry={() => void query.refetch()}
-          emptyTitle="Заявок пока нет"
-          emptyDescription="Опишите проблему — инженер свяжется с вами."
-          emptyFallback={
-            <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center">
-              <Wrench className="mx-auto h-8 w-8 text-primary" />
-              <p className="mt-3 font-semibold">Сервисных заявок пока нет</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Опишите оборудование и проблему — мы примем заявку в работу.
-              </p>
-              <Link
-                to="/service"
-                className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
-              >
-                Создать заявку <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+          loadingVariant="list"
+          emptyIcon={Wrench}
+          emptyTitle="Сервисных заявок пока нет"
+          emptyDescription="Опишите оборудование и проблему — мы примем заявку в работу."
+          emptyAction={
+            <Link
+              to="/service"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+            >
+              Создать заявку <ArrowRight className="h-4 w-4" />
+            </Link>
           }
         >
           <ul className="space-y-3">

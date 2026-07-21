@@ -1,6 +1,9 @@
 import { Outlet, createRootRoute, Link } from "@tanstack/react-router";
+import { MapPinOff } from "lucide-react";
 import { Toaster } from "sonner";
 import { AppProviders } from "@/app/providers";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -9,25 +12,36 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   return (
-    <AppProviders>
-      <Outlet />
-      <Toaster richColors position="top-center" closeButton />
-    </AppProviders>
+    <ErrorBoundary>
+      <AppProviders>
+        <Outlet />
+        <Toaster richColors position="top-center" closeButton />
+      </AppProviders>
+    </ErrorBoundary>
   );
 }
 
 function NotFound() {
   return (
-    <div className="grid min-h-screen place-items-center bg-background px-5">
-      <div className="max-w-md text-center">
-        <h1 className="font-display text-6xl font-bold">404</h1>
-        <p className="mt-3 text-sm text-muted-foreground">Страница не найдена</p>
-        <Link
-          to="/"
-          className="mt-6 inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
-        >
-          На главную
-        </Link>
+    <div className="grid min-h-screen place-items-center bg-background px-5 py-10">
+      <div className="w-full max-w-md">
+        <p className="text-center font-display text-6xl font-bold text-muted-foreground/40">
+          404
+        </p>
+        <EmptyState
+          icon={MapPinOff}
+          title="Страница не найдена"
+          description="Проверьте адрес или вернитесь на главную."
+          action={
+            <Link
+              to="/"
+              className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
+            >
+              На главную
+            </Link>
+          }
+          className="mt-4 border-solid shadow-[var(--shadow-soft)]"
+        />
       </div>
     </div>
   );

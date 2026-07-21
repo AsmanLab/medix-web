@@ -1,6 +1,17 @@
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { isAppError } from "@/api/errors";
+import { EmptyState } from "@/components/shared/EmptyState";
+import {
+  BannerSkeleton,
+  CardGridSkeleton,
+  DetailSkeleton,
+  ListSkeleton,
+  type CardGridSkeletonVariant,
+} from "@/components/shared/skeletons";
 import { Button } from "@/components/ui/button";
+
+export type LoadingVariant = "list" | "card-grid" | "detail" | "banner";
 
 type StateBlockProps = {
   isLoading?: boolean;
@@ -9,11 +20,43 @@ type StateBlockProps = {
   isEmpty?: boolean;
   onRetry?: () => void;
   loadingFallback?: ReactNode;
+  loadingVariant?: LoadingVariant;
+  loadingCount?: number;
+  cardGridVariant?: CardGridSkeletonVariant;
   emptyFallback?: ReactNode;
+  emptyIcon?: LucideIcon;
+  emptyAction?: ReactNode;
   emptyTitle?: string;
   emptyDescription?: string;
   children?: ReactNode;
 };
+
+function resolveLoadingFallback(
+  variant: LoadingVariant | undefined,
+  count: number,
+  cardGridVariant: CardGridSkeletonVariant,
+): ReactNode {
+  switch (variant) {
+    case "list":
+      return <ListSkeleton count={count} />;
+    case "card-grid":
+      return <CardGridSkeleton count={count} variant={cardGridVariant} />;
+    case "detail":
+      return <DetailSkeleton />;
+    case "banner":
+      return <BannerSkeleton />;
+    default:
+      return (
+        <div
+          className="rounded-3xl border border-border bg-card px-6 py-12 text-center text-sm text-muted-foreground"
+          role="status"
+          aria-live="polite"
+        >
+          Загрузка…
+        </div>
+      );
+  }
+}
 
 export function StateBlock({
   isLoading,
@@ -22,7 +65,12 @@ export function StateBlock({
   isEmpty,
   onRetry,
   loadingFallback,
+  loadingVariant,
+  loadingCount = 4,
+  cardGridVariant = "category",
   emptyFallback,
+  emptyIcon,
+  emptyAction,
   emptyTitle = "Пока пусто",
   emptyDescription = "Данные появятся после публикации.",
   children,
@@ -30,15 +78,8 @@ export function StateBlock({
   if (isLoading) {
     return (
       <>
-        {loadingFallback ?? (
-          <div
-            className="rounded-3xl border border-border bg-card px-6 py-12 text-center text-sm text-muted-foreground"
-            role="status"
-            aria-live="polite"
-          >
-            Загрузка…
-          </div>
-        )}
+        {loadingFallback ??
+          resolveLoadingFallback(loadingVariant, loadingCount, cardGridVariant)}
       </>
     );
   }
@@ -72,12 +113,12 @@ export function StateBlock({
     return (
       <>
         {emptyFallback ?? (
-          <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center">
-            <p className="font-semibold">{emptyTitle}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {emptyDescription}
-            </p>
-          </div>
+          <EmptyState
+            icon={emptyIcon}
+            title={emptyTitle}
+            description={emptyDescription}
+            action={emptyAction}
+          />
         )}
       </>
     );

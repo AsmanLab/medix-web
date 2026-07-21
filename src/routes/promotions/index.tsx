@@ -56,23 +56,19 @@ function PromotionsListPage() {
           error={listQuery.error}
           isEmpty={listQuery.isSuccess && items.length === 0}
           onRetry={() => void listQuery.refetch()}
+          loadingVariant="list"
+          loadingCount={3}
+          emptyIcon={Tag}
           emptyTitle="Акций пока нет"
-          emptyDescription="Следите за обновлениями — скоро появятся специальные предложения."
-          emptyFallback={
-            <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center">
-              <Tag className="mx-auto h-8 w-8 text-primary" />
-              <p className="mt-3 font-semibold">Акций пока нет</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Загляните в каталог — там актуальные позиции.
-              </p>
-              <Link
-                to="/catalog"
-                search={{ q: undefined }}
-                className="mt-5 inline-flex text-sm font-semibold text-primary"
-              >
-                В каталог
-              </Link>
-            </div>
+          emptyDescription="Загляните в каталог — там актуальные позиции."
+          emptyAction={
+            <Link
+              to="/catalog"
+              search={{ q: undefined }}
+              className="inline-flex text-sm font-semibold text-primary"
+            >
+              В каталог
+            </Link>
           }
         >
           <ul className="grid gap-4 sm:grid-cols-2">

@@ -144,6 +144,7 @@ function CategoryPage() {
         error={categoriesQuery.error}
         isEmpty={notFound}
         onRetry={() => void categoriesQuery.refetch()}
+        loadingVariant="detail"
         emptyTitle="Категория не найдена"
         emptyDescription="Проверьте ссылку или вернитесь в каталог."
       >
@@ -242,6 +243,9 @@ function CategoryPage() {
                   error={productsQuery.error}
                   isEmpty={productsQuery.isSuccess && products.length === 0}
                   onRetry={() => void productsQuery.refetch()}
+                  loadingVariant="card-grid"
+                  cardGridVariant="catalog"
+                  loadingCount={6}
                   emptyTitle="Товары не найдены"
                   emptyDescription="Измените поиск или выберите другую подкатегорию."
                 >

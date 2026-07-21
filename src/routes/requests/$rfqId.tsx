@@ -138,6 +138,7 @@ function RequestDetailPage() {
           isError={detailQuery.isError}
           error={detailQuery.error}
           onRetry={() => void detailQuery.refetch()}
+          loadingVariant="detail"
         >
           {rfq ? (
             <div className="space-y-6">

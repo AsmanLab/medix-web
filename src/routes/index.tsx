@@ -14,6 +14,7 @@ import { fetchMediaDownloadUrl } from "@/api/media";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { BannerSkeleton } from "@/components/shared/skeletons";
 import { availabilityLabel } from "@/features/catalog/availability";
 import { buildCategoryTree } from "@/features/catalog/map-category";
 import { BannerSlider } from "@/features/home/BannerSlider";
@@ -107,7 +108,7 @@ function HomePage() {
     <AppShell>
       <div className="space-y-14">
         {bannersQuery.isLoading ? (
-          <div className="min-h-[360px] animate-pulse rounded-3xl bg-muted/50 sm:min-h-[420px]" />
+          <BannerSkeleton />
         ) : (
           <BannerSlider banners={banners} imageById={imagesQuery.data ?? {}} />
         )}
@@ -137,6 +138,8 @@ function HomePage() {
             error={categoriesQuery.error}
             isEmpty={categoriesQuery.isSuccess && rootCategories.length === 0}
             onRetry={() => void categoriesQuery.refetch()}
+            loadingVariant="card-grid"
+            loadingCount={8}
             emptyTitle="Категории пока не опубликованы"
             emptyDescription="Разделы появятся после публикации в админке."
           >
@@ -187,6 +190,9 @@ function HomePage() {
             error={productsQuery.error}
             isEmpty={productsQuery.isSuccess && products.length === 0}
             onRetry={() => void productsQuery.refetch()}
+            loadingVariant="card-grid"
+            cardGridVariant="product"
+            loadingCount={4}
             emptyTitle="Товары пока не опубликованы"
             emptyDescription="Позиции появятся после публикации каталога."
           >
