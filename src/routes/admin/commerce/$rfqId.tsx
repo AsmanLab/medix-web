@@ -1,10 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { listManagerCustomers } from "@/api/customers";
 import { isAppError } from "@/api/errors";
+import {
+  downloadManagerInvoice,
+  fetchManagerInvoiceByRfq,
+  publishManagerInvoice,
+} from "@/api/manager-invoice";
 import {
   convertManagerRfq,
   fetchManagerRfq,
@@ -50,6 +55,20 @@ function ManagerRfqDetailPage() {
     queryFn: ({ signal }) => listManagerCustomers(null, signal),
   });
 
+  const invoiceQuery = useQuery({
+    queryKey: queryKeys.managerRfq.invoice(rfqId),
+    queryFn: async ({ signal }) => {
+      try {
+        return await fetchManagerInvoiceByRfq(rfqId, signal);
+      } catch (err) {
+        if (isAppError(err) && err.status === 404) return null;
+        throw err;
+      }
+    },
+    enabled: !!detailQuery.data,
+    retry: false,
+  });
+
   const rfq = detailQuery.data;
   const customer = useMemo(() => {
     if (!rfq) return null;
@@ -91,6 +110,9 @@ function ManagerRfqDetailPage() {
     await queryClient.invalidateQueries({ queryKey: queryKeys.managerRfq.all });
     await queryClient.invalidateQueries({
       queryKey: queryKeys.managerRfq.detail(rfqId),
+    });
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.managerRfq.invoice(rfqId),
     });
   }
 
@@ -151,6 +173,19 @@ function ManagerRfqDetailPage() {
     },
   });
 
+  const publishInvoiceMutation = useMutation({
+    mutationFn: (invoiceId: string) => publishManagerInvoice(invoiceId),
+    onSuccess: async () => {
+      toast.success("Счёт опубликован для клиента");
+      await invalidate();
+    },
+    onError: (err) => {
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось опубликовать счёт",
+      );
+    },
+  });
+
   const tone = rfq ? rfqStatusTone(rfq.status) : "muted";
   const isMine = !!rfq?.manager_id && rfq.manager_id === user?.userId;
   const canTake = rfq && !rfq.manager_id && rfq.status === "submitted";
@@ -159,6 +194,32 @@ function ManagerRfqDetailPage() {
     (rfq.status === "in_review" || rfq.status === "quoted") &&
     (isMine || user?.role === "admin");
   const canConvert = rfq?.status === "accepted" && (isMine || user?.role === "admin");
+  const invoice = invoiceQuery.data;
+  const canManageInvoice = isMine || user?.role === "admin";
+  const canPublishInvoice =
+    !!invoice &&
+    invoice.status === "draft" &&
+    canManageInvoice;
+  const canDownloadInvoice =
+    !!invoice && (!!invoice.pdf_key || !!invoice.pdf_url || invoice.status === "published");
+
+  async function onDownloadInvoice() {
+    if (!invoice) return;
+    try {
+      const res = await downloadManagerInvoice(invoice.id);
+      window.open(res.download_url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      if (invoice.pdf_url) {
+        window.open(invoice.pdf_url, "_blank", "noopener,noreferrer");
+        return;
+      }
+      toast.error(
+        isAppError(err)
+          ? err.message
+          : "PDF ещё не готов — опубликуйте счёт и подождите генерацию",
+      );
+    }
+  }
 
   function updateLine(key: string, patch: Partial<QuoteLine>) {
     setLines((prev) =>
@@ -445,6 +506,116 @@ function ManagerRfqDetailPage() {
                       : "Отправить КП клиенту"}
                   </Button>
                 ) : null}
+              </section>
+            ) : null}
+
+            {rfq.status === "quoted" ||
+            rfq.status === "accepted" ||
+            invoice ||
+            invoiceQuery.isFetching ? (
+              <section className="space-y-4 rounded-3xl border border-border bg-card p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-sm font-bold">Счёт</h2>
+                  {invoice ? (
+                    <span
+                      className={cn(
+                        "rounded-lg px-2 py-1 text-[10px] font-bold uppercase",
+                        invoice.status === "published"
+                          ? "bg-emerald-500/15 text-emerald-700"
+                          : "bg-amber-500/15 text-amber-700",
+                      )}
+                    >
+                      {invoice.status === "published"
+                        ? "Опубликован"
+                        : "Черновик"}
+                    </span>
+                  ) : null}
+                </div>
+
+                {invoiceQuery.isLoading ? (
+                  <p className="text-sm text-muted-foreground">Загрузка счёта…</p>
+                ) : !invoice ? (
+                  <p className="text-sm text-muted-foreground">
+                    Счёт появится после отправки КП (черновик создаётся
+                    автоматически).
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                      <span>
+                        Итого:{" "}
+                        <span className="font-semibold text-foreground">
+                          {invoice.total ?? "—"}
+                        </span>
+                      </span>
+                      <span className="font-mono text-xs">
+                        id {invoice.id.slice(0, 8)}…
+                      </span>
+                    </div>
+
+                    <ul className="divide-y divide-border rounded-2xl border border-border">
+                      {invoice.items.map((item, i) => (
+                        <li
+                          key={`${item.sku}-${i}`}
+                          className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2 text-sm"
+                        >
+                          <div className="min-w-0">
+                            <div className="font-semibold">{item.name}</div>
+                            <div className="font-mono text-xs text-muted-foreground">
+                              {item.sku}
+                            </div>
+                          </div>
+                          <div className="text-xs text-right">
+                            ×{item.qty}
+                            {item.unit_price ? ` · ${item.unit_price}` : ""}
+                            {item.line_total ? (
+                              <div className="font-semibold text-foreground">
+                                {item.line_total}
+                              </div>
+                            ) : null}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {invoice.requisites.trim() ? (
+                      <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                        {invoice.requisites}
+                      </p>
+                    ) : null}
+
+                    <div className="flex flex-wrap gap-2">
+                      {canPublishInvoice ? (
+                        <Button
+                          disabled={publishInvoiceMutation.isPending}
+                          onClick={() =>
+                            publishInvoiceMutation.mutate(invoice.id)
+                          }
+                        >
+                          {publishInvoiceMutation.isPending
+                            ? "Публикация…"
+                            : "Опубликовать счёт"}
+                        </Button>
+                      ) : null}
+                      {canDownloadInvoice ? (
+                        <Button
+                          variant="outline"
+                          onClick={() => void onDownloadInvoice()}
+                        >
+                          <Download className="mr-1.5 h-4 w-4" aria-hidden />
+                          Скачать PDF
+                        </Button>
+                      ) : null}
+                    </div>
+
+                    {invoice.status === "published" && !invoice.pdf_key ? (
+                      <p className="text-xs text-muted-foreground">
+                        PDF генерируется в фоне — обновите страницу через
+                        несколько секунд.
+                      </p>
+                    ) : null}
+                  </>
+                )}
               </section>
             ) : null}
           </>
