@@ -14,6 +14,63 @@ export function fetchCategories(signal?: AbortSignal): Promise<CategoryOut[]> {
   });
 }
 
+/** Admin: all categories including inactive. */
+export function fetchAdminCategories(
+  signal?: AbortSignal,
+): Promise<CategoryOut[]> {
+  return apiRequest<CategoryOut[]>({
+    path: "/admin/catalog/categories",
+    signal,
+  });
+}
+
+export type CreateCategoryBody = {
+  name_ru: string;
+  name_en?: string;
+  slug: string;
+  parent_id?: string | null;
+  sort?: number;
+  image_key?: string;
+  seo_title?: string;
+  seo_description?: string;
+  is_active?: boolean;
+};
+
+export type UpdateCategoryBody = {
+  name_ru?: string;
+  name_en?: string;
+  slug?: string;
+  parent_id?: string | null;
+  sort?: number;
+  image_key?: string;
+  seo_title?: string;
+  seo_description?: string;
+  is_active?: boolean;
+};
+
+export function createAdminCategory(body: CreateCategoryBody) {
+  return apiRequest<CategoryOut>({
+    method: "POST",
+    path: "/admin/catalog/categories",
+    body,
+  });
+}
+
+export function updateAdminCategory(categoryId: string, body: UpdateCategoryBody) {
+  return apiRequest<CategoryOut>({
+    method: "PATCH",
+    path: `/admin/catalog/categories/${encodeURIComponent(categoryId)}`,
+    body,
+  });
+}
+
+export function deleteAdminCategory(categoryId: string) {
+  return apiRequest<void>({
+    method: "DELETE",
+    path: `/admin/catalog/categories/${encodeURIComponent(categoryId)}`,
+  });
+}
+
 export type FetchProductsParams = {
   q?: string;
   category_id?: string | null;
