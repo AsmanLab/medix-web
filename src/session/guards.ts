@@ -61,3 +61,42 @@ export async function requireGuest() {
 export async function requireAdmin() {
   return requireAuth({ roles: ["admin"], loginTo: "/login" });
 }
+
+type RequireStaffPanelOptions = {
+  /**
+   * Roles that are allowed to access `/admin/*`.
+   * If an authenticated user has another role, we redirect them to `/login`.
+   */
+  roles: UserRole[];
+};
+
+/**
+ * Staff panel guard for `/admin/*`.
+ *
+ * Notes:
+ * - If unauthenticated => redirect to `/login`
+ * - If authenticated but role is not allowed => redirect to `/login`
+ *   (per S7 acceptance criteria).
+ */
+export async function requireStaffPanel({ roles }: RequireStaffPanelOptions) {
+  await bootstrapSession();
+  const session = getSessionSnapshot();
+  const redirectTo = typeof window !== "undefined" ? window.location.pathname : undefined;
+
+  const loginTo = "/login";
+  if (session.status !== "authenticated" || !session.user) {
+    throw redirect({
+      to: loginTo,
+      search: { redirect: redirectTo, phone: undefined },
+    });
+  }
+
+  if (roles.length && !hasRole(session.user, roles)) {
+    throw redirect({
+      to: loginTo,
+      search: { redirect: redirectTo, phone: undefined },
+    });
+  }
+
+  return session;
+}
