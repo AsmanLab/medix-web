@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Boxes, FolderTree } from "lucide-react";
+import { Boxes, FolderTree, Package } from "lucide-react";
 import { requireStaffPanel } from "@/session/guards";
 
 export const Route = createFileRoute("/admin/catalog/")({
@@ -35,9 +35,18 @@ function AdminCatalogPage() {
             </p>
           </div>
         </Link>
-        <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-5 text-sm text-muted-foreground">
-          Товары — следующий этап админки каталога
-        </div>
+        <Link
+          to="/admin/catalog/products"
+          className="flex items-start gap-3 rounded-3xl border border-border bg-card p-5 transition hover:border-primary/40"
+        >
+          <Package className="mt-0.5 h-5 w-5 text-primary" aria-hidden />
+          <div>
+            <div className="font-semibold">Товары</div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              CRUD, публикация, медиа и импорт
+            </p>
+          </div>
+        </Link>
       </div>
     </div>
   );

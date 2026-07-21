@@ -54,6 +54,9 @@ import { Route as ServiceRequestsRequestIdRouteImport } from './routes/service/r
 import { Route as AdminCatalogCategoriesIndexRouteImport } from './routes/admin/catalog/categories/index'
 import { Route as AdminCatalogCategoriesCategoryIdRouteImport } from './routes/admin/catalog/categories/$categoryId'
 import { Route as AdminCatalogCategoriesNewRouteImport } from './routes/admin/catalog/categories/new'
+import { Route as AdminCatalogProductsIndexRouteImport } from './routes/admin/catalog/products/index'
+import { Route as AdminCatalogProductsProductIdRouteImport } from './routes/admin/catalog/products/$productId'
+import { Route as AdminCatalogProductsNewRouteImport } from './routes/admin/catalog/products/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -284,6 +287,23 @@ const AdminCatalogCategoriesNewRoute =
     path: '/catalog/categories/new',
     getParentRoute: () => AdminRouteRoute,
   } as any)
+const AdminCatalogProductsIndexRoute =
+  AdminCatalogProductsIndexRouteImport.update({
+    id: '/catalog/products/',
+    path: '/catalog/products/',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
+const AdminCatalogProductsProductIdRoute =
+  AdminCatalogProductsProductIdRouteImport.update({
+    id: '/catalog/products/$productId',
+    path: '/catalog/products/$productId',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
+const AdminCatalogProductsNewRoute = AdminCatalogProductsNewRouteImport.update({
+  id: '/catalog/products/new',
+  path: '/catalog/products/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -330,7 +350,10 @@ export interface FileRoutesByFullPath {
   '/service/requests/': typeof ServiceRequestsIndexRoute
   '/admin/catalog/categories/$categoryId': typeof AdminCatalogCategoriesCategoryIdRoute
   '/admin/catalog/categories/new': typeof AdminCatalogCategoriesNewRoute
+  '/admin/catalog/products/$productId': typeof AdminCatalogProductsProductIdRoute
+  '/admin/catalog/products/new': typeof AdminCatalogProductsNewRoute
   '/admin/catalog/categories/': typeof AdminCatalogCategoriesIndexRoute
+  '/admin/catalog/products/': typeof AdminCatalogProductsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -372,7 +395,10 @@ export interface FileRoutesByTo {
   '/service/requests': typeof ServiceRequestsIndexRoute
   '/admin/catalog/categories/$categoryId': typeof AdminCatalogCategoriesCategoryIdRoute
   '/admin/catalog/categories/new': typeof AdminCatalogCategoriesNewRoute
+  '/admin/catalog/products/$productId': typeof AdminCatalogProductsProductIdRoute
+  '/admin/catalog/products/new': typeof AdminCatalogProductsNewRoute
   '/admin/catalog/categories': typeof AdminCatalogCategoriesIndexRoute
+  '/admin/catalog/products': typeof AdminCatalogProductsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -420,7 +446,10 @@ export interface FileRoutesById {
   '/service/requests/': typeof ServiceRequestsIndexRoute
   '/admin/catalog/categories/$categoryId': typeof AdminCatalogCategoriesCategoryIdRoute
   '/admin/catalog/categories/new': typeof AdminCatalogCategoriesNewRoute
+  '/admin/catalog/products/$productId': typeof AdminCatalogProductsProductIdRoute
+  '/admin/catalog/products/new': typeof AdminCatalogProductsNewRoute
   '/admin/catalog/categories/': typeof AdminCatalogCategoriesIndexRoute
+  '/admin/catalog/products/': typeof AdminCatalogProductsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -469,7 +498,10 @@ export interface FileRouteTypes {
     | '/service/requests/'
     | '/admin/catalog/categories/$categoryId'
     | '/admin/catalog/categories/new'
+    | '/admin/catalog/products/$productId'
+    | '/admin/catalog/products/new'
     | '/admin/catalog/categories/'
+    | '/admin/catalog/products/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -511,7 +543,10 @@ export interface FileRouteTypes {
     | '/service/requests'
     | '/admin/catalog/categories/$categoryId'
     | '/admin/catalog/categories/new'
+    | '/admin/catalog/products/$productId'
+    | '/admin/catalog/products/new'
     | '/admin/catalog/categories'
+    | '/admin/catalog/products'
   id:
     | '__root__'
     | '/'
@@ -558,7 +593,10 @@ export interface FileRouteTypes {
     | '/service/requests/'
     | '/admin/catalog/categories/$categoryId'
     | '/admin/catalog/categories/new'
+    | '/admin/catalog/products/$productId'
+    | '/admin/catalog/products/new'
     | '/admin/catalog/categories/'
+    | '/admin/catalog/products/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -904,6 +942,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCatalogCategoriesNewRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/catalog/products/': {
+      id: '/admin/catalog/products/'
+      path: '/catalog/products'
+      fullPath: '/admin/catalog/products/'
+      preLoaderRoute: typeof AdminCatalogProductsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/catalog/products/$productId': {
+      id: '/admin/catalog/products/$productId'
+      path: '/catalog/products/$productId'
+      fullPath: '/admin/catalog/products/$productId'
+      preLoaderRoute: typeof AdminCatalogProductsProductIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/catalog/products/new': {
+      id: '/admin/catalog/products/new'
+      path: '/catalog/products/new'
+      fullPath: '/admin/catalog/products/new'
+      preLoaderRoute: typeof AdminCatalogProductsNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
@@ -919,7 +978,10 @@ interface AdminRouteRouteChildren {
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
   AdminCatalogCategoriesCategoryIdRoute: typeof AdminCatalogCategoriesCategoryIdRoute
   AdminCatalogCategoriesNewRoute: typeof AdminCatalogCategoriesNewRoute
+  AdminCatalogProductsProductIdRoute: typeof AdminCatalogProductsProductIdRoute
+  AdminCatalogProductsNewRoute: typeof AdminCatalogProductsNewRoute
   AdminCatalogCategoriesIndexRoute: typeof AdminCatalogCategoriesIndexRoute
+  AdminCatalogProductsIndexRoute: typeof AdminCatalogProductsIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
@@ -934,7 +996,10 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminUsersIndexRoute: AdminUsersIndexRoute,
   AdminCatalogCategoriesCategoryIdRoute: AdminCatalogCategoriesCategoryIdRoute,
   AdminCatalogCategoriesNewRoute: AdminCatalogCategoriesNewRoute,
+  AdminCatalogProductsProductIdRoute: AdminCatalogProductsProductIdRoute,
+  AdminCatalogProductsNewRoute: AdminCatalogProductsNewRoute,
   AdminCatalogCategoriesIndexRoute: AdminCatalogCategoriesIndexRoute,
+  AdminCatalogProductsIndexRoute: AdminCatalogProductsIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(

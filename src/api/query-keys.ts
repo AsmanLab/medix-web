@@ -18,6 +18,10 @@ export const queryKeys = {
       ] as const,
     product: (slug: string) =>
       [...queryKeys.catalog.all, "product", slug] as const,
+    adminProducts: (params?: Record<string, unknown>) =>
+      [...queryKeys.catalog.all, "admin-products", params ?? {}] as const,
+    adminProduct: (id: string) =>
+      [...queryKeys.catalog.all, "admin-product", id] as const,
   },
   cms: {
     all: ["cms"] as const,

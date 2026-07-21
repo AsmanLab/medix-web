@@ -126,3 +126,159 @@ export async function fetchProductsForCategories(
   }
   return [...byId.values()];
 }
+
+export type FetchAdminProductsParams = {
+  q?: string;
+  category_id?: string | null;
+  is_published?: boolean | null;
+  cursor?: string | null;
+  limit?: number;
+};
+
+export function fetchAdminProducts(
+  params: FetchAdminProductsParams = {},
+  signal?: AbortSignal,
+): Promise<ProductListOut[]> {
+  return apiRequest<ProductListOut[]>({
+    path: "/admin/catalog/products",
+    query: {
+      q: params.q?.trim() || undefined,
+      category_id: params.category_id || undefined,
+      is_published:
+        params.is_published === undefined || params.is_published === null
+          ? undefined
+          : params.is_published,
+      cursor: params.cursor || undefined,
+      limit: params.limit ?? 40,
+    },
+    signal,
+  });
+}
+
+export function fetchAdminProduct(
+  productId: string,
+  signal?: AbortSignal,
+): Promise<ProductDetailOut> {
+  return apiRequest<ProductDetailOut>({
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}`,
+    signal,
+  });
+}
+
+export type CreateProductBody = {
+  sku: string;
+  name_ru: string;
+  name_en?: string;
+  slug: string;
+  category_ids?: string[];
+  manufacturer?: string;
+  country?: string;
+  description_ru?: string;
+  availability?: string;
+  price_amount?: number | null;
+};
+
+export type UpdateProductBody = {
+  sku?: string;
+  name_ru?: string;
+  name_en?: string;
+  slug?: string;
+  category_ids?: string[];
+  manufacturer?: string;
+  country?: string;
+  description_ru?: string;
+  availability?: string;
+  price_amount?: number | null;
+};
+
+export function createAdminProduct(body: CreateProductBody) {
+  return apiRequest<ProductListOut>({
+    method: "POST",
+    path: "/admin/catalog/products",
+    body,
+  });
+}
+
+export function updateAdminProduct(productId: string, body: UpdateProductBody) {
+  return apiRequest<ProductDetailOut>({
+    method: "PATCH",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}`,
+    body,
+  });
+}
+
+export function deleteAdminProduct(productId: string) {
+  return apiRequest<void>({
+    method: "DELETE",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}`,
+  });
+}
+
+export function publishAdminProduct(productId: string) {
+  return apiRequest<void>({
+    method: "POST",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}/publish`,
+  });
+}
+
+export function unpublishAdminProduct(productId: string) {
+  return apiRequest<void>({
+    method: "POST",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}/unpublish`,
+  });
+}
+
+export function attachAdminProductImage(
+  productId: string,
+  body: { s3_key: string; sort?: number; is_primary?: boolean },
+) {
+  return apiRequest<ProductDetailOut>({
+    method: "POST",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}/images`,
+    body,
+  });
+}
+
+export function detachAdminProductImage(productId: string, imageId: string) {
+  return apiRequest<void>({
+    method: "DELETE",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}/images/${encodeURIComponent(imageId)}`,
+  });
+}
+
+export function attachAdminProductDocument(
+  productId: string,
+  body: { name: string; s3_key: string },
+) {
+  return apiRequest<ProductDetailOut>({
+    method: "POST",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}/documents`,
+    body,
+  });
+}
+
+export function detachAdminProductDocument(
+  productId: string,
+  documentId: string,
+) {
+  return apiRequest<void>({
+    method: "DELETE",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}/documents/${encodeURIComponent(documentId)}`,
+  });
+}
+
+export type ImportCatalogResult = {
+  created: number;
+  updated: number;
+  errors: number;
+};
+
+export function importCatalogFile(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return apiRequest<ImportCatalogResult>({
+    method: "POST",
+    path: "/admin/catalog/import",
+    rawBody: form,
+  });
+}
