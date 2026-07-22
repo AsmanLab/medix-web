@@ -46,6 +46,7 @@ import { Route as ServiceSuccessRouteImport } from './routes/service/success'
 import { Route as AdminBannersIndexRouteImport } from './routes/admin/banners/index'
 import { Route as AdminCatalogIndexRouteImport } from './routes/admin/catalog/index'
 import { Route as AdminCmsIndexRouteImport } from './routes/admin/cms/index'
+import { Route as AdminCmsContactsRouteImport } from './routes/admin/cms/contacts'
 import { Route as AdminCommerceIndexRouteImport } from './routes/admin/commerce/index'
 import { Route as AdminCommerceRfqIdRouteImport } from './routes/admin/commerce/$rfqId'
 import { Route as AdminReportsIndexRouteImport } from './routes/admin/reports/index'
@@ -61,6 +62,12 @@ import { Route as AdminCatalogCategoriesNewRouteImport } from './routes/admin/ca
 import { Route as AdminCatalogProductsIndexRouteImport } from './routes/admin/catalog/products/index'
 import { Route as AdminCatalogProductsProductIdRouteImport } from './routes/admin/catalog/products/$productId'
 import { Route as AdminCatalogProductsNewRouteImport } from './routes/admin/catalog/products/new'
+import { Route as AdminCmsPagesIndexRouteImport } from './routes/admin/cms/pages/index'
+import { Route as AdminCmsPagesSlugRouteImport } from './routes/admin/cms/pages/$slug'
+import { Route as AdminCmsPagesNewRouteImport } from './routes/admin/cms/pages/new'
+import { Route as AdminCmsPromotionsIndexRouteImport } from './routes/admin/cms/promotions/index'
+import { Route as AdminCmsPromotionsPromotionIdRouteImport } from './routes/admin/cms/promotions/$promotionId'
+import { Route as AdminCmsPromotionsNewRouteImport } from './routes/admin/cms/promotions/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -247,6 +254,11 @@ const AdminCmsIndexRoute = AdminCmsIndexRouteImport.update({
   path: '/cms/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminCmsContactsRoute = AdminCmsContactsRouteImport.update({
+  id: '/cms/contacts',
+  path: '/cms/contacts',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminCommerceIndexRoute = AdminCommerceIndexRouteImport.update({
   id: '/commerce/',
   path: '/commerce/',
@@ -329,6 +341,37 @@ const AdminCatalogProductsNewRoute = AdminCatalogProductsNewRouteImport.update({
   path: '/catalog/products/new',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminCmsPagesIndexRoute = AdminCmsPagesIndexRouteImport.update({
+  id: '/cms/pages/',
+  path: '/cms/pages/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCmsPagesSlugRoute = AdminCmsPagesSlugRouteImport.update({
+  id: '/cms/pages/$slug',
+  path: '/cms/pages/$slug',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCmsPagesNewRoute = AdminCmsPagesNewRouteImport.update({
+  id: '/cms/pages/new',
+  path: '/cms/pages/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCmsPromotionsIndexRoute = AdminCmsPromotionsIndexRouteImport.update({
+  id: '/cms/promotions/',
+  path: '/cms/promotions/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCmsPromotionsPromotionIdRoute =
+  AdminCmsPromotionsPromotionIdRouteImport.update({
+    id: '/cms/promotions/$promotionId',
+    path: '/cms/promotions/$promotionId',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
+const AdminCmsPromotionsNewRoute = AdminCmsPromotionsNewRouteImport.update({
+  id: '/cms/promotions/new',
+  path: '/cms/promotions/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -365,6 +408,7 @@ export interface FileRoutesByFullPath {
   '/promotions/': typeof PromotionsIndexRoute
   '/requests/': typeof RequestsIndexRoute
   '/service/': typeof ServiceIndexRoute
+  '/admin/cms/contacts': typeof AdminCmsContactsRoute
   '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
   '/admin/service-desk/$requestId': typeof AdminServiceDeskRequestIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
@@ -381,8 +425,14 @@ export interface FileRoutesByFullPath {
   '/admin/catalog/categories/new': typeof AdminCatalogCategoriesNewRoute
   '/admin/catalog/products/$productId': typeof AdminCatalogProductsProductIdRoute
   '/admin/catalog/products/new': typeof AdminCatalogProductsNewRoute
+  '/admin/cms/pages/$slug': typeof AdminCmsPagesSlugRoute
+  '/admin/cms/pages/new': typeof AdminCmsPagesNewRoute
+  '/admin/cms/promotions/$promotionId': typeof AdminCmsPromotionsPromotionIdRoute
+  '/admin/cms/promotions/new': typeof AdminCmsPromotionsNewRoute
   '/admin/catalog/categories/': typeof AdminCatalogCategoriesIndexRoute
   '/admin/catalog/products/': typeof AdminCatalogProductsIndexRoute
+  '/admin/cms/pages/': typeof AdminCmsPagesIndexRoute
+  '/admin/cms/promotions/': typeof AdminCmsPromotionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -413,6 +463,7 @@ export interface FileRoutesByTo {
   '/promotions': typeof PromotionsIndexRoute
   '/requests': typeof RequestsIndexRoute
   '/service': typeof ServiceIndexRoute
+  '/admin/cms/contacts': typeof AdminCmsContactsRoute
   '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
   '/admin/service-desk/$requestId': typeof AdminServiceDeskRequestIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
@@ -429,8 +480,14 @@ export interface FileRoutesByTo {
   '/admin/catalog/categories/new': typeof AdminCatalogCategoriesNewRoute
   '/admin/catalog/products/$productId': typeof AdminCatalogProductsProductIdRoute
   '/admin/catalog/products/new': typeof AdminCatalogProductsNewRoute
+  '/admin/cms/pages/$slug': typeof AdminCmsPagesSlugRoute
+  '/admin/cms/pages/new': typeof AdminCmsPagesNewRoute
+  '/admin/cms/promotions/$promotionId': typeof AdminCmsPromotionsPromotionIdRoute
+  '/admin/cms/promotions/new': typeof AdminCmsPromotionsNewRoute
   '/admin/catalog/categories': typeof AdminCatalogCategoriesIndexRoute
   '/admin/catalog/products': typeof AdminCatalogProductsIndexRoute
+  '/admin/cms/pages': typeof AdminCmsPagesIndexRoute
+  '/admin/cms/promotions': typeof AdminCmsPromotionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -468,6 +525,7 @@ export interface FileRoutesById {
   '/promotions/': typeof PromotionsIndexRoute
   '/requests/': typeof RequestsIndexRoute
   '/service/': typeof ServiceIndexRoute
+  '/admin/cms/contacts': typeof AdminCmsContactsRoute
   '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
   '/admin/service-desk/$requestId': typeof AdminServiceDeskRequestIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
@@ -484,8 +542,14 @@ export interface FileRoutesById {
   '/admin/catalog/categories/new': typeof AdminCatalogCategoriesNewRoute
   '/admin/catalog/products/$productId': typeof AdminCatalogProductsProductIdRoute
   '/admin/catalog/products/new': typeof AdminCatalogProductsNewRoute
+  '/admin/cms/pages/$slug': typeof AdminCmsPagesSlugRoute
+  '/admin/cms/pages/new': typeof AdminCmsPagesNewRoute
+  '/admin/cms/promotions/$promotionId': typeof AdminCmsPromotionsPromotionIdRoute
+  '/admin/cms/promotions/new': typeof AdminCmsPromotionsNewRoute
   '/admin/catalog/categories/': typeof AdminCatalogCategoriesIndexRoute
   '/admin/catalog/products/': typeof AdminCatalogProductsIndexRoute
+  '/admin/cms/pages/': typeof AdminCmsPagesIndexRoute
+  '/admin/cms/promotions/': typeof AdminCmsPromotionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -524,6 +588,7 @@ export interface FileRouteTypes {
     | '/promotions/'
     | '/requests/'
     | '/service/'
+    | '/admin/cms/contacts'
     | '/admin/commerce/$rfqId'
     | '/admin/service-desk/$requestId'
     | '/admin/users/$customerId'
@@ -540,8 +605,14 @@ export interface FileRouteTypes {
     | '/admin/catalog/categories/new'
     | '/admin/catalog/products/$productId'
     | '/admin/catalog/products/new'
+    | '/admin/cms/pages/$slug'
+    | '/admin/cms/pages/new'
+    | '/admin/cms/promotions/$promotionId'
+    | '/admin/cms/promotions/new'
     | '/admin/catalog/categories/'
     | '/admin/catalog/products/'
+    | '/admin/cms/pages/'
+    | '/admin/cms/promotions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -572,6 +643,7 @@ export interface FileRouteTypes {
     | '/promotions'
     | '/requests'
     | '/service'
+    | '/admin/cms/contacts'
     | '/admin/commerce/$rfqId'
     | '/admin/service-desk/$requestId'
     | '/admin/users/$customerId'
@@ -588,8 +660,14 @@ export interface FileRouteTypes {
     | '/admin/catalog/categories/new'
     | '/admin/catalog/products/$productId'
     | '/admin/catalog/products/new'
+    | '/admin/cms/pages/$slug'
+    | '/admin/cms/pages/new'
+    | '/admin/cms/promotions/$promotionId'
+    | '/admin/cms/promotions/new'
     | '/admin/catalog/categories'
     | '/admin/catalog/products'
+    | '/admin/cms/pages'
+    | '/admin/cms/promotions'
   id:
     | '__root__'
     | '/'
@@ -626,6 +704,7 @@ export interface FileRouteTypes {
     | '/promotions/'
     | '/requests/'
     | '/service/'
+    | '/admin/cms/contacts'
     | '/admin/commerce/$rfqId'
     | '/admin/service-desk/$requestId'
     | '/admin/users/$customerId'
@@ -642,8 +721,14 @@ export interface FileRouteTypes {
     | '/admin/catalog/categories/new'
     | '/admin/catalog/products/$productId'
     | '/admin/catalog/products/new'
+    | '/admin/cms/pages/$slug'
+    | '/admin/cms/pages/new'
+    | '/admin/cms/promotions/$promotionId'
+    | '/admin/cms/promotions/new'
     | '/admin/catalog/categories/'
     | '/admin/catalog/products/'
+    | '/admin/cms/pages/'
+    | '/admin/cms/promotions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -933,6 +1018,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCmsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/cms/contacts': {
+      id: '/admin/cms/contacts'
+      path: '/cms/contacts'
+      fullPath: '/admin/cms/contacts'
+      preLoaderRoute: typeof AdminCmsContactsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/commerce/': {
       id: '/admin/commerce/'
       path: '/commerce'
@@ -1038,11 +1130,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCatalogProductsNewRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/cms/pages/': {
+      id: '/admin/cms/pages/'
+      path: '/cms/pages'
+      fullPath: '/admin/cms/pages/'
+      preLoaderRoute: typeof AdminCmsPagesIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/cms/pages/$slug': {
+      id: '/admin/cms/pages/$slug'
+      path: '/cms/pages/$slug'
+      fullPath: '/admin/cms/pages/$slug'
+      preLoaderRoute: typeof AdminCmsPagesSlugRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/cms/pages/new': {
+      id: '/admin/cms/pages/new'
+      path: '/cms/pages/new'
+      fullPath: '/admin/cms/pages/new'
+      preLoaderRoute: typeof AdminCmsPagesNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/cms/promotions/': {
+      id: '/admin/cms/promotions/'
+      path: '/cms/promotions'
+      fullPath: '/admin/cms/promotions/'
+      preLoaderRoute: typeof AdminCmsPromotionsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/cms/promotions/$promotionId': {
+      id: '/admin/cms/promotions/$promotionId'
+      path: '/cms/promotions/$promotionId'
+      fullPath: '/admin/cms/promotions/$promotionId'
+      preLoaderRoute: typeof AdminCmsPromotionsPromotionIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/cms/promotions/new': {
+      id: '/admin/cms/promotions/new'
+      path: '/cms/promotions/new'
+      fullPath: '/admin/cms/promotions/new'
+      preLoaderRoute: typeof AdminCmsPromotionsNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminCmsContactsRoute: typeof AdminCmsContactsRoute
   AdminCommerceRfqIdRoute: typeof AdminCommerceRfqIdRoute
   AdminServiceDeskRequestIdRoute: typeof AdminServiceDeskRequestIdRoute
   AdminUsersCustomerIdRoute: typeof AdminUsersCustomerIdRoute
@@ -1057,12 +1192,19 @@ interface AdminRouteRouteChildren {
   AdminCatalogCategoriesNewRoute: typeof AdminCatalogCategoriesNewRoute
   AdminCatalogProductsProductIdRoute: typeof AdminCatalogProductsProductIdRoute
   AdminCatalogProductsNewRoute: typeof AdminCatalogProductsNewRoute
+  AdminCmsPagesSlugRoute: typeof AdminCmsPagesSlugRoute
+  AdminCmsPagesNewRoute: typeof AdminCmsPagesNewRoute
+  AdminCmsPromotionsPromotionIdRoute: typeof AdminCmsPromotionsPromotionIdRoute
+  AdminCmsPromotionsNewRoute: typeof AdminCmsPromotionsNewRoute
   AdminCatalogCategoriesIndexRoute: typeof AdminCatalogCategoriesIndexRoute
   AdminCatalogProductsIndexRoute: typeof AdminCatalogProductsIndexRoute
+  AdminCmsPagesIndexRoute: typeof AdminCmsPagesIndexRoute
+  AdminCmsPromotionsIndexRoute: typeof AdminCmsPromotionsIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
+  AdminCmsContactsRoute: AdminCmsContactsRoute,
   AdminCommerceRfqIdRoute: AdminCommerceRfqIdRoute,
   AdminServiceDeskRequestIdRoute: AdminServiceDeskRequestIdRoute,
   AdminUsersCustomerIdRoute: AdminUsersCustomerIdRoute,
@@ -1077,8 +1219,14 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminCatalogCategoriesNewRoute: AdminCatalogCategoriesNewRoute,
   AdminCatalogProductsProductIdRoute: AdminCatalogProductsProductIdRoute,
   AdminCatalogProductsNewRoute: AdminCatalogProductsNewRoute,
+  AdminCmsPagesSlugRoute: AdminCmsPagesSlugRoute,
+  AdminCmsPagesNewRoute: AdminCmsPagesNewRoute,
+  AdminCmsPromotionsPromotionIdRoute: AdminCmsPromotionsPromotionIdRoute,
+  AdminCmsPromotionsNewRoute: AdminCmsPromotionsNewRoute,
   AdminCatalogCategoriesIndexRoute: AdminCatalogCategoriesIndexRoute,
   AdminCatalogProductsIndexRoute: AdminCatalogProductsIndexRoute,
+  AdminCmsPagesIndexRoute: AdminCmsPagesIndexRoute,
+  AdminCmsPromotionsIndexRoute: AdminCmsPromotionsIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
