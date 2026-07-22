@@ -35,6 +35,12 @@ export const queryKeys = {
     promotionImages: (keys: string[]) =>
       [...queryKeys.cms.all, "promotion-images", [...keys].sort()] as const,
     contacts: () => [...queryKeys.cms.all, "contacts"] as const,
+    adminPages: () => [...queryKeys.cms.all, "admin-pages"] as const,
+    adminPage: (slug: string) =>
+      [...queryKeys.cms.all, "admin-page", slug] as const,
+    adminPromotions: () => [...queryKeys.cms.all, "admin-promotions"] as const,
+    adminPromotion: (id: string) =>
+      [...queryKeys.cms.all, "admin-promotion", id] as const,
   },
   rfq: {
     all: ["rfq"] as const,
