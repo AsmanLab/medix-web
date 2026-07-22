@@ -13,7 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as ContactsRouteImport } from './routes/contacts'
-import { Route as EngineerRouteImport } from './routes/engineer'
+import { Route as EngineerRouteRouteImport } from './routes/engineer/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ManagerRouteImport } from './routes/manager'
 import { Route as OrdersRouteRouteImport } from './routes/orders/route'
@@ -26,6 +26,8 @@ import { Route as CartIndexRouteImport } from './routes/cart/index'
 import { Route as CartSuccessRouteImport } from './routes/cart/success'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogCategoryIdRouteImport } from './routes/catalog/$categoryId'
+import { Route as EngineerIndexRouteImport } from './routes/engineer/index'
+import { Route as EngineerRequestIdRouteImport } from './routes/engineer/$requestId'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders/$orderId'
 import { Route as PagesSlugRouteImport } from './routes/pages/$slug'
@@ -48,6 +50,7 @@ import { Route as AdminCommerceIndexRouteImport } from './routes/admin/commerce/
 import { Route as AdminCommerceRfqIdRouteImport } from './routes/admin/commerce/$rfqId'
 import { Route as AdminReportsIndexRouteImport } from './routes/admin/reports/index'
 import { Route as AdminServiceDeskIndexRouteImport } from './routes/admin/service-desk/index'
+import { Route as AdminServiceDeskRequestIdRouteImport } from './routes/admin/service-desk/$requestId'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUsersCustomerIdRouteImport } from './routes/admin/users/$customerId'
 import { Route as ServiceRequestsIndexRouteImport } from './routes/service/requests/index'
@@ -79,7 +82,7 @@ const ContactsRoute = ContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EngineerRoute = EngineerRouteImport.update({
+const EngineerRouteRoute = EngineerRouteRouteImport.update({
   id: '/engineer',
   path: '/engineer',
   getParentRoute: () => rootRouteImport,
@@ -143,6 +146,16 @@ const CatalogCategoryIdRoute = CatalogCategoryIdRouteImport.update({
   id: '/catalog/$categoryId',
   path: '/catalog/$categoryId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const EngineerIndexRoute = EngineerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EngineerRouteRoute,
+} as any)
+const EngineerRequestIdRoute = EngineerRequestIdRouteImport.update({
+  id: '/$requestId',
+  path: '/$requestId',
+  getParentRoute: () => EngineerRouteRoute,
 } as any)
 const OrdersIndexRoute = OrdersIndexRouteImport.update({
   id: '/',
@@ -254,6 +267,12 @@ const AdminServiceDeskIndexRoute = AdminServiceDeskIndexRouteImport.update({
   path: '/service-desk/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminServiceDeskRequestIdRoute =
+  AdminServiceDeskRequestIdRouteImport.update({
+    id: '/service-desk/$requestId',
+    path: '/service-desk/$requestId',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -314,12 +333,12 @@ const AdminCatalogProductsNewRoute = AdminCatalogProductsNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/engineer': typeof EngineerRouteRouteWithChildren
   '/orders': typeof OrdersRouteRouteWithChildren
   '/profile': typeof ProfileRouteRouteWithChildren
   '/requests': typeof RequestsRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/contacts': typeof ContactsRoute
-  '/engineer': typeof EngineerRoute
   '/login': typeof LoginRoute
   '/manager': typeof ManagerRoute
   '/password-reset': typeof PasswordResetRoute
@@ -327,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/service/requests': typeof ServiceRequestsRouteRouteWithChildren
   '/cart/success': typeof CartSuccessRoute
   '/catalog/$categoryId': typeof CatalogCategoryIdRoute
+  '/engineer/$requestId': typeof EngineerRequestIdRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -339,12 +359,14 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/cart/': typeof CartIndexRoute
   '/catalog/': typeof CatalogIndexRoute
+  '/engineer/': typeof EngineerIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/profile/': typeof ProfileIndexRoute
   '/promotions/': typeof PromotionsIndexRoute
   '/requests/': typeof RequestsIndexRoute
   '/service/': typeof ServiceIndexRoute
   '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
+  '/admin/service-desk/$requestId': typeof AdminServiceDeskRequestIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
   '/admin/banners/': typeof AdminBannersIndexRoute
@@ -366,13 +388,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contacts': typeof ContactsRoute
-  '/engineer': typeof EngineerRoute
   '/login': typeof LoginRoute
   '/manager': typeof ManagerRoute
   '/password-reset': typeof PasswordResetRoute
   '/register': typeof RegisterRoute
   '/cart/success': typeof CartSuccessRoute
   '/catalog/$categoryId': typeof CatalogCategoryIdRoute
+  '/engineer/$requestId': typeof EngineerRequestIdRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -385,12 +407,14 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/cart': typeof CartIndexRoute
   '/catalog': typeof CatalogIndexRoute
+  '/engineer': typeof EngineerIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/profile': typeof ProfileIndexRoute
   '/promotions': typeof PromotionsIndexRoute
   '/requests': typeof RequestsIndexRoute
   '/service': typeof ServiceIndexRoute
   '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
+  '/admin/service-desk/$requestId': typeof AdminServiceDeskRequestIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
   '/admin/banners': typeof AdminBannersIndexRoute
@@ -412,12 +436,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/engineer': typeof EngineerRouteRouteWithChildren
   '/orders': typeof OrdersRouteRouteWithChildren
   '/profile': typeof ProfileRouteRouteWithChildren
   '/requests': typeof RequestsRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/contacts': typeof ContactsRoute
-  '/engineer': typeof EngineerRoute
   '/login': typeof LoginRoute
   '/manager': typeof ManagerRoute
   '/password-reset': typeof PasswordResetRoute
@@ -425,6 +449,7 @@ export interface FileRoutesById {
   '/service/requests': typeof ServiceRequestsRouteRouteWithChildren
   '/cart/success': typeof CartSuccessRoute
   '/catalog/$categoryId': typeof CatalogCategoryIdRoute
+  '/engineer/$requestId': typeof EngineerRequestIdRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -437,12 +462,14 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/cart/': typeof CartIndexRoute
   '/catalog/': typeof CatalogIndexRoute
+  '/engineer/': typeof EngineerIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/profile/': typeof ProfileIndexRoute
   '/promotions/': typeof PromotionsIndexRoute
   '/requests/': typeof RequestsIndexRoute
   '/service/': typeof ServiceIndexRoute
   '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
+  '/admin/service-desk/$requestId': typeof AdminServiceDeskRequestIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
   '/admin/banners/': typeof AdminBannersIndexRoute
@@ -465,12 +492,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/engineer'
     | '/orders'
     | '/profile'
     | '/requests'
     | '/about'
     | '/contacts'
-    | '/engineer'
     | '/login'
     | '/manager'
     | '/password-reset'
@@ -478,6 +505,7 @@ export interface FileRouteTypes {
     | '/service/requests'
     | '/cart/success'
     | '/catalog/$categoryId'
+    | '/engineer/$requestId'
     | '/orders/$orderId'
     | '/pages/$slug'
     | '/product/$slug'
@@ -490,12 +518,14 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/cart/'
     | '/catalog/'
+    | '/engineer/'
     | '/orders/'
     | '/profile/'
     | '/promotions/'
     | '/requests/'
     | '/service/'
     | '/admin/commerce/$rfqId'
+    | '/admin/service-desk/$requestId'
     | '/admin/users/$customerId'
     | '/service/requests/$requestId'
     | '/admin/banners/'
@@ -517,13 +547,13 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/contacts'
-    | '/engineer'
     | '/login'
     | '/manager'
     | '/password-reset'
     | '/register'
     | '/cart/success'
     | '/catalog/$categoryId'
+    | '/engineer/$requestId'
     | '/orders/$orderId'
     | '/pages/$slug'
     | '/product/$slug'
@@ -536,12 +566,14 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cart'
     | '/catalog'
+    | '/engineer'
     | '/orders'
     | '/profile'
     | '/promotions'
     | '/requests'
     | '/service'
     | '/admin/commerce/$rfqId'
+    | '/admin/service-desk/$requestId'
     | '/admin/users/$customerId'
     | '/service/requests/$requestId'
     | '/admin/banners'
@@ -562,12 +594,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/engineer'
     | '/orders'
     | '/profile'
     | '/requests'
     | '/about'
     | '/contacts'
-    | '/engineer'
     | '/login'
     | '/manager'
     | '/password-reset'
@@ -575,6 +607,7 @@ export interface FileRouteTypes {
     | '/service/requests'
     | '/cart/success'
     | '/catalog/$categoryId'
+    | '/engineer/$requestId'
     | '/orders/$orderId'
     | '/pages/$slug'
     | '/product/$slug'
@@ -587,12 +620,14 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/cart/'
     | '/catalog/'
+    | '/engineer/'
     | '/orders/'
     | '/profile/'
     | '/promotions/'
     | '/requests/'
     | '/service/'
     | '/admin/commerce/$rfqId'
+    | '/admin/service-desk/$requestId'
     | '/admin/users/$customerId'
     | '/service/requests/$requestId'
     | '/admin/banners/'
@@ -614,12 +649,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  EngineerRouteRoute: typeof EngineerRouteRouteWithChildren
   OrdersRouteRoute: typeof OrdersRouteRouteWithChildren
   ProfileRouteRoute: typeof ProfileRouteRouteWithChildren
   RequestsRouteRoute: typeof RequestsRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   ContactsRoute: typeof ContactsRoute
-  EngineerRoute: typeof EngineerRoute
   LoginRoute: typeof LoginRoute
   ManagerRoute: typeof ManagerRoute
   PasswordResetRoute: typeof PasswordResetRoute
@@ -671,7 +706,7 @@ declare module '@tanstack/react-router' {
       id: '/engineer'
       path: '/engineer'
       fullPath: '/engineer'
-      preLoaderRoute: typeof EngineerRouteImport
+      preLoaderRoute: typeof EngineerRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -757,6 +792,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/catalog/$categoryId'
       preLoaderRoute: typeof CatalogCategoryIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/engineer/': {
+      id: '/engineer/'
+      path: '/'
+      fullPath: '/engineer/'
+      preLoaderRoute: typeof EngineerIndexRouteImport
+      parentRoute: typeof EngineerRouteRoute
+    }
+    '/engineer/$requestId': {
+      id: '/engineer/$requestId'
+      path: '/$requestId'
+      fullPath: '/engineer/$requestId'
+      preLoaderRoute: typeof EngineerRequestIdRouteImport
+      parentRoute: typeof EngineerRouteRoute
     }
     '/orders/': {
       id: '/orders/'
@@ -912,6 +961,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminServiceDeskIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/service-desk/$requestId': {
+      id: '/admin/service-desk/$requestId'
+      path: '/service-desk/$requestId'
+      fullPath: '/admin/service-desk/$requestId'
+      preLoaderRoute: typeof AdminServiceDeskRequestIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/users/': {
       id: '/admin/users/'
       path: '/users'
@@ -988,6 +1044,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCommerceRfqIdRoute: typeof AdminCommerceRfqIdRoute
+  AdminServiceDeskRequestIdRoute: typeof AdminServiceDeskRequestIdRoute
   AdminUsersCustomerIdRoute: typeof AdminUsersCustomerIdRoute
   AdminBannersIndexRoute: typeof AdminBannersIndexRoute
   AdminCatalogIndexRoute: typeof AdminCatalogIndexRoute
@@ -1007,6 +1064,7 @@ interface AdminRouteRouteChildren {
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminCommerceRfqIdRoute: AdminCommerceRfqIdRoute,
+  AdminServiceDeskRequestIdRoute: AdminServiceDeskRequestIdRoute,
   AdminUsersCustomerIdRoute: AdminUsersCustomerIdRoute,
   AdminBannersIndexRoute: AdminBannersIndexRoute,
   AdminCatalogIndexRoute: AdminCatalogIndexRoute,
@@ -1025,6 +1083,20 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
+)
+
+interface EngineerRouteRouteChildren {
+  EngineerRequestIdRoute: typeof EngineerRequestIdRoute
+  EngineerIndexRoute: typeof EngineerIndexRoute
+}
+
+const EngineerRouteRouteChildren: EngineerRouteRouteChildren = {
+  EngineerRequestIdRoute: EngineerRequestIdRoute,
+  EngineerIndexRoute: EngineerIndexRoute,
+}
+
+const EngineerRouteRouteWithChildren = EngineerRouteRoute._addFileChildren(
+  EngineerRouteRouteChildren,
 )
 
 interface OrdersRouteRouteChildren {
@@ -1089,12 +1161,12 @@ const ServiceRequestsRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  EngineerRouteRoute: EngineerRouteRouteWithChildren,
   OrdersRouteRoute: OrdersRouteRouteWithChildren,
   ProfileRouteRoute: ProfileRouteRouteWithChildren,
   RequestsRouteRoute: RequestsRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   ContactsRoute: ContactsRoute,
-  EngineerRoute: EngineerRoute,
   LoginRoute: LoginRoute,
   ManagerRoute: ManagerRoute,
   PasswordResetRoute: PasswordResetRoute,
