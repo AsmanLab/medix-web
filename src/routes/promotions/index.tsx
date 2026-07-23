@@ -88,6 +88,8 @@ function PromotionsListPage() {
                       <img
                         src={img}
                         alt=""
+                        loading="lazy"
+                        decoding="async"
                         className="aspect-[16/9] w-full object-cover"
                       />
                     ) : (

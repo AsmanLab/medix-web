@@ -82,6 +82,8 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
           <img
             src={imageUrl}
             alt=""
+            fetchPriority="high"
+            decoding="async"
             className="h-full w-full object-cover opacity-55"
           />
         ) : (

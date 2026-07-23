@@ -183,6 +183,8 @@ function ServiceRequestDetailPage() {
                           <img
                             src={url}
                             alt="Фото к заявке"
+                            loading="lazy"
+                            decoding="async"
                             className="aspect-square w-full object-cover"
                           />
                         </a>
