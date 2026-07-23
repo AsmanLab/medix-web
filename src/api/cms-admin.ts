@@ -193,4 +193,68 @@ export function upsertAdminContact(body: UpsertContactInput) {
   });
 }
 
+export type AdminBanner = {
+  id: string;
+  image_key: string;
+  title: string;
+  subtitle: string;
+  cta_text: string;
+  link_url: string;
+  deep_link: string;
+  sort: number;
+  is_enabled: boolean;
+};
+
+export type CreateBannerInput = {
+  image_key: string;
+  title?: string;
+  subtitle?: string;
+  cta_text?: string;
+  link_url?: string;
+  deep_link?: string;
+  sort?: number;
+  is_enabled?: boolean;
+};
+
+export type UpdateBannerInput = Partial<CreateBannerInput>;
+
+export function listAdminBanners(signal?: AbortSignal) {
+  return apiRequest<AdminBanner[]>({
+    path: "/admin/cms/banners",
+    signal,
+  });
+}
+
+export function createAdminBanner(body: CreateBannerInput) {
+  return apiRequest<{ id: string }>({
+    method: "POST",
+    path: "/admin/cms/banners",
+    body: {
+      image_key: body.image_key,
+      title: body.title ?? "",
+      subtitle: body.subtitle ?? "",
+      cta_text: body.cta_text ?? "",
+      link_url: body.link_url ?? "",
+      deep_link: body.deep_link ?? "",
+      sort: body.sort ?? 0,
+      is_enabled: body.is_enabled ?? true,
+    },
+  });
+}
+
+export function updateAdminBanner(id: string, body: UpdateBannerInput) {
+  return apiRequest<{ id: string }>({
+    method: "PATCH",
+    path: `/admin/cms/banners/${encodeURIComponent(id)}`,
+    body,
+  });
+}
+
+export function deleteAdminBanner(id: string) {
+  return apiRequest<void>({
+    method: "DELETE",
+    path: `/admin/cms/banners/${encodeURIComponent(id)}`,
+  });
+}
+
 export type { ContactOffice };

@@ -1,9 +1,10 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Boxes,
   FileUp,
   HeartPulse,
   LayoutDashboard,
+  LogOut,
   Megaphone,
   Package,
   Users,
@@ -11,7 +12,8 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
-import { useSession } from "@/session/store";
+import { getAppQueryClient } from "@/app/providers";
+import { logoutSession, useSession } from "@/session/store";
 import { cn } from "@/lib/utils";
 
 type AdminNavKey =
@@ -42,10 +44,22 @@ function Logo() {
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const { user } = useSession();
+  const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const role = user?.role;
+
+  async function onLogout() {
+    setLoggingOut(true);
+    try {
+      await logoutSession(getAppQueryClient());
+      await navigate({ to: "/login" });
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   const nav = useMemo((): AdminNavItem[] => {
     const common = ["admin", "manager", "service_engineer"] as const;
@@ -124,12 +138,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [role]);
 
   return (
-    <div className="min-h-screen bg-surface text-foreground">
-      <div className="lg:grid lg:grid-cols-[270px_1fr]">
+    <div className="min-h-screen bg-transparent text-foreground">
+      <div className="lg:grid lg:grid-cols-[260px_1fr]">
         {/* Sidebar */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[280px] border-r border-border bg-card transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+            "fixed inset-y-0 left-0 z-50 w-[280px] border-r border-border/80 bg-card/95 shadow-[var(--shadow-soft)] backdrop-blur transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0",
             open ? "translate-x-0" : "-translate-x-full",
           )}
           aria-label="Навигация админ-панели"
@@ -154,7 +168,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </button>
           </div>
 
-          <nav className="px-3 pb-6 pt-2">
+          <nav className="flex h-[calc(100%-4rem)] flex-col px-3 pb-6 pt-2">
             <ul className="space-y-1">
               {nav.map((item) => {
                 const active =
@@ -186,6 +200,17 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 );
               })}
             </ul>
+            <div className="mt-auto border-t border-border pt-3">
+              <button
+                type="button"
+                disabled={loggingOut}
+                onClick={() => void onLogout()}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" aria-hidden />
+                {loggingOut ? "Выход…" : "Выйти"}
+              </button>
+            </div>
           </nav>
         </aside>
 

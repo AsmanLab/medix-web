@@ -110,7 +110,7 @@ export function fetchRfq(rfqId: string, signal?: AbortSignal) {
 }
 
 export function acceptRfqQuote(rfqId: string) {
-  return apiRequest<void>({
+  return apiRequest<{ order_id: string; status: string }>({
     method: "POST",
     path: `/rfq/${encodeURIComponent(rfqId)}/accept-quote`,
   });

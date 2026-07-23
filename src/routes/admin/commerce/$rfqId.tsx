@@ -308,15 +308,25 @@ function ManagerRfqDetailPage() {
                 ) : null}
                 {canConvert ? (
                   <Button
+                    variant="outline"
                     disabled={convertMutation.isPending}
                     onClick={() => {
-                      if (window.confirm("Создать заказ из принятого RFQ?")) {
+                      if (
+                        window.confirm(
+                          "Создать заказ из принятого RFQ? (fallback, если заказ не создался при принятии КП)",
+                        )
+                      ) {
                         convertMutation.mutate();
                       }
                     }}
                   >
                     В заказ
                   </Button>
+                ) : null}
+                {rfq?.status === "converted_to_order" ? (
+                  <p className="w-full text-xs text-muted-foreground sm:w-auto">
+                    Заказ уже создан при принятии КП.
+                  </p>
                 ) : null}
               </div>
             </header>

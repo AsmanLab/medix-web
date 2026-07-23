@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -37,6 +37,7 @@ export const Route = createFileRoute("/requests/$rfqId")({
 
 function RequestDetailPage() {
   const { rfqId } = Route.useParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [acting, setActing] = useState<"accept" | "reject" | null>(null);
 
@@ -65,9 +66,14 @@ function RequestDetailPage() {
 
   const acceptMutation = useMutation({
     mutationFn: () => acceptRfqQuote(rfqId),
-    onSuccess: async () => {
-      toast.success("Котировка принята");
+    onSuccess: async (result) => {
+      toast.success("КП принято — заказ создан, организация подтверждена");
       await queryClient.invalidateQueries({ queryKey: queryKeys.rfq.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+      await navigate({
+        to: "/orders/$orderId",
+        params: { orderId: result.order_id },
+      });
     },
     onError: (err) => {
       toast.error(isAppError(err) ? err.message : "Не удалось принять КП");
@@ -90,9 +96,11 @@ function RequestDetailPage() {
   const timeline = rfq ? buildRfqTimeline(rfq.status) : [];
   const canDecide = rfq?.status === "quoted";
   const invoice = invoiceQuery.data;
-  const canDownloadInvoice =
+  const invoicePublished =
     !!invoice &&
     (invoice.status === "published" || !!invoice.pdf_key || !!invoice.pdf_url);
+  const invoicePdfPending =
+    invoicePublished && !invoice?.pdf_key && !invoice?.pdf_url;
 
   async function onDownloadInvoice() {
     try {
@@ -244,7 +252,11 @@ function RequestDetailPage() {
                   ) : null}
 
                   {canDecide ? (
-                    <div className="mt-5 flex flex-wrap gap-3">
+                    <div className="mt-5 space-y-3">
+                      <p className="text-xs leading-5 text-muted-foreground">
+                        Принятие КП создаёт заказ и подтверждает организацию.
+                      </p>
+                      <div className="flex flex-wrap gap-3">
                       <Button
                         disabled={acting !== null}
                         onClick={() => void onAccept()}
@@ -268,6 +280,7 @@ function RequestDetailPage() {
                         )}
                         Отклонить
                       </Button>
+                      </div>
                     </div>
                   ) : null}
                 </section>
@@ -278,20 +291,26 @@ function RequestDetailPage() {
                 </section>
               )}
 
-              {canDownloadInvoice ? (
+              {invoicePublished ? (
                 <section className="rounded-2xl border border-border bg-card p-5">
                   <h2 className="font-semibold">Счёт</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Статус: {invoice?.status}
                   </p>
-                  <Button
-                    className="mt-4"
-                    variant="outline"
-                    onClick={() => void onDownloadInvoice()}
-                  >
-                    <Download className="h-4 w-4" />
-                    Скачать счёт
-                  </Button>
+                  {invoicePdfPending ? (
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      PDF готовится — обновите страницу через минуту.
+                    </p>
+                  ) : (
+                    <Button
+                      className="mt-4"
+                      variant="outline"
+                      onClick={() => void onDownloadInvoice()}
+                    >
+                      <Download className="h-4 w-4" />
+                      Скачать счёт
+                    </Button>
+                  )}
                 </section>
               ) : null}
             </div>

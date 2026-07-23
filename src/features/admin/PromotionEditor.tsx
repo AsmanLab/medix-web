@@ -10,7 +10,7 @@ import {
   updateAdminPromotion,
 } from "@/api/cms-admin";
 import { isAppError } from "@/api/errors";
-import { uploadMediaFile } from "@/api/media";
+import { fetchMediaDownloadUrl, uploadMediaFile } from "@/api/media";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,12 @@ export function PromotionEditor({ promotionId }: Props) {
   const [endsAt, setEndsAt] = useState("");
   const [productIds, setProductIds] = useState("");
   const [uploading, setUploading] = useState(false);
+
+  const previewQuery = useQuery({
+    queryKey: ["media", "preview", imageKey],
+    queryFn: ({ signal }) => fetchMediaDownloadUrl(imageKey, signal),
+    enabled: Boolean(imageKey.trim()),
+  });
 
   useEffect(() => {
     const p = detailQuery.data;
@@ -243,6 +249,23 @@ export function PromotionEditor({ promotionId }: Props) {
                 onChange={(e) => void onUpload(e.target.files?.[0] ?? null)}
               />
             </label>
+            {imageKey.trim() ? (
+              <div className="sm:col-span-2 overflow-hidden rounded-2xl border border-border bg-muted">
+                {previewQuery.data ? (
+                  <img
+                    src={previewQuery.data}
+                    alt=""
+                    className="max-h-56 w-full object-cover"
+                  />
+                ) : (
+                  <div className="grid h-40 place-items-center text-sm text-muted-foreground">
+                    {previewQuery.isLoading
+                      ? "Загрузка превью…"
+                      : "Не удалось загрузить превью"}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
 
           <label className="block text-xs font-semibold">

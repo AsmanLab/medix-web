@@ -338,7 +338,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 hidden border-b border-border/80 bg-card/95 backdrop-blur-xl lg:block">
+      <header className="sticky top-0 z-50 hidden border-b border-border/80 bg-card/90 backdrop-blur-xl lg:block">
         <div className="mx-auto flex h-[82px] max-w-[1320px] items-center gap-4 px-4 xl:gap-8 xl:px-6">
           <Logo />
 

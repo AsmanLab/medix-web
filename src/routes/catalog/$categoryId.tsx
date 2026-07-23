@@ -279,22 +279,34 @@ function ProductGrid({ products }: { products: ProductListOut[] }) {
           <Link
             to="/product/$slug"
             params={{ slug: p.slug }}
-            className="block rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5"
+            className="block overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5"
           >
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              {p.sku}
-            </p>
-            <h3 className="mt-1 font-semibold text-foreground">{p.name_ru}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {[p.manufacturer, p.country].filter(Boolean).join(" · ")}
-            </p>
-            <div className="mt-3 flex items-center justify-between gap-2 text-sm">
-              <span className="text-muted-foreground">
-                {availabilityLabel(p.availability)}
-              </span>
-              <span className="font-semibold text-primary">
-                {p.price ? `${p.price} сом` : "По запросу"}
-              </span>
+            <div className="aspect-[4/3] bg-muted">
+              {p.primary_image_url ? (
+                <img
+                  src={p.primary_image_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : null}
+            </div>
+            <div className="p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {p.sku}
+              </p>
+              <h3 className="mt-1 font-semibold text-foreground">{p.name_ru}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {[p.manufacturer, p.country].filter(Boolean).join(" · ")}
+              </p>
+              <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+                <span className="text-muted-foreground">
+                  {availabilityLabel(p.availability)}
+                </span>
+                <span className="font-semibold text-primary">
+                  {p.price ? `${p.price} сом` : "По запросу"}
+                </span>
+              </div>
             </div>
           </Link>
         </li>
