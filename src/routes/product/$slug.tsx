@@ -130,6 +130,8 @@ function ProductDetailPage() {
                   <img
                     src={primaryImage.url}
                     alt={product.name_ru}
+                    fetchPriority="high"
+                    decoding="async"
                     className="aspect-[16/9] w-full object-cover"
                   />
                 ) : (
