@@ -106,8 +106,8 @@ function BannersAdminPage() {
       await invalidate();
       startCreate();
     },
-    onError: (err) => {
-      toast.error(isAppError(err) ? err.message : String(err.message ?? err));
+    onError: (err: unknown) => {
+      toast.error(isAppError(err) ? err.message : "Не удалось сохранить");
     },
   });
 
@@ -118,7 +118,7 @@ function BannersAdminPage() {
       await invalidate();
       if (editingId) startCreate();
     },
-    onError: (err) => {
+    onError: (err: unknown) => {
       toast.error(isAppError(err) ? err.message : "Не удалось удалить");
     },
   });
