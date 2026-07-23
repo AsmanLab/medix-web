@@ -41,6 +41,7 @@ export const queryKeys = {
     adminPromotions: () => [...queryKeys.cms.all, "admin-promotions"] as const,
     adminPromotion: (id: string) =>
       [...queryKeys.cms.all, "admin-promotion", id] as const,
+    adminBanners: () => [...queryKeys.cms.all, "admin-banners"] as const,
   },
   rfq: {
     all: ["rfq"] as const,

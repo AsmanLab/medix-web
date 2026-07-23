@@ -45,6 +45,8 @@ export interface components {
       availability: string;
       price: string | null;
       is_published: boolean;
+      primary_image_key?: string | null;
+      primary_image_url?: string | null;
     };
     ProductImageOut: {
       id: string;

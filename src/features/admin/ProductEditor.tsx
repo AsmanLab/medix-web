@@ -207,22 +207,29 @@ export function ProductEditor({ productId }: ProductEditorProps) {
   });
 
   const imageMutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async (files: File[]) => {
       if (!productId) throw new Error("save first");
-      const key = await uploadMediaFile("products", file);
-      return attachAdminProductImage(productId, {
-        s3_key: key,
-        is_primary: (existing?.images?.length ?? 0) === 0,
-      });
+      let existingCount = existing?.images?.length ?? 0;
+      for (const file of files) {
+        const key = await uploadMediaFile("products", file);
+        await attachAdminProductImage(productId, {
+          s3_key: key,
+          is_primary: existingCount === 0,
+        });
+        existingCount += 1;
+      }
+      return files.length;
     },
-    onSuccess: async () => {
+    onSuccess: async (count) => {
       await invalidateAll();
       if (productId) {
         await queryClient.invalidateQueries({
           queryKey: queryKeys.catalog.adminProduct(productId),
         });
       }
-      toast.success("Изображение добавлено");
+      toast.success(
+        count === 1 ? "Изображение добавлено" : `Добавлено фото: ${count}`,
+      );
     },
     onError: (err) => {
       toast.error(isAppError(err) ? err.message : "Не удалось загрузить фото");
@@ -539,7 +546,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
               imageUrls={imageUrls}
               locked={mediaLocked}
               uploading={imageMutation.isPending}
-              onUpload={(file) => imageMutation.mutate(file)}
+              onUpload={(files) => imageMutation.mutate(files)}
               onDelete={(id) => deleteImageMutation.mutate(id)}
             />
           ) : null}
@@ -596,7 +603,7 @@ function ImagesPanel({
   imageUrls: Record<string, string>;
   locked: boolean;
   uploading: boolean;
-  onUpload: (file: File) => void;
+  onUpload: (files: File[]) => void;
   onDelete: (id: string) => void;
 }) {
   const images = product?.images ?? [];
@@ -613,12 +620,13 @@ function ImagesPanel({
           <input
             type="file"
             accept="image/*"
+            multiple
             className="sr-only"
             disabled={uploading}
             onChange={(e) => {
-              const file = e.target.files?.[0];
+              const files = Array.from(e.target.files ?? []);
               e.target.value = "";
-              if (file) onUpload(file);
+              if (files.length) onUpload(files);
             }}
           />
         </label>

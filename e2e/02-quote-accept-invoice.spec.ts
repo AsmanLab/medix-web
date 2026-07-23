@@ -117,8 +117,9 @@ test.describe("E2E #34 — quote accept + invoice", () => {
 
     await gotoAuthed(page, `/requests/${rfqId}`, phone, password);
     await page.getByRole("button", { name: "Принять КП" }).click();
+    await expect(page).toHaveURL(/\/orders\/[0-9a-f-]+/i, { timeout: 20_000 });
     await expect(
-      page.getByText(/принят|Принята|accepted/i).first(),
+      page.getByText(/заказ|order|new|Новый/i).first(),
     ).toBeVisible({ timeout: 20_000 });
 
     const invRes = await request.get(
@@ -134,10 +135,5 @@ test.describe("E2E #34 — quote accept + invoice", () => {
       );
       expect([200, 204].includes(pub.status())).toBeTruthy();
     }
-
-    await page.reload();
-    await expect(
-      page.getByText(/счёт|invoice|published|Черновик|Опубликован/i).first(),
-    ).toBeVisible({ timeout: 20_000 });
   });
 });

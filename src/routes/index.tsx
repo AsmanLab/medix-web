@@ -106,7 +106,7 @@ function HomePage() {
 
   return (
     <AppShell>
-      <div className="space-y-14">
+      <div className="space-y-[var(--spacing-section-lg)]">
         {bannersQuery.isLoading ? (
           <BannerSkeleton />
         ) : (
@@ -208,21 +208,33 @@ function HomePage() {
                   <Link
                     to="/product/$slug"
                     params={{ slug: p.slug }}
-                    className="block h-full rounded-2xl border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]"
+                    className="block h-full overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]"
                   >
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                      {p.manufacturer || p.sku}
-                    </p>
-                    <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug">
-                      {p.name_ru}
-                    </h3>
-                    <div className="mt-3 flex items-end justify-between gap-2 text-sm">
-                      <span className="text-xs text-muted-foreground">
-                        {availabilityLabel(p.availability)}
-                      </span>
-                      <span className="font-semibold text-primary">
-                        {p.price ? `${p.price}` : "По запросу"}
-                      </span>
+                    <div className="aspect-[4/3] bg-muted">
+                      {p.primary_image_url ? (
+                        <img
+                          src={p.primary_image_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                        {p.manufacturer || p.sku}
+                      </p>
+                      <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug">
+                        {p.name_ru}
+                      </h3>
+                      <div className="mt-3 flex items-end justify-between gap-2 text-sm">
+                        <span className="text-xs text-muted-foreground">
+                          {availabilityLabel(p.availability)}
+                        </span>
+                        <span className="font-semibold text-primary">
+                          {p.price ? `${p.price}` : "По запросу"}
+                        </span>
+                      </div>
                     </div>
                   </Link>
                 </li>
