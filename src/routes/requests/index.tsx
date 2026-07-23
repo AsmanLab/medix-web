@@ -49,12 +49,12 @@ function RequestsListPage() {
           loadingVariant="list"
           emptyIcon={FileText}
           emptyTitle="Заявок пока нет"
-          emptyDescription="Добавьте товары в корзину и отправьте запрос на расчёт."
+          emptyDescription="Соберите корзину и отправьте запрос на коммерческое предложение. Менеджер подготовит КП — после принятия появится заказ."
           emptyAction={
             <Link
               to="/catalog"
               search={{ q: undefined }}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
             >
               В каталог <ArrowRight className="h-4 w-4" />
             </Link>

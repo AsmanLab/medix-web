@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { fetchCategories } from "@/api/catalog";
+import { listNotifications } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
 import { useRfqCart } from "@/features/rfq/cart-store";
 import {
@@ -273,6 +274,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     staleTime: 5 * 60_000,
   });
 
+  const notificationsQuery = useQuery({
+    queryKey: queryKeys.notifications.list(),
+    queryFn: ({ signal }) => listNotifications(signal),
+    enabled: authenticated && session.user?.role === "client",
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+  const unreadCount = notificationsQuery.data?.unread_count ?? 0;
+
   const categoryTree = useMemo(
     () => buildCategoryTree(categoriesQuery.data ?? []),
     [categoriesQuery.data],
@@ -282,6 +292,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     path.startsWith("/cart") ||
     path.startsWith("/orders") ||
     path.startsWith("/requests") ||
+    path.startsWith("/notifications") ||
     path.startsWith("/profile") ||
     path.startsWith("/login") ||
     path.startsWith("/register") ||
@@ -400,12 +411,21 @@ export function AppShell({ children }: { children: ReactNode }) {
           </form>
 
           <Link
-            to={profileTo}
+            to="/notifications"
             className="relative hidden h-11 w-11 place-items-center rounded-full border border-border text-muted-foreground transition hover:text-primary xl:grid"
-            aria-label="Уведомления — скоро"
-            title="Уведомления — скоро"
+            aria-label={
+              unreadCount > 0
+                ? `Уведомления, непрочитанных ${unreadCount}`
+                : "Уведомления"
+            }
+            title="Уведомления"
           >
             <Bell className="h-[18px] w-[18px]" aria-hidden />
+            {unreadCount > 0 ? (
+              <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            ) : null}
           </Link>
 
           <Link
@@ -442,7 +462,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         id="main-content"
         tabIndex={-1}
         className={cn(
-          "mx-auto min-h-[70vh] w-full max-w-full px-5 py-8 pb-24 lg:px-6 lg:pb-8",
+          "mx-auto min-h-[70vh] w-full max-w-full px-5 py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:px-6 lg:pb-8",
           accountPage ? "max-w-[820px]" : "max-w-[1320px]",
         )}
       >
@@ -482,9 +502,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav
         aria-label="Мобильная навигация"
         className="fixed inset-x-0 bottom-0 z-50 w-full border-t border-border bg-card/95 backdrop-blur lg:hidden"
-        style={{ boxShadow: "var(--shadow-nav)" }}
+        style={{
+          boxShadow: "var(--shadow-nav)",
+          paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
+        }}
       >
-        <ul className="mx-auto grid max-w-[440px] grid-cols-4 px-2 pt-2 pb-3">
+        <ul className="mx-auto grid max-w-[440px] grid-cols-4 px-2 pt-2">
           {mobileTabs.map((tab) => {
             const Icon = tab.icon;
             const active = tab.match(path);

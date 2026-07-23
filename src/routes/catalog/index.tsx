@@ -110,11 +110,11 @@ function CatalogIndexPage() {
           loadingVariant="card-grid"
           cardGridVariant="catalog"
           loadingCount={4}
-          emptyTitle={normalized ? "Разделы не найдены" : "Категории пока не опубликованы"}
+          emptyTitle={normalized ? "Ничего не найдено" : "Каталог пока пуст"}
           emptyDescription={
             normalized
-              ? "Измените запрос или откройте раздел без фильтра."
-              : "Добавьте категории в админ-панели."
+              ? "Попробуйте другое слово или откройте каталог без поиска."
+              : "Разделы появятся после публикации. Загляните позже или свяжитесь с менеджером."
           }
         >
           <ul className="grid gap-4 sm:grid-cols-2">

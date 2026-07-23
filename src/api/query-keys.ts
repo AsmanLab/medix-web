@@ -75,6 +75,10 @@ export const queryKeys = {
     managerList: () => [...queryKeys.service.all, "manager-list"] as const,
     engineers: () => [...queryKeys.service.all, "engineers"] as const,
   },
+  notifications: {
+    all: ["notifications"] as const,
+    list: () => [...queryKeys.notifications.all, "list"] as const,
+  },
   adminCustomers: {
     all: ["admin-customers"] as const,
     list: (status?: string | null) =>

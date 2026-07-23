@@ -28,6 +28,7 @@ import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogCategoryIdRouteImport } from './routes/catalog/$categoryId'
 import { Route as EngineerIndexRouteImport } from './routes/engineer/index'
 import { Route as EngineerRequestIdRouteImport } from './routes/engineer/$requestId'
+import { Route as NotificationsIndexRouteImport } from './routes/notifications/index'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders/$orderId'
 import { Route as PagesSlugRouteImport } from './routes/pages/$slug'
@@ -163,6 +164,11 @@ const EngineerRequestIdRoute = EngineerRequestIdRouteImport.update({
   id: '/$requestId',
   path: '/$requestId',
   getParentRoute: () => EngineerRouteRoute,
+} as any)
+const NotificationsIndexRoute = NotificationsIndexRouteImport.update({
+  id: '/notifications/',
+  path: '/notifications/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersIndexRoute = OrdersIndexRouteImport.update({
   id: '/',
@@ -403,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/cart/': typeof CartIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/engineer/': typeof EngineerIndexRoute
+  '/notifications/': typeof NotificationsIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/profile/': typeof ProfileIndexRoute
   '/promotions/': typeof PromotionsIndexRoute
@@ -458,6 +465,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/engineer': typeof EngineerIndexRoute
+  '/notifications': typeof NotificationsIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/profile': typeof ProfileIndexRoute
   '/promotions': typeof PromotionsIndexRoute
@@ -520,6 +528,7 @@ export interface FileRoutesById {
   '/cart/': typeof CartIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/engineer/': typeof EngineerIndexRoute
+  '/notifications/': typeof NotificationsIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/profile/': typeof ProfileIndexRoute
   '/promotions/': typeof PromotionsIndexRoute
@@ -583,6 +592,7 @@ export interface FileRouteTypes {
     | '/cart/'
     | '/catalog/'
     | '/engineer/'
+    | '/notifications/'
     | '/orders/'
     | '/profile/'
     | '/promotions/'
@@ -638,6 +648,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/catalog'
     | '/engineer'
+    | '/notifications'
     | '/orders'
     | '/profile'
     | '/promotions'
@@ -699,6 +710,7 @@ export interface FileRouteTypes {
     | '/cart/'
     | '/catalog/'
     | '/engineer/'
+    | '/notifications/'
     | '/orders/'
     | '/profile/'
     | '/promotions/'
@@ -753,6 +765,7 @@ export interface RootRouteChildren {
   ServiceSuccessRoute: typeof ServiceSuccessRoute
   CartIndexRoute: typeof CartIndexRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
+  NotificationsIndexRoute: typeof NotificationsIndexRoute
   PromotionsIndexRoute: typeof PromotionsIndexRoute
   ServiceIndexRoute: typeof ServiceIndexRoute
 }
@@ -891,6 +904,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/engineer/$requestId'
       preLoaderRoute: typeof EngineerRequestIdRouteImport
       parentRoute: typeof EngineerRouteRoute
+    }
+    '/notifications/': {
+      id: '/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof NotificationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/orders/': {
       id: '/orders/'
@@ -1328,6 +1348,7 @@ const rootRouteChildren: RootRouteChildren = {
   ServiceSuccessRoute: ServiceSuccessRoute,
   CartIndexRoute: CartIndexRoute,
   CatalogIndexRoute: CatalogIndexRoute,
+  NotificationsIndexRoute: NotificationsIndexRoute,
   PromotionsIndexRoute: PromotionsIndexRoute,
   ServiceIndexRoute: ServiceIndexRoute,
 }

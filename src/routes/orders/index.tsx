@@ -49,13 +49,14 @@ function OrdersListPage() {
           loadingVariant="list"
           emptyIcon={Package}
           emptyTitle="Заказов пока нет"
-          emptyDescription="Заказы появятся после принятия коммерческого предложения."
+          emptyDescription="После принятия КП заказ создаётся автоматически. Либо оформите прямой заказ из корзины, если организация подтверждена и у позиций есть цены."
           emptyAction={
             <Link
-              to="/requests"
+              to="/catalog"
+              search={{ q: undefined }}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
             >
-              К заявкам <ArrowRight className="h-4 w-4" />
+              В каталог <ArrowRight className="h-4 w-4" />
             </Link>
           }
         >
