@@ -242,7 +242,7 @@ function CatalogIndexPage() {
         ) : null}
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 min-h-[40rem]">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
             <h2 className="font-display text-xl font-bold">Товары</h2>
@@ -280,20 +280,23 @@ function CatalogIndexPage() {
 function ProductGrid({ products }: { products: ProductListOut[] }) {
   return (
     <ul className="grid gap-3 sm:grid-cols-2">
-      {products.map((p) => (
+      {products.map((p, index) => (
         <li key={p.id}>
           <Link
             to="/product/$slug"
             params={{ slug: p.slug }}
             className="block overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5"
           >
-            <div className="aspect-[4/3] bg-muted">
+            <div className="relative aspect-[4/3] overflow-hidden bg-muted">
               {p.primary_image_url ? (
                 <img
                   src={p.primary_image_url}
                   alt=""
-                  className="h-full w-full object-cover"
-                  loading="lazy"
+                  width={800}
+                  height={600}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading={index < 2 ? "eager" : "lazy"}
+                  decoding="async"
                 />
               ) : null}
             </div>
