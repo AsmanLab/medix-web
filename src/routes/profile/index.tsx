@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
   ChevronRight,
-  FileText,
   KeyRound,
   LogOut,
   Package,
@@ -13,9 +12,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
-import { listOrders } from "@/api/orders";
 import { fetchProfile } from "@/api/profile";
-import { listRfqs } from "@/api/rfq";
 import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { getAppQueryClient } from "@/app/providers";
@@ -49,18 +46,6 @@ function ProfilePage() {
     },
   });
 
-  const rfqsQuery = useQuery({
-    queryKey: queryKeys.rfq.list(),
-    queryFn: ({ signal }) => listRfqs(signal),
-    staleTime: 30_000,
-  });
-
-  const ordersQuery = useQuery({
-    queryKey: queryKeys.orders.list(),
-    queryFn: ({ signal }) => listOrders(signal),
-    staleTime: 30_000,
-  });
-
   const api = profileQuery.data;
   const displayName =
     api?.full_name?.trim() ||
@@ -69,9 +54,6 @@ function ProfilePage() {
     .filter(Boolean)
     .join(", ");
   const verification = api?.verification_status ?? "unverified";
-  const rfqCount = (rfqsQuery.data ?? []).filter((r) => r.status !== "draft")
-    .length;
-  const orderCount = (ordersQuery.data ?? []).length;
 
   if (
     profileQuery.isError &&
@@ -161,42 +143,35 @@ function ProfilePage() {
             ) : null}
 
             <Link
-              to="/requests"
-              className="block overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[oklch(0.5_0.12_200)] p-5 text-primary-foreground shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5"
+              to="/orders"
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 transition hover:bg-primary-soft/40"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/70">
-                    История
-                  </p>
-                  <h2 className="mt-1 font-display text-xl font-bold">
-                    Заявки и заказы
-                  </h2>
-                  <p className="mt-1 text-xs text-white/70">
-                    Статусы, котировки и счета
-                  </p>
-                </div>
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15">
-                  <Package className="h-5 w-5" />
-                </span>
-              </div>
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                <span className="rounded-2xl bg-white/10 px-3 py-3">
-                  <span className="flex items-center gap-2 text-[11px] text-white/70">
-                    <FileText className="h-3.5 w-3.5" /> Заявки
-                  </span>
-                  <b className="mt-1 block text-xl">{rfqCount}</b>
-                </span>
-                <span className="rounded-2xl bg-white/10 px-3 py-3">
-                  <span className="flex items-center gap-2 text-[11px] text-white/70">
-                    <Package className="h-3.5 w-3.5" /> Заказы
-                  </span>
-                  <b className="mt-1 block text-xl">{orderCount}</b>
-                </span>
-              </div>
-              <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold">
-                Открыть <ChevronRight className="h-3.5 w-3.5" />
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary-soft text-primary">
+                <Package className="h-4 w-4" />
               </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">История заказов</span>
+                <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                  Заказы, статусы и счета
+                </span>
+              </span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+
+            <Link
+              to="/requests"
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 transition hover:bg-primary-soft/40"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary-soft text-primary">
+                <Package className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">Заявки на КП</span>
+                <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                  Запросы цены и коммерческие предложения
+                </span>
+              </span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
 
             <Link

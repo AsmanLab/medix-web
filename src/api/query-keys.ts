@@ -79,6 +79,11 @@ export const queryKeys = {
     all: ["notifications"] as const,
     list: () => [...queryKeys.notifications.all, "list"] as const,
   },
+  staff: {
+    all: ["staff"] as const,
+    list: (includeInactive = false) =>
+      [...queryKeys.staff.all, "list", includeInactive] as const,
+  },
   adminCustomers: {
     all: ["admin-customers"] as const,
     list: (status?: string | null) =>

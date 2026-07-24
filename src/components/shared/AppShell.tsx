@@ -36,11 +36,10 @@ type Tab = {
 
 const mobileTabs: Tab[] = [
   {
-    to: "/",
+    to: "/catalog",
     label: "Каталог",
     icon: LayoutGrid,
-    match: (p) =>
-      p === "/" || p.startsWith("/catalog") || p.startsWith("/product"),
+    match: (p) => p.startsWith("/catalog") || p.startsWith("/product"),
   },
   {
     to: "/cart",
@@ -131,7 +130,7 @@ function CatalogMegaMenu({
     <div className="group/catalog relative">
       <Link
         to="/catalog"
-        search={{ q: undefined }}
+        search={{ q: undefined, category: undefined }}
         aria-haspopup="true"
         className={cn(
           "inline-flex items-center gap-1.5 py-3",
@@ -188,7 +187,7 @@ function CatalogMegaMenu({
             )}
             <Link
               to="/catalog"
-              search={{ q: undefined }}
+              search={{ q: undefined, category: undefined }}
               className="mt-2 flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-primary"
             >
               Весь каталог <ArrowRight className="h-3.5 w-3.5" />
@@ -259,6 +258,37 @@ function CatalogMegaMenu({
   );
 }
 
+function NotificationsBell({
+  unreadCount,
+  className,
+}: {
+  unreadCount: number;
+  className?: string;
+}) {
+  return (
+    <Link
+      to="/notifications"
+      className={cn(
+        "relative grid h-11 w-11 place-items-center rounded-full border border-border text-muted-foreground transition hover:text-primary",
+        className,
+      )}
+      aria-label={
+        unreadCount > 0
+          ? `Уведомления, непрочитанных ${unreadCount}`
+          : "Уведомления"
+      }
+      title="Уведомления"
+    >
+      <Bell className="h-[18px] w-[18px]" aria-hidden />
+      {unreadCount > 0 ? (
+        <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-white">
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -305,7 +335,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     event.preventDefault();
     void navigate({
       to: "/catalog",
-      search: { q: headerQuery.trim() || undefined },
+      search: { q: headerQuery.trim() || undefined, category: undefined },
     });
   }
 
@@ -348,6 +378,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </div>
+
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-card/90 backdrop-blur-xl lg:hidden">
+        <div className="mx-auto flex h-14 max-w-[1320px] items-center justify-between gap-3 px-4">
+          <Logo compact />
+          <NotificationsBell unreadCount={unreadCount} />
+        </div>
+      </header>
 
       <header className="sticky top-0 z-50 hidden border-b border-border/80 bg-card/90 backdrop-blur-xl lg:block">
         <div className="mx-auto flex h-[82px] max-w-[1320px] items-center gap-4 px-4 xl:gap-8 xl:px-6">
@@ -410,23 +447,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             />
           </form>
 
-          <Link
-            to="/notifications"
-            className="relative hidden h-11 w-11 place-items-center rounded-full border border-border text-muted-foreground transition hover:text-primary xl:grid"
-            aria-label={
-              unreadCount > 0
-                ? `Уведомления, непрочитанных ${unreadCount}`
-                : "Уведомления"
-            }
-            title="Уведомления"
-          >
-            <Bell className="h-[18px] w-[18px]" aria-hidden />
-            {unreadCount > 0 ? (
-              <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-white">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            ) : null}
-          </Link>
+          <NotificationsBell unreadCount={unreadCount} className="hidden lg:grid" />
 
           <Link
             to="/cart"

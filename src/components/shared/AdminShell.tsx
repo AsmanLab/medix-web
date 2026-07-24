@@ -7,6 +7,7 @@ import {
   LogOut,
   Megaphone,
   Package,
+  UserCog,
   Users,
   Wrench,
   X,
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 type AdminNavKey =
   | "dashboard"
   | "users"
+  | "staff"
   | "catalog"
   | "commerce"
   | "service_desk"
@@ -84,6 +86,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
         label: "Клиенты",
         icon: ({ className }) => <Users className={className} aria-hidden />,
         allowedRoles: ["admin", "manager"],
+      },
+      {
+        key: "staff",
+        to: "/admin/staff",
+        label: "Сотрудники",
+        icon: ({ className }) => <UserCog className={className} aria-hidden />,
+        allowedRoles: ["admin"],
       },
       {
         key: "catalog",
@@ -227,7 +236,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 ☰
               </span>
             </button>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Admin
               </p>
@@ -241,6 +250,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
                       : "—"}
               </h2>
             </div>
+            <button
+              type="button"
+              disabled={loggingOut}
+              onClick={() => void onLogout()}
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-muted-foreground"
+              aria-label="Выйти"
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+              <span className="sr-only sm:not-sr-only">
+                {loggingOut ? "Выход…" : "Выйти"}
+              </span>
+            </button>
           </header>
 
           {/* Mobile backdrop */}

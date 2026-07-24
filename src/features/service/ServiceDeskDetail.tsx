@@ -184,6 +184,36 @@ export function ServiceDeskDetail({ requestId, allowAssign = false }: Props) {
             </div>
           </section>
 
+          <section className="rounded-3xl border border-border bg-card p-5">
+            <h2 className="text-sm font-bold">Фото поломки</h2>
+            {!sr.photo_urls?.length ? (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Клиент не приложил фото
+              </p>
+            ) : (
+              <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {sr.photo_urls.map((url) => (
+                  <li key={url}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block overflow-hidden rounded-2xl border border-border"
+                    >
+                      <img
+                        src={url}
+                        alt="Фото к сервисной заявке"
+                        loading="lazy"
+                        decoding="async"
+                        className="aspect-square w-full object-cover"
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
           {actions.length > 0 ? (
             <section className="flex flex-wrap gap-2 rounded-3xl border border-border bg-card p-5">
               {actions.map((action) => (

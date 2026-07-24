@@ -1,28 +1,37 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Boxes, ChevronDown, Search } from "lucide-react";
+import { Boxes, ChevronDown, Filter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { fetchCategories } from "@/api/catalog";
+import {
+  fetchCategories,
+  fetchProducts,
+  type ProductListOut,
+} from "@/api/catalog";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { availabilityLabel } from "@/features/catalog/availability";
 import { buildCategoryTree } from "@/features/catalog/map-category";
+import { cn } from "@/lib/utils";
 
 type CatalogSearch = {
   q?: string;
+  category?: string;
 };
 
 export const Route = createFileRoute("/catalog/")({
   validateSearch: (search: Record<string, unknown>): CatalogSearch => ({
     q: typeof search.q === "string" ? search.q : undefined,
+    category: typeof search.category === "string" ? search.category : undefined,
   }),
   component: CatalogIndexPage,
 });
 
 function CatalogIndexPage() {
-  const { q: qFromUrl } = Route.useSearch();
+  const { q: qFromUrl, category: categoryFromUrl } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [draftQ, setDraftQ] = useState(qFromUrl ?? "");
-  const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(Boolean(categoryFromUrl));
 
   const categoriesQuery = useQuery({
     queryKey: queryKeys.catalog.categories(),
@@ -34,31 +43,56 @@ function CatalogIndexPage() {
     [categoriesQuery.data],
   );
 
-  const normalized = (qFromUrl ?? "").trim().toLocaleLowerCase("ru");
-  const filtered = useMemo(() => {
-    return tree
-      .map((category) => ({
-        ...category,
-        children: normalized
-          ? category.children.filter((child) =>
-              child.name.toLocaleLowerCase("ru").includes(normalized),
-            )
-          : category.children,
-      }))
-      .filter(
-        (category) =>
-          !normalized ||
-          category.name.toLocaleLowerCase("ru").includes(normalized) ||
-          category.children.length > 0,
-      );
-  }, [normalized, tree]);
+  const selectedCategory = useMemo(() => {
+    if (!categoryFromUrl) return null;
+    for (const section of tree) {
+      if (section.id === categoryFromUrl || section.slug === categoryFromUrl) {
+        return section;
+      }
+      for (const child of section.children) {
+        if (child.id === categoryFromUrl || child.slug === categoryFromUrl) {
+          return child;
+        }
+      }
+    }
+    return null;
+  }, [categoryFromUrl, tree]);
 
-  const navigate = Route.useNavigate();
+  const productsQuery = useQuery({
+    queryKey: queryKeys.catalog.products({
+      q: qFromUrl ?? "",
+      category_id: selectedCategory?.id ?? "",
+    }),
+    queryFn: ({ signal }) =>
+      fetchProducts(
+        {
+          q: qFromUrl,
+          category_id: selectedCategory?.id ?? null,
+          limit: 48,
+        },
+        signal,
+      ),
+  });
+
+  const products = (productsQuery.data ?? []).filter((p) => p.is_published);
 
   function onSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
     void navigate({
-      search: { q: draftQ.trim() || undefined },
+      search: (prev) => ({
+        ...prev,
+        q: draftQ.trim() || undefined,
+      }),
+      replace: true,
+    });
+  }
+
+  function selectCategory(next?: { id: string; slug: string }) {
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        category: next ? next.slug || next.id : undefined,
+      }),
       replace: true,
     });
   }
@@ -72,12 +106,12 @@ function CatalogIndexPage() {
         Медицинское оборудование и материалы
       </h1>
       <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
-        Выберите направление, затем нужную подкатегорию.
+        Список товаров. Категории — в фильтре ниже.
       </p>
 
       <form onSubmit={onSearchSubmit} className="mt-6 flex gap-2" role="search">
         <label htmlFor="catalog-index-search" className="sr-only">
-          Поиск категории или подкатегории
+          Поиск товаров
         </label>
         <div className="relative min-w-0 flex-1">
           <Search
@@ -88,7 +122,7 @@ function CatalogIndexPage() {
             id="catalog-index-search"
             value={draftQ}
             onChange={(e) => setDraftQ(e.target.value)}
-            placeholder="Найти категорию или подкатегорию"
+            placeholder="Поиск по названию или артикулу"
             className="field-control pl-10"
           />
         </div>
@@ -100,96 +134,189 @@ function CatalogIndexPage() {
         </button>
       </form>
 
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={() => setFilterOpen((open) => !open)}
+          className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold"
+          aria-expanded={filterOpen}
+        >
+          <Filter className="h-4 w-4 text-primary" aria-hidden />
+          {selectedCategory
+            ? `Категория: ${selectedCategory.name}`
+            : "Фильтр по категориям"}
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform",
+              filterOpen && "rotate-180",
+            )}
+            aria-hidden
+          />
+        </button>
+
+        {filterOpen ? (
+          <div className="mt-3 space-y-3 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                Категории
+              </p>
+              {selectedCategory ? (
+                <button
+                  type="button"
+                  onClick={() => selectCategory(undefined)}
+                  className="text-xs font-semibold text-primary"
+                >
+                  Сбросить
+                </button>
+              ) : null}
+            </div>
+
+            <StateBlock
+              isLoading={categoriesQuery.isLoading}
+              isError={categoriesQuery.isError}
+              error={categoriesQuery.error}
+              isEmpty={categoriesQuery.isSuccess && tree.length === 0}
+              onRetry={() => void categoriesQuery.refetch()}
+              emptyTitle="Категории пока пусты"
+            >
+              <ul className="space-y-3">
+                {tree.map((section) => {
+                  const sectionActive =
+                    selectedCategory?.id === section.id ||
+                    selectedCategory?.slug === section.slug;
+                  return (
+                    <li key={section.id}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          selectCategory({
+                            id: section.id,
+                            slug: section.slug || section.id,
+                          })
+                        }
+                        className={cn(
+                          "w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition",
+                          sectionActive
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary/70 hover:bg-primary-soft",
+                        )}
+                      >
+                        {section.name}
+                      </button>
+                      {section.children.length > 0 ? (
+                        <ul className="mt-2 flex flex-wrap gap-2 pl-1">
+                          {section.children.map((child) => {
+                            const active =
+                              selectedCategory?.id === child.id ||
+                              selectedCategory?.slug === child.slug;
+                            return (
+                              <li key={child.id}>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    selectCategory({
+                                      id: child.id,
+                                      slug: child.slug || child.id,
+                                    })
+                                  }
+                                  className={cn(
+                                    "rounded-full px-3 py-1.5 text-xs font-semibold transition",
+                                    active
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-background border border-border hover:border-primary/40",
+                                  )}
+                                >
+                                  {child.name}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </StateBlock>
+          </div>
+        ) : null}
+      </div>
+
       <div className="mt-8">
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="font-display text-xl font-bold">Товары</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {selectedCategory?.name ?? "Все опубликованные товары"}
+            </p>
+          </div>
+        </div>
+
         <StateBlock
-          isLoading={categoriesQuery.isLoading}
-          isError={categoriesQuery.isError}
-          error={categoriesQuery.error}
-          isEmpty={categoriesQuery.isSuccess && filtered.length === 0}
-          onRetry={() => void categoriesQuery.refetch()}
+          isLoading={productsQuery.isLoading}
+          isError={productsQuery.isError}
+          error={productsQuery.error}
+          isEmpty={productsQuery.isSuccess && products.length === 0}
+          onRetry={() => void productsQuery.refetch()}
           loadingVariant="card-grid"
           cardGridVariant="catalog"
-          loadingCount={4}
-          emptyTitle={normalized ? "Ничего не найдено" : "Каталог пока пуст"}
+          loadingCount={6}
+          emptyTitle={
+            qFromUrl || selectedCategory ? "Товары не найдены" : "Каталог пока пуст"
+          }
           emptyDescription={
-            normalized
-              ? "Попробуйте другое слово или откройте каталог без поиска."
-              : "Разделы появятся после публикации. Загляните позже или свяжитесь с менеджером."
+            qFromUrl || selectedCategory
+              ? "Измените поиск или сбросьте фильтр категорий."
+              : "Товары появятся после публикации."
           }
         >
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {filtered.map((category) => (
-              <li key={category.id}>
-                <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)]">
-                  <Link
-                    to="/catalog/$categoryId"
-                    params={{ categoryId: category.slug || category.id }}
-                    search={{ subcategory: undefined, q: undefined }}
-                    className="group flex gap-4 border-b border-border p-4"
-                  >
-                    <div className="grid h-20 w-20 shrink-0 place-items-center rounded-xl bg-primary-soft text-lg font-bold text-primary">
-                      {category.name.slice(0, 1)}
-                    </div>
-                    <div className="min-w-0 flex-1 self-center">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                        {category.children.length} подкатегорий
-                      </p>
-                      <h2 className="mt-1 font-display text-lg font-bold leading-snug">
-                        {category.name}
-                      </h2>
-                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground group-hover:text-primary">
-                        Открыть раздел <ArrowRight className="h-3.5 w-3.5" />
-                      </span>
-                    </div>
-                  </Link>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setOpenCategoryId((current) =>
-                        current === category.id ? null : category.id,
-                      )
-                    }
-                    className="flex w-full items-center justify-between px-4 py-3 text-xs font-semibold text-primary sm:hidden"
-                    aria-expanded={openCategoryId === category.id}
-                  >
-                    {openCategoryId === category.id
-                      ? "Скрыть подкатегории"
-                      : `Показать подкатегории · ${category.children.length}`}
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform ${openCategoryId === category.id ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  <div
-                    className={`grid-cols-1 gap-1 border-t border-border p-3 sm:grid sm:grid-cols-2 ${
-                      openCategoryId === category.id ? "grid" : "hidden sm:grid"
-                    }`}
-                  >
-                    {category.children.length === 0 ? (
-                      <p className="px-2 py-2 text-xs text-muted-foreground sm:col-span-2">
-                        Подкатегорий нет — товары появятся в разделе.
-                      </p>
-                    ) : (
-                      category.children.map((child) => (
-                        <Link
-                          key={child.id}
-                          to="/catalog/$categoryId"
-                          params={{ categoryId: child.slug || child.id }}
-                          search={{ subcategory: undefined, q: undefined }}
-                          className="rounded-xl px-2.5 py-2.5 text-sm transition hover:bg-primary-soft hover:text-primary"
-                        >
-                          {child.name}
-                        </Link>
-                      ))
-                    )}
-                  </div>
-                </article>
-              </li>
-            ))}
-          </ul>
+          <ProductGrid products={products} />
         </StateBlock>
       </div>
     </AppShell>
+  );
+}
+
+function ProductGrid({ products }: { products: ProductListOut[] }) {
+  return (
+    <ul className="grid gap-3 sm:grid-cols-2">
+      {products.map((p) => (
+        <li key={p.id}>
+          <Link
+            to="/product/$slug"
+            params={{ slug: p.slug }}
+            className="block overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5"
+          >
+            <div className="aspect-[4/3] bg-muted">
+              {p.primary_image_url ? (
+                <img
+                  src={p.primary_image_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : null}
+            </div>
+            <div className="p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {p.sku}
+              </p>
+              <h3 className="mt-1 font-semibold text-foreground">{p.name_ru}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {[p.manufacturer, p.country].filter(Boolean).join(" · ")}
+              </p>
+              <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+                <span className="text-muted-foreground">
+                  {availabilityLabel(p.availability)}
+                </span>
+                <span className="font-semibold text-primary">
+                  {p.price ? `${p.price} сом` : "По запросу"}
+                </span>
+              </div>
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

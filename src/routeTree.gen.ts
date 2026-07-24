@@ -53,6 +53,7 @@ import { Route as AdminCommerceRfqIdRouteImport } from './routes/admin/commerce/
 import { Route as AdminReportsIndexRouteImport } from './routes/admin/reports/index'
 import { Route as AdminServiceDeskIndexRouteImport } from './routes/admin/service-desk/index'
 import { Route as AdminServiceDeskRequestIdRouteImport } from './routes/admin/service-desk/$requestId'
+import { Route as AdminStaffIndexRouteImport } from './routes/admin/staff/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUsersCustomerIdRouteImport } from './routes/admin/users/$customerId'
 import { Route as ServiceRequestsIndexRouteImport } from './routes/service/requests/index'
@@ -291,6 +292,11 @@ const AdminServiceDeskRequestIdRoute =
     path: '/service-desk/$requestId',
     getParentRoute: () => AdminRouteRoute,
   } as any)
+const AdminStaffIndexRoute = AdminStaffIndexRouteImport.update({
+  id: '/staff/',
+  path: '/staff/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -426,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/admin/commerce/': typeof AdminCommerceIndexRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/admin/service-desk/': typeof AdminServiceDeskIndexRoute
+  '/admin/staff/': typeof AdminStaffIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/service/requests/': typeof ServiceRequestsIndexRoute
   '/admin/catalog/categories/$categoryId': typeof AdminCatalogCategoriesCategoryIdRoute
@@ -482,6 +489,7 @@ export interface FileRoutesByTo {
   '/admin/commerce': typeof AdminCommerceIndexRoute
   '/admin/reports': typeof AdminReportsIndexRoute
   '/admin/service-desk': typeof AdminServiceDeskIndexRoute
+  '/admin/staff': typeof AdminStaffIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/service/requests': typeof ServiceRequestsIndexRoute
   '/admin/catalog/categories/$categoryId': typeof AdminCatalogCategoriesCategoryIdRoute
@@ -545,6 +553,7 @@ export interface FileRoutesById {
   '/admin/commerce/': typeof AdminCommerceIndexRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/admin/service-desk/': typeof AdminServiceDeskIndexRoute
+  '/admin/staff/': typeof AdminStaffIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/service/requests/': typeof ServiceRequestsIndexRoute
   '/admin/catalog/categories/$categoryId': typeof AdminCatalogCategoriesCategoryIdRoute
@@ -609,6 +618,7 @@ export interface FileRouteTypes {
     | '/admin/commerce/'
     | '/admin/reports/'
     | '/admin/service-desk/'
+    | '/admin/staff/'
     | '/admin/users/'
     | '/service/requests/'
     | '/admin/catalog/categories/$categoryId'
@@ -665,6 +675,7 @@ export interface FileRouteTypes {
     | '/admin/commerce'
     | '/admin/reports'
     | '/admin/service-desk'
+    | '/admin/staff'
     | '/admin/users'
     | '/service/requests'
     | '/admin/catalog/categories/$categoryId'
@@ -727,6 +738,7 @@ export interface FileRouteTypes {
     | '/admin/commerce/'
     | '/admin/reports/'
     | '/admin/service-desk/'
+    | '/admin/staff/'
     | '/admin/users/'
     | '/service/requests/'
     | '/admin/catalog/categories/$categoryId'
@@ -1080,6 +1092,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminServiceDeskRequestIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/staff/': {
+      id: '/admin/staff/'
+      path: '/staff'
+      fullPath: '/admin/staff/'
+      preLoaderRoute: typeof AdminStaffIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/users/': {
       id: '/admin/users/'
       path: '/users'
@@ -1207,6 +1226,7 @@ interface AdminRouteRouteChildren {
   AdminCommerceIndexRoute: typeof AdminCommerceIndexRoute
   AdminReportsIndexRoute: typeof AdminReportsIndexRoute
   AdminServiceDeskIndexRoute: typeof AdminServiceDeskIndexRoute
+  AdminStaffIndexRoute: typeof AdminStaffIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
   AdminCatalogCategoriesCategoryIdRoute: typeof AdminCatalogCategoriesCategoryIdRoute
   AdminCatalogCategoriesNewRoute: typeof AdminCatalogCategoriesNewRoute
@@ -1234,6 +1254,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminCommerceIndexRoute: AdminCommerceIndexRoute,
   AdminReportsIndexRoute: AdminReportsIndexRoute,
   AdminServiceDeskIndexRoute: AdminServiceDeskIndexRoute,
+  AdminStaffIndexRoute: AdminStaffIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
   AdminCatalogCategoriesCategoryIdRoute: AdminCatalogCategoriesCategoryIdRoute,
   AdminCatalogCategoriesNewRoute: AdminCatalogCategoriesNewRoute,

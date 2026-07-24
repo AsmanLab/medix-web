@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, ChevronDown, Filter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   fetchCategories,
@@ -132,7 +132,7 @@ function CategoryPage() {
     <AppShell>
       <Link
         to="/catalog"
-        search={{ q: undefined }}
+        search={{ q: undefined, category: undefined }}
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
       >
         <ArrowLeft className="h-4 w-4" />К каталогу
@@ -152,7 +152,7 @@ function CategoryPage() {
           <div className="mt-6 space-y-8">
             <header>
               <nav className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <Link to="/catalog" search={{ q: undefined }} className="hover:text-primary">
+                <Link to="/catalog" search={{ q: undefined, category: undefined }} className="hover:text-primary">
                   Каталог
                 </Link>
                 <span>/</span>
@@ -175,38 +175,11 @@ function CategoryPage() {
             </header>
 
             {section.children.length > 0 ? (
-              <section>
-                <div className="flex items-end justify-between gap-3">
-                  <h2 className="font-display text-xl font-bold">Подкатегории</h2>
-                  <button
-                    type="button"
-                    onClick={() => selectSubcategory(undefined)}
-                    className="text-xs font-semibold text-primary"
-                  >
-                    Показать всё
-                  </button>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {section.children.map((child) => {
-                    const active = selectedChild?.id === child.id;
-                    return (
-                      <button
-                        key={child.id}
-                        type="button"
-                        onClick={() => selectSubcategory(child)}
-                        className={cn(
-                          "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-                          active
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-secondary-foreground hover:bg-primary-soft",
-                        )}
-                      >
-                        {child.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
+              <CategoryFilter
+                children={section.children}
+                selectedChild={selectedChild}
+                onSelect={selectSubcategory}
+              />
             ) : null}
 
             <section>
@@ -268,6 +241,78 @@ function CategoryPage() {
         ) : null}
       </StateBlock>
     </AppShell>
+  );
+}
+
+function CategoryFilter({
+  children,
+  selectedChild,
+  onSelect,
+}: {
+  children: CatalogCategoryNode[];
+  selectedChild: CatalogCategoryNode | null;
+  onSelect: (next?: CatalogCategoryNode) => void;
+}) {
+  const [open, setOpen] = useState(Boolean(selectedChild));
+
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold"
+        aria-expanded={open}
+      >
+        <Filter className="h-4 w-4 text-primary" aria-hidden />
+        {selectedChild
+          ? `Подкатегория: ${selectedChild.name}`
+          : "Фильтр по подкатегориям"}
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 text-muted-foreground transition-transform",
+            open && "rotate-180",
+          )}
+          aria-hidden
+        />
+      </button>
+
+      {open ? (
+        <div className="mt-3 rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="text-sm font-bold">Подкатегории</h2>
+            {selectedChild ? (
+              <button
+                type="button"
+                onClick={() => onSelect(undefined)}
+                className="text-xs font-semibold text-primary"
+              >
+                Показать всё
+              </button>
+            ) : null}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {children.map((child) => {
+              const active = selectedChild?.id === child.id;
+              return (
+                <button
+                  key={child.id}
+                  type="button"
+                  onClick={() => onSelect(child)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold transition",
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-primary-soft",
+                  )}
+                >
+                  {child.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </section>
   );
 }
 
