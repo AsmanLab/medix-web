@@ -24,7 +24,8 @@ function CartSuccessPage() {
         </div>
         <h1 className="mt-5 font-display text-3xl font-bold">Запрос отправлен</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Менеджер подготовит коммерческое предложение и свяжется с вами.
+          Менеджер подготовит коммерческое предложение. Когда вы примете КП,
+          заказ создастся автоматически, а организация будет подтверждена.
         </p>
         {rfqId ? (
           <p className="mt-4 rounded-2xl border border-border bg-card px-4 py-3 text-sm">

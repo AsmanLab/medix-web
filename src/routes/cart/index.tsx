@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { isAppError } from "@/api/errors";
+import { placeOrderFromCart } from "@/api/orders";
 import { fetchProfile } from "@/api/profile";
 import { submitRfqFromCart } from "@/api/rfq";
 import { queryKeys } from "@/api/query-keys";
@@ -43,7 +44,10 @@ function CartPage() {
     cart.items.some((i) => !i.unitPriceAmount) ||
     cart.items.some((i) => i.options.some((o) => !o.unitPriceAmount));
 
-  async function doSubmit() {
+  /** Verified + all priced → direct order; otherwise RFQ. */
+  const canDirectOrder = isVerified && !hasPriceless && cart.items.length > 0;
+
+  async function doSubmitRfq() {
     if (cart.items.length === 0 || submitting) return;
 
     if (session.status !== "authenticated") {
@@ -74,38 +78,87 @@ function CartPage() {
         })),
       });
       rfqCartStore.clear();
-      toast.success("Запрос отправлен");
+      toast.success("Запрос отправлен менеджеру");
       await navigate({
         to: "/cart/success",
         search: { rfqId },
       });
     } catch (err) {
-      const message = isAppError(err)
-        ? err.message
-        : "Не удалось отправить запрос";
-      toast.error(message);
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось отправить запрос",
+      );
     } finally {
       setSubmitting(false);
       setShowVerifyGate(false);
     }
   }
 
-  function onSubmitClick() {
+  async function doPlaceOrder() {
+    if (!canDirectOrder || submitting) return;
+    if (session.status !== "authenticated") {
+      toast.message("Войдите, чтобы оформить заказ");
+      await navigate({
+        to: "/login",
+        search: { redirect: "/cart", phone: undefined },
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await placeOrderFromCart({
+        items: cart.items.map((i) => ({
+          productId: i.productId,
+          qty: i.qty,
+          options: i.options.map((o) => ({
+            optionId: o.optionId,
+            optionType: o.optionType,
+          })),
+        })),
+      });
+      rfqCartStore.clear();
+      if (result.type === "order") {
+        toast.success("Заказ оформлен");
+        await navigate({
+          to: "/orders/$orderId",
+          params: { orderId: result.id },
+        });
+      } else {
+        toast.message("Оформлен запрос — менеджер подготовит КП");
+        await navigate({
+          to: "/cart/success",
+          search: { rfqId: result.id },
+        });
+      }
+    } catch (err) {
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось оформить заказ",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function onPrimaryClick() {
     if (cart.items.length === 0 || submitting) return;
+    if (canDirectOrder) {
+      void doPlaceOrder();
+      return;
+    }
     if (session.status === "authenticated" && !isVerified) {
       setShowVerifyGate(true);
       return;
     }
-    void doSubmit();
+    void doSubmitRfq();
   }
 
   return (
     <AppShell>
-      <h1 className="font-display text-3xl font-bold">Корзина RFQ</h1>
+      <h1 className="font-display text-3xl font-bold">Корзина</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         {cart.items.length
           ? `${cart.items.length} позиций · ${totalQty} ед.`
-          : "Соберите запрос на расчёт стоимости"}
+          : "Добавьте оборудование из каталога"}
       </p>
 
       {cart.items.length === 0 ? (
@@ -113,10 +166,11 @@ function CartPage() {
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary-soft text-primary">
             <ShoppingCart className="h-7 w-7" />
           </div>
-          <h2 className="mt-4 text-lg font-semibold">Здесь пока пусто</h2>
+          <h2 className="mt-4 text-lg font-semibold">Корзина пуста</h2>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-            Добавляйте товары из каталога, затем отправьте корзину менеджеру на
-            расчёт.
+            Выберите позиции в каталоге. После проверки организации можно
+            оформить заказ сразу; иначе менеджер подготовит коммерческое
+            предложение.
           </p>
           <Link
             to="/catalog"
@@ -199,19 +253,29 @@ function CartPage() {
           <section className="rounded-2xl border border-border bg-card p-5">
             <h2 className="font-semibold">Итого</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {hasPriceless
-                ? "Цена по запросу — менеджер подготовит коммерческое предложение."
-                : "Сумма будет подтверждена менеджером в котировке."}
+              {canDirectOrder
+                ? "Организация подтверждена — можно оформить заказ с ценами из каталога."
+                : hasPriceless
+                  ? "Есть позиции без цены — менеджер подготовит коммерческое предложение (КП)."
+                  : !isVerified
+                    ? "После подтверждения организации станет доступен прямой заказ. Сейчас можно отправить запрос на КП."
+                    : "Сумма будет подтверждена в КП."}
             </p>
             <p className="mt-3 text-lg font-bold text-primary">
-              {hasPriceless ? "Цена по запросу" : "По запросу / котировка"}
+              {canDirectOrder
+                ? "Готово к заказу"
+                : hasPriceless
+                  ? "Цена по запросу"
+                  : "Запрос / котировка"}
             </p>
           </section>
 
           <section>
             <label className="block text-sm font-semibold" htmlFor="rfq-comment">
               Комментарий{" "}
-              <span className="font-normal text-muted-foreground">(необязательно)</span>
+              <span className="font-normal text-muted-foreground">
+                (необязательно, для запроса КП)
+              </span>
             </label>
             <textarea
               id="rfq-comment"
@@ -220,16 +284,33 @@ function CartPage() {
               rows={3}
               placeholder="Сроки, комплектация, адрес доставки…"
               className="field-control mt-2 min-h-[96px] resize-y"
+              disabled={canDirectOrder}
             />
           </section>
 
-          <Button
-            className="h-12 w-full sm:w-auto"
-            disabled={submitting}
-            onClick={onSubmitClick}
-          >
-            {submitting ? "Отправка…" : "Отправить запрос"}
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              className="h-12 w-full sm:w-auto"
+              disabled={submitting}
+              onClick={onPrimaryClick}
+            >
+              {submitting
+                ? "Отправка…"
+                : canDirectOrder
+                  ? "Оформить заказ"
+                  : "Отправить запрос на КП"}
+            </Button>
+            {canDirectOrder ? (
+              <Button
+                variant="outline"
+                className="h-12 w-full sm:w-auto"
+                disabled={submitting}
+                onClick={() => void doSubmitRfq()}
+              >
+                Всё же запросить КП
+              </Button>
+            ) : null}
+          </div>
         </div>
       )}
 
@@ -241,20 +322,21 @@ function CartPage() {
           aria-labelledby="verify-gate-title"
         >
           <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-soft)]">
-            <h2 id="verify-gate-title" className="font-display text-xl font-bold">
-              Аккаунт на проверке
+            <h2
+              id="verify-gate-title"
+              className="font-display text-xl font-bold"
+            >
+              Организация ещё не подтверждена
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Ваша организация ещё не подтверждена. Запрос цены можно отправить —
-              после отправки заявка на верификацию уйдёт администратору. Прямой
-              заказ станет доступен после проверки.
+              Запрос на коммерческое предложение можно отправить сейчас —
+              менеджер свяжется с вами. Прямой заказ с ценами каталога станет
+              доступен после проверки организации (или автоматически при
+              принятии КП).
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button
-                disabled={submitting}
-                onClick={() => void doSubmit()}
-              >
-                {submitting ? "Отправка…" : "Отправить всё равно"}
+              <Button disabled={submitting} onClick={() => void doSubmitRfq()}>
+                {submitting ? "Отправка…" : "Отправить запрос"}
               </Button>
               <Button
                 variant="outline"
