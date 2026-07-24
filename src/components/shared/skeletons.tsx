@@ -51,15 +51,28 @@ export function CardGridSkeleton({
 
   if (variant === "catalog") {
     return (
-      <div
-        className={cn("grid gap-4 sm:grid-cols-2", className)}
+      <ul
+        className={cn("grid gap-3 sm:grid-cols-2", className)}
         aria-busy
         aria-label="Загрузка каталога"
       >
         {Array.from({ length: count }, (_, i) => (
-          <Skeleton key={i} className="h-36 rounded-2xl" />
+          <li key={i}>
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+              <Skeleton className="aspect-[4/3] w-full rounded-none" />
+              <div className="space-y-2 p-5">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-5 w-[80%]" />
+                <Skeleton className="h-3 w-[40%]" />
+                <div className="flex justify-between pt-1">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </div>
+            </div>
+          </li>
         ))}
-      </div>
+      </ul>
     );
   }
 
