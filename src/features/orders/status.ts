@@ -44,13 +44,29 @@ export function orderStatusTone(
   }
 }
 
+/** Значения приходят из Order.source: "direct" | "from_rfq". */
 export function orderSourceLabel(source: string): string {
   switch (source) {
+    case "from_rfq":
     case "rfq":
-      return "Из RFQ";
+      return "Из запроса КП";
     case "direct":
       return "Прямой заказ";
     default:
       return source;
   }
+}
+
+/** Переходы, разрешённые доменом (commerce/domain/entities.py, Order). */
+const ORDER_TRANSITIONS: Record<string, OrderStatus[]> = {
+  new: ["confirmed", "cancelled"],
+  confirmed: ["processing", "cancelled"],
+  processing: ["shipped", "cancelled"],
+  shipped: ["completed"],
+  completed: [],
+  cancelled: [],
+};
+
+export function nextOrderStatuses(current: OrderStatus): OrderStatus[] {
+  return ORDER_TRANSITIONS[current] ?? [];
 }

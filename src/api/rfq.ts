@@ -34,6 +34,8 @@ export type RfqDetail = {
   comment: string;
   items: RfqLineItem[];
   quote: RfqQuote | null;
+  /** Заполняется после конвертации RFQ→заказ (сейчас только у менеджера). */
+  order_id?: string | null;
   created_at: string;
   updated_at: string;
 };

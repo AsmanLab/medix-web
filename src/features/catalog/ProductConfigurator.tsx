@@ -1,6 +1,6 @@
-import { ChevronDown } from "lucide-react";
+﻿import { ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { OptionGroupOut } from "@/api/generated/openapi";
+import type { OptionGroupOut } from "@/api/generated/schemas";
 import {
   activeOptions,
   isSingleChoiceGroup,
@@ -76,9 +76,9 @@ export function ProductConfigurator({
   return (
     <section className="space-y-3 rounded-3xl border border-border bg-card p-5">
       <div>
-        <h2 className="font-semibold">Конфигурация</h2>
+        <h2 className="font-semibold">ÐšÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ñ</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Выберите комплектацию и дополнительные опции
+          Ð’Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ ÐºÐ¾Ð¼Ð¿Ð»ÐµÐºÑ‚Ð°Ñ†Ð¸ÑŽ Ð¸ Ð´Ð¾Ð¿Ð¾Ð»Ð½Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ñ‹Ðµ Ð¾Ð¿Ñ†Ð¸Ð¸
         </p>
       </div>
 
@@ -110,13 +110,13 @@ export function ProductConfigurator({
                     {group.name_ru}
                     {single ? (
                       <span className="ml-2 text-[11px] font-medium text-primary">
-                        выберите один
+                        Ð²Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð¾Ð´Ð¸Ð½
                       </span>
                     ) : null}
                   </span>
                   {required ? (
                     <span className="text-[11px] font-semibold text-destructive">
-                      Обязательный выбор
+                      ÐžÐ±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ñ‹Ð¹ Ð²Ñ‹Ð±Ð¾Ñ€
                     </span>
                   ) : null}
                 </span>
@@ -136,7 +136,7 @@ export function ProductConfigurator({
                   className="space-y-2 border-t border-border px-4 py-3"
                 >
                   {opts.map((opt) => {
-                    const priceLabel = opt.price?.trim() || "По запросу";
+                    const priceLabel = opt.price?.trim() || "ÐŸÐ¾ Ð·Ð°Ð¿Ñ€Ð¾ÑÑƒ";
                     if (single) {
                       const checked = selection.singles[group.id] === opt.id;
                       return (
@@ -162,7 +162,7 @@ export function ProductConfigurator({
                             </span>
                             <span className="mt-0.5 block text-xs text-muted-foreground">
                               {priceLabel}
-                              {opt.is_required ? " · обяз." : ""}
+                              {opt.is_required ? " Â· Ð¾Ð±ÑÐ·." : ""}
                             </span>
                           </span>
                         </label>
@@ -206,7 +206,7 @@ export function ProductConfigurator({
 
       <div className="rounded-2xl bg-secondary/50 px-4 py-3">
         <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-          Итого конфигурации
+          Ð˜Ñ‚Ð¾Ð³Ð¾ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸
         </p>
         <p className="mt-1 text-lg font-bold text-primary">{summary.label}</p>
         {selected.length > 0 ? (
@@ -214,7 +214,7 @@ export function ProductConfigurator({
             {selected.map((o) => (
               <li key={o.id}>
                 + {o.name_ru}
-                {o.price ? ` · ${o.price}` : " · по запросу"}
+                {o.price ? ` Â· ${o.price}` : " Â· Ð¿Ð¾ Ð·Ð°Ð¿Ñ€Ð¾ÑÑƒ"}
               </li>
             ))}
           </ul>

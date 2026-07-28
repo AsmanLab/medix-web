@@ -1,7 +1,7 @@
-import type {
+﻿import type {
   ProfileResponse,
   UpdateProfileRequest,
-} from "@/api/generated/openapi";
+} from "@/api/generated/schemas";
 import { apiRequest } from "@/api/client";
 
 export type { ProfileResponse };

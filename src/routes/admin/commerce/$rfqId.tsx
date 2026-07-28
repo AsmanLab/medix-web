@@ -323,7 +323,15 @@ function ManagerRfqDetailPage() {
                     В заказ
                   </Button>
                 ) : null}
-                {rfq?.status === "converted_to_order" ? (
+                {rfq?.order_id ? (
+                  <Link
+                    to="/admin/orders/$orderId"
+                    params={{ orderId: rfq.order_id }}
+                    className="inline-flex h-11 items-center rounded-xl border border-border px-4 text-sm font-semibold text-primary"
+                  >
+                    Перейти к заказу
+                  </Link>
+                ) : rfq?.status === "converted_to_order" ? (
                   <p className="w-full text-xs text-muted-foreground sm:w-auto">
                     Заказ уже создан при принятии КП.
                   </p>

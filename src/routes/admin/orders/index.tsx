@@ -1,116 +1,97 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ClipboardList, Search } from "lucide-react";
+import { Package, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { listManagerRfqs } from "@/api/manager-rfq";
+import { listManagerOrders } from "@/api/manager-orders";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import {
-  formatRfqDate,
-  rfqStatusLabel,
-  rfqStatusTone,
-} from "@/features/rfq/status";
+  orderSourceLabel,
+  orderStatusLabel,
+  orderStatusTone,
+} from "@/features/orders/status";
+import { formatRfqDate } from "@/features/rfq/status";
 import { requireStaffPanel } from "@/session/guards";
 import { useSession } from "@/session/store";
 import { cn } from "@/lib/utils";
 
-type QueueTab = "all" | "unassigned" | "mine";
-// converted_to_order и rejected обязаны быть в списке: после accept-quote RFQ
-// сразу становится converted_to_order, и без них сделка пропадала из очереди.
 const STATUS_FILTERS = [
-  "submitted",
-  "in_review",
-  "quoted",
-  "accepted",
-  "converted_to_order",
-  "rejected",
+  "new",
+  "confirmed",
+  "processing",
+  "shipped",
+  "completed",
+  "cancelled",
 ] as const;
-type StatusFilter = "all" | (typeof STATUS_FILTERS)[number];
+type StatusFilter = (typeof STATUS_FILTERS)[number];
 
-const STATUS_FILTER_LABELS: Record<(typeof STATUS_FILTERS)[number], string> = {
-  submitted: "Отправлен",
-  in_review: "В работе",
-  quoted: "Есть КП",
-  accepted: "Принят",
-  converted_to_order: "В заказе",
-  rejected: "Отклонён",
-};
+type OrdersTab = "all" | "mine";
 
-type CommerceSearch = {
-  tab?: QueueTab;
+type OrdersSearch = {
+  tab?: OrdersTab;
   status?: StatusFilter;
   q?: string;
 };
 
-export const Route = createFileRoute("/admin/commerce/")({
-  validateSearch: (search: Record<string, unknown>): CommerceSearch => ({
-    tab:
-      search.tab === "unassigned" ||
-      search.tab === "mine" ||
-      search.tab === "all"
-        ? search.tab
-        : undefined,
-    status: STATUS_FILTERS.includes(
-      search.status as (typeof STATUS_FILTERS)[number],
-    )
+export const Route = createFileRoute("/admin/orders/")({
+  validateSearch: (search: Record<string, unknown>): OrdersSearch => ({
+    tab: search.tab === "mine" || search.tab === "all" ? search.tab : undefined,
+    status: STATUS_FILTERS.includes(search.status as StatusFilter)
       ? (search.status as StatusFilter)
       : undefined,
     q: typeof search.q === "string" ? search.q : undefined,
   }),
   beforeLoad: () => requireStaffPanel({ roles: ["admin", "manager"] }),
-  component: ManagerRfqQueuePage,
+  component: ManagerOrdersPage,
 });
 
-function ManagerRfqQueuePage() {
-  const { tab: tabFromUrl, status: statusFromUrl, q: qFromUrl } =
-    Route.useSearch();
+function ManagerOrdersPage() {
+  const { tab: tabFromUrl, status, q: qFromUrl } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { user } = useSession();
   const [draftQ, setDraftQ] = useState(qFromUrl ?? "");
 
   const tab = tabFromUrl ?? "all";
-  const status = statusFromUrl ?? "all";
 
+  // Фильтр по статусу отдаём серверу — он умеет это сам; вкладка «мои» и поиск
+  // остаются клиентскими, как в очереди RFQ.
   const listQuery = useQuery({
-    queryKey: queryKeys.managerRfq.list(),
-    queryFn: ({ signal }) => listManagerRfqs(signal),
+    queryKey: queryKeys.managerOrders.list({ status }),
+    queryFn: ({ signal }) => listManagerOrders({ status }, signal),
   });
 
   const items = useMemo(() => {
     let rows = listQuery.data ?? [];
     const myId = user?.userId;
 
-    if (tab === "unassigned") {
-      rows = rows.filter((r) => !r.manager_id);
-    } else if (tab === "mine" && myId) {
-      rows = rows.filter((r) => r.manager_id === myId);
-    }
-
-    if (status !== "all") {
-      rows = rows.filter((r) => r.status === status);
+    if (tab === "mine" && myId) {
+      rows = rows.filter((o) => o.manager_id === myId);
     }
 
     const needle = (qFromUrl ?? "").trim().toLocaleLowerCase("ru");
     if (needle) {
-      rows = rows.filter((r) =>
-        [r.id, r.client_id, r.status].join(" ").toLocaleLowerCase("ru").includes(needle),
+      rows = rows.filter((o) =>
+        [o.id, o.client_id, o.status]
+          .join(" ")
+          .toLocaleLowerCase("ru")
+          .includes(needle),
       );
     }
 
     return rows;
-  }, [listQuery.data, tab, status, qFromUrl, user?.userId]);
+  }, [listQuery.data, tab, qFromUrl, user?.userId]);
 
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft">
-            <ClipboardList className="h-5 w-5 text-primary" aria-hidden />
+            <Package className="h-5 w-5 text-primary" aria-hidden />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-bold">Очередь RFQ</h1>
+            <h1 className="font-display text-2xl font-bold">Заказы</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Взять в работу, выставить КП, конвертировать в заказ
+              Статусы доставки и публикация счетов
             </p>
           </div>
         </div>
@@ -120,7 +101,6 @@ function ManagerRfqQueuePage() {
         {(
           [
             { value: "all", label: "Все" },
-            { value: "unassigned", label: "Свободные" },
             { value: "mine", label: "Мои" },
           ] as const
         ).map((t) => (
@@ -129,7 +109,10 @@ function ManagerRfqQueuePage() {
             type="button"
             onClick={() =>
               void navigate({
-                search: (prev) => ({ ...prev, tab: t.value === "all" ? undefined : t.value }),
+                search: (prev) => ({
+                  ...prev,
+                  tab: t.value === "all" ? undefined : t.value,
+                }),
                 replace: true,
               })
             }
@@ -147,14 +130,11 @@ function ManagerRfqQueuePage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <form
-          className="relative min-w-[200px] flex-1"
+          className="relative flex-1"
           onSubmit={(e) => {
             e.preventDefault();
             void navigate({
-              search: (prev) => ({
-                ...prev,
-                q: draftQ.trim() || undefined,
-              }),
+              search: (prev) => ({ ...prev, q: draftQ.trim() || undefined }),
               replace: true,
             });
           }}
@@ -167,11 +147,13 @@ function ManagerRfqQueuePage() {
             value={draftQ}
             onChange={(e) => setDraftQ(e.target.value)}
             placeholder="Поиск по ID / клиенту"
+            aria-label="Поиск заказов"
             className="h-11 w-full rounded-xl border border-border bg-background pr-3 pl-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </form>
         <select
-          value={status}
+          value={status ?? "all"}
+          aria-label="Фильтр по статусу"
           onChange={(e) =>
             void navigate({
               search: (prev) => ({
@@ -189,7 +171,7 @@ function ManagerRfqQueuePage() {
           <option value="all">Все статусы</option>
           {STATUS_FILTERS.map((value) => (
             <option key={value} value={value}>
-              {STATUS_FILTER_LABELS[value]}
+              {orderStatusLabel(value)}
             </option>
           ))}
         </select>
@@ -202,40 +184,38 @@ function ManagerRfqQueuePage() {
         onRetry={() => void listQuery.refetch()}
         isEmpty={!listQuery.isLoading && items.length === 0}
         loadingVariant="list"
-        emptyIcon={ClipboardList}
-        emptyTitle="Очередь пуста"
-        emptyDescription="Новые запросы появятся здесь после отправки клиентом."
+        emptyIcon={Package}
+        emptyTitle="Заказов нет"
+        emptyDescription="Заказы появляются после прямого оформления клиентом или конвертации запроса КП."
       >
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
-          <div className="hidden grid-cols-[1fr_110px_100px_140px] border-b border-border bg-muted/40 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
-            <span>RFQ</span>
+          <div className="hidden grid-cols-[1fr_120px_110px_110px_140px] border-b border-border bg-muted/40 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
+            <span>Заказ</span>
+            <span>Сумма</span>
             <span>Позиций</span>
             <span>Статус</span>
             <span>Дата</span>
           </div>
-          {items.map((rfq) => {
-            const tone = rfqStatusTone(rfq.status);
+          {items.map((order) => {
+            const tone = orderStatusTone(order.status);
             return (
               <Link
-                key={rfq.id}
-                to="/admin/commerce/$rfqId"
-                params={{ rfqId: rfq.id }}
-                className="grid gap-1 border-b border-border px-4 py-3 last:border-0 hover:bg-muted/30 sm:grid-cols-[1fr_110px_100px_140px] sm:items-center"
+                key={order.id}
+                to="/admin/orders/$orderId"
+                params={{ orderId: order.id }}
+                className="grid gap-1 border-b border-border px-4 py-3 last:border-0 hover:bg-muted/30 sm:grid-cols-[1fr_120px_110px_110px_140px] sm:items-center"
               >
                 <div className="min-w-0">
                   <div className="truncate font-mono text-xs font-semibold">
-                    {rfq.id.slice(0, 8)}…
+                    {order.id.slice(0, 8)}…
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
-                    {rfq.manager_id
-                      ? rfq.manager_id === user?.userId
-                        ? "Назначен вам"
-                        : "Назначен"
-                      : "Свободный"}{" "}
-                    · клиент {rfq.client_id.slice(0, 8)}…
+                    {orderSourceLabel(order.source)} · клиент{" "}
+                    {order.client_id.slice(0, 8)}…
                   </div>
                 </div>
-                <span className="text-sm">{rfq.items_count}</span>
+                <span className="text-sm">{order.total ?? "—"}</span>
+                <span className="text-sm">{order.items_count}</span>
                 <span
                   className={cn(
                     "inline-flex w-fit rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase",
@@ -246,10 +226,10 @@ function ManagerRfqQueuePage() {
                     tone === "muted" && "bg-muted text-muted-foreground",
                   )}
                 >
-                  {rfqStatusLabel(rfq.status)}
+                  {orderStatusLabel(order.status)}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {formatRfqDate(rfq.created_at)}
+                  {formatRfqDate(order.created_at)}
                 </span>
               </Link>
             );

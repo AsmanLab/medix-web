@@ -61,6 +61,10 @@ function OrderDetailPage() {
   const canDownloadInvoice =
     !!invoice &&
     (invoice.status === "published" || !!invoice.pdf_key || !!invoice.pdf_url);
+  // Три разных состояния, которые раньше сливались в одну плашку «счёт появится
+  // после публикации»: запрос упал, счёт ещё черновик, счёта вообще нет.
+  const invoiceFailed = invoiceQuery.isError;
+  const invoiceIsDraft = !!invoice && !canDownloadInvoice;
 
   const history = (order?.status_history ?? [])
     .slice()
@@ -212,6 +216,38 @@ function OrderDetailPage() {
                   >
                     <Download className="h-4 w-4" />
                     Скачать счёт (PDF)
+                  </Button>
+                </section>
+              ) : invoiceFailed ? (
+                <section className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm">
+                  <p className="text-muted-foreground">
+                    Не удалось загрузить счёт
+                    {isAppError(invoiceQuery.error)
+                      ? `: ${invoiceQuery.error.message}`
+                      : "."}
+                  </p>
+                  <Button
+                    className="mt-3"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void invoiceQuery.refetch()}
+                  >
+                    Повторить
+                  </Button>
+                </section>
+              ) : invoiceIsDraft ? (
+                <section className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm">
+                  <p className="text-muted-foreground">
+                    Счёт готовится. PDF появляется в течение минуты после
+                    публикации менеджером.
+                  </p>
+                  <Button
+                    className="mt-3"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void invoiceQuery.refetch()}
+                  >
+                    Обновить
                   </Button>
                 </section>
               ) : (

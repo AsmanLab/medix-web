@@ -7,6 +7,7 @@ import {
   LogOut,
   Megaphone,
   Package,
+  ShoppingCart,
   UserCog,
   Users,
   Wrench,
@@ -23,6 +24,7 @@ type AdminNavKey =
   | "staff"
   | "catalog"
   | "commerce"
+  | "orders"
   | "service_desk"
   | "cms"
   | "banners"
@@ -106,6 +108,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
         to: "/admin/commerce",
         label: "Коммерция",
         icon: ({ className }) => <Package className={className} aria-hidden />,
+        allowedRoles: ["admin", "manager"],
+      },
+      {
+        key: "orders",
+        to: "/admin/orders",
+        label: "Заказы",
+        icon: ({ className }) => (
+          <ShoppingCart className={className} aria-hidden />
+        ),
         allowedRoles: ["admin", "manager"],
       },
       {

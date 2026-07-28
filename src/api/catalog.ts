@@ -1,9 +1,9 @@
-import { apiRequest } from "@/api/client";
+﻿import { apiRequest } from "@/api/client";
 import type {
   CategoryOut,
   ProductDetailOut,
   ProductListOut,
-} from "@/api/generated/openapi";
+} from "@/api/generated/schemas";
 
 export type { CategoryOut, ProductDetailOut, ProductListOut };
 

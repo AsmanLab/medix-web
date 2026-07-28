@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { orderSourceLabel, orderStatusLabel } from "./status";
+import {
+  nextOrderStatuses,
+  orderSourceLabel,
+  orderStatusLabel,
+} from "./status";
 
 describe("orderStatusLabel", () => {
   it("maps known statuses", () => {
@@ -9,7 +13,29 @@ describe("orderStatusLabel", () => {
 });
 
 describe("orderSourceLabel", () => {
-  it("maps rfq source", () => {
-    expect(orderSourceLabel("rfq")).toBe("Из RFQ");
+  // Order.source в бэкенде принимает ровно два значения: "direct" и "from_rfq".
+  it("maps the values the backend actually sends", () => {
+    expect(orderSourceLabel("from_rfq")).toBe("Из запроса КП");
+    expect(orderSourceLabel("direct")).toBe("Прямой заказ");
+  });
+
+  it("falls back to the raw value", () => {
+    expect(orderSourceLabel("whatever")).toBe("whatever");
+  });
+});
+
+describe("nextOrderStatuses", () => {
+  it("follows the domain state machine", () => {
+    expect(nextOrderStatuses("new")).toEqual(["confirmed", "cancelled"]);
+    expect(nextOrderStatuses("shipped")).toEqual(["completed"]);
+  });
+
+  it("returns nothing for terminal statuses", () => {
+    expect(nextOrderStatuses("completed")).toEqual([]);
+    expect(nextOrderStatuses("cancelled")).toEqual([]);
+  });
+
+  it("returns nothing for an unknown status", () => {
+    expect(nextOrderStatuses("bogus")).toEqual([]);
   });
 });
