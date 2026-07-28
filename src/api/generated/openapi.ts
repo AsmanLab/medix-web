@@ -522,26 +522,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/password-reset": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Запрос сброса пароля
-         * @description Отправляет OTP для сброса пароля. Всегда возвращает 204 (без утечки существования аккаунта).
-         */
-        post: operations["password_reset_request_api_v1_auth_password_reset_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/auth/password-reset/confirm": {
         parameters: {
             query?: never;
@@ -553,7 +533,8 @@ export interface paths {
         put?: never;
         /**
          * Подтверждение сброса пароля
-         * @description Проверяет OTP и устанавливает новый пароль. Инвалидирует refresh-токены.
+         * @description Шаг 3 сброса: ставит новый пароль по тикету с verify-otp и отзывает
+         *     все refresh-токены пользователя.
          */
         post: operations["password_reset_confirm_api_v1_auth_password_reset_confirm_post"];
         delete?: never;
@@ -593,8 +574,11 @@ export interface paths {
         put?: never;
         /**
          * Регистрация нового пользователя
-         * @description Шаг 2 регистрации.
-         *     Проверяет OTP transaction_id, создаёт аккаунт и возвращает токены.
+         * @description Шаг 3 регистрации.
+         *
+         *     Создаёт аккаунт по тикету с шага verify-otp: номер берётся из тикета,
+         *     от клиента нужны ФИО, пароль и согласие на обработку ПДн. Профиль
+         *     организации заполняется отдельно через PATCH /profile.
          */
         post: operations["register_api_v1_auth_register_post"];
         delete?: never;
@@ -615,10 +599,39 @@ export interface paths {
         /**
          * Отправить OTP на телефон
          * @description Шаг 1 регистрации или сброса пароля.
-         *     Отправляет OTP через smsnikita на указанный номер.
-         *     Возвращает transaction_id для корреляции запроса на клиенте.
+         *
+         *     Отправляет OTP через smsnikita и возвращает transaction_id — ключ, по
+         *     которому клиент подтвердит код на шаге verify-otp.
+         *
+         *     Для сброса пароля ответ одинаков независимо от того, зарегистрирован ли
+         *     номер: раньше в этом случае отдавался 204, что само по себе выдавало
+         *     отсутствие аккаунта.
          */
         post: operations["send_otp_api_v1_auth_send_otp_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/verify-otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Подтвердить OTP и получить тикет
+         * @description Шаг 2 регистрации и сброса пароля.
+         *
+         *     Проверяет код и выдаёт одноразовый тикет со сроком жизни 15 минут.
+         *     Аккаунт здесь не создаётся и пароль не запрашивается — клиенту не нужно
+         *     хранить его, пока пользователь ходит за SMS.
+         */
+        post: operations["verify_otp_api_v1_auth_verify_otp_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2724,22 +2737,15 @@ export interface components {
             /** Status */
             status: string;
         };
-        /** PasswordResetConfirmRequest */
+        /**
+         * PasswordResetConfirmRequest
+         * @description Шаг 3 сброса. Номер берётся из тикета, полученного на verify-otp.
+         */
         PasswordResetConfirmRequest: {
             /** New Password */
             new_password: string;
-            /**
-             * Otp Code
-             * @description OTP-код из SMS
-             */
-            otp_code: string;
-            /** Phone */
-            phone: string;
-        };
-        /** PasswordResetRequest */
-        PasswordResetRequest: {
-            /** Phone */
-            phone: string;
+            /** Reset Ticket */
+            reset_ticket: string;
         };
         /** PlaceOrderItemRequest */
         PlaceOrderItemRequest: {
@@ -2986,28 +2992,30 @@ export interface components {
         };
         /**
          * RegisterRequest
+         * @description Шаг 3. Телефон не передаётся — он берётся из тикета, подтверждённого на шаге 2.
+         *     Организация, город и адрес заполняются позже через PATCH /profile.
          * @example {
          *       "full_name": "Иван Иванов",
-         *       "otp_code": "123456",
          *       "password": "SecurePass1",
-         *       "phone": "996555123456"
+         *       "registration_ticket": "hK3n..."
          *     }
          */
         RegisterRequest: {
             /** Full Name */
             full_name: string;
             /**
-             * Otp Code
-             * @description OTP-код из SMS
-             */
-            otp_code: string;
-            /**
              * Password
              * @description Минимум 8 символов
              */
             password: string;
-            /** Phone */
-            phone: string;
+            /**
+             * Pd Consent
+             * @description Согласие на обработку персональных данных. Обязательно: без него регистрация отклоняется с кодом consent_required.
+             * @default false
+             */
+            pd_consent: boolean;
+            /** Registration Ticket */
+            registration_ticket: string;
         };
         /** RejectRequest */
         RejectRequest: {
@@ -3080,8 +3088,19 @@ export interface components {
         /** SendOtpResponse */
         SendOtpResponse: {
             /**
+             * Expires At
+             * @description Когда код перестанет действовать (ISO 8601, UTC)
+             */
+            expires_at?: string | null;
+            /**
+             * Retry After
+             * @description Через сколько секунд можно запросить код повторно
+             * @default 0
+             */
+            retry_after: number;
+            /**
              * Transaction Id
-             * @description ID транзакции для корреляции запроса
+             * @description Ключ транзакции для шага verify-otp
              */
             transaction_id: string;
         };
@@ -3382,6 +3401,41 @@ export interface components {
         VerificationStatusResponse: {
             /** Verification Status */
             verification_status: string;
+        };
+        /**
+         * VerifyOtpRequest
+         * @example {
+         *       "otp_code": "123456",
+         *       "purpose": "registration",
+         *       "transaction_id": "3f2b8c1d4e5a6b7c8d9e0f1a2b3c4d5e"
+         *     }
+         */
+        VerifyOtpRequest: {
+            /**
+             * Otp Code
+             * @description OTP-код из SMS
+             */
+            otp_code: string;
+            /**
+             * Purpose
+             * @default registration
+             */
+            purpose: string;
+            /** Transaction Id */
+            transaction_id: string;
+        };
+        /** VerifyOtpResponse */
+        VerifyOtpResponse: {
+            /**
+             * Expires At
+             * @description Срок годности тикета (ISO 8601, UTC)
+             */
+            expires_at: string;
+            /**
+             * Ticket
+             * @description Одноразовое доказательство владения номером
+             */
+            ticket: string;
         };
         /** VerifyRequest */
         VerifyRequest: {
@@ -6214,65 +6268,6 @@ export interface operations {
             };
         };
     };
-    password_reset_request_api_v1_auth_password_reset_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasswordResetRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Некорректный запрос */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        detail: string;
-                    };
-                };
-            };
-            /** @description Ошибка валидации */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        detail?: {
-                            loc?: (string | number)[];
-                            msg?: string;
-                            type?: string;
-                        }[];
-                    };
-                };
-            };
-            /** @description Сервис временно недоступен */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        detail: string;
-                    };
-                };
-            };
-        };
-    };
     password_reset_confirm_api_v1_auth_password_reset_confirm_post: {
         parameters: {
             query?: never;
@@ -6487,12 +6482,66 @@ export interface operations {
                     "application/json": components["schemas"]["SendOtpResponse"];
                 };
             };
-            /** @description OTP не отправлен (сброс пароля, пользователь не найден) */
-            204: {
+            /** @description Некорректный запрос */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Сервис временно недоступен */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+        };
+    };
+    verify_otp_api_v1_auth_verify_otp_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyOtpRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyOtpResponse"];
+                };
             };
             /** @description Некорректный запрос */
             400: {

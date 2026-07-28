@@ -1,7 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { confirmPasswordReset, requestPasswordReset } from "@/api/auth";
+import {
+  confirmPasswordReset,
+  requestPasswordReset,
+  verifyOtp,
+} from "@/api/auth";
 import { isAppError } from "@/api/errors";
 import { requireGuest } from "@/session/guards";
 import { logoutSession } from "@/session/store";
@@ -13,15 +17,26 @@ export const Route = createFileRoute("/password-reset")({
   component: ResetPage,
 });
 
-const OTP_COOLDOWN_SEC = 60;
+const FALLBACK_COOLDOWN_SEC = 60;
 
+/**
+ * Сброс пароля в три шага: телефон → код → новый пароль.
+ *
+ * Тот же приём, что и в регистрации: новый пароль вводится после возврата
+ * из SMS, поэтому он не живёт в стейте через уход в другое приложение.
+ */
 function ResetPage() {
   const nav = useNavigate();
-  const [sent, setSent] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
+
+  const [transactionId, setTransactionId] = useState("");
+  const [ticket, setTicket] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
@@ -32,39 +47,65 @@ function ResetPage() {
     return () => window.clearInterval(id);
   }, [cooldown]);
 
-  async function onSubmit(e: React.FormEvent) {
+  function applyError(err: unknown, fallback: string) {
+    const message = isAppError(err) ? err.message : fallback;
+    setFormError(message);
+    toast.error(message);
+  }
+
+  async function requestCode(normalized: string) {
+    const res = await requestPasswordReset(normalized);
+    setTransactionId(res.transaction_id);
+    setCooldown(res.retry_after || FALLBACK_COOLDOWN_SEC);
+  }
+
+  async function onSubmitPhone(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
     const normalized = normalizePhone(phone);
-
-    if (!sent) {
-      if (!isValidKgPhone(normalized)) {
-        setFormError("Телефон в формате 996XXXXXXXXX");
-        return;
-      }
-      setSubmitting(true);
-      try {
-        await requestPasswordReset(normalized);
-        setPhone(normalized);
-        setSent(true);
-        setCooldown(OTP_COOLDOWN_SEC);
-        toast.success("Если аккаунт существует, код отправлен по SMS");
-      } catch (err) {
-        setFormError(isAppError(err) ? err.message : "Не удалось отправить код");
-      } finally {
-        setSubmitting(false);
-      }
-      return;
-    }
-
     if (!isValidKgPhone(normalized)) {
       setFormError("Телефон в формате 996XXXXXXXXX");
       return;
     }
+    setSubmitting(true);
+    try {
+      await requestCode(normalized);
+      setPhone(normalized);
+      setStep(2);
+      toast.success("Если аккаунт существует, код отправлен по SMS");
+    } catch (err) {
+      applyError(err, "Не удалось отправить код");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function onSubmitCode(e: React.FormEvent) {
+    e.preventDefault();
+    setFormError(null);
     if (otp.trim().length < 4) {
       setFormError("Введите код из SMS");
       return;
     }
+    setSubmitting(true);
+    try {
+      const res = await verifyOtp({
+        transaction_id: transactionId,
+        otp_code: otp.trim(),
+        purpose: "password_reset",
+      });
+      setTicket(res.ticket);
+      setStep(3);
+    } catch (err) {
+      applyError(err, "Не удалось подтвердить код");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function onSubmitPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setFormError(null);
     if (password.length < 8) {
       setFormError("Новый пароль — минимум 8 символов");
       return;
@@ -73,95 +114,149 @@ function ResetPage() {
       setFormError("Пароли не совпадают");
       return;
     }
-
     setSubmitting(true);
     try {
       await confirmPasswordReset({
-        phone: normalized,
-        otp_code: otp.trim(),
+        reset_ticket: ticket,
         new_password: password,
       });
       await logoutSession();
       toast.success("Пароль изменён. Войдите с новым паролем");
-      await nav({
-        to: "/login",
-        search: { redirect: undefined, phone: normalized },
-      });
+      await nav({ to: "/login", search: { redirect: undefined, phone } });
     } catch (err) {
-      const message = isAppError(err) ? err.message : "Не удалось сменить пароль";
-      setFormError(message);
-      toast.error(message);
+      applyError(err, "Не удалось сменить пароль");
     } finally {
       setSubmitting(false);
     }
   }
 
+  const subtitle =
+    step === 1
+      ? "Отправим одноразовый код на ваш номер."
+      : step === 2
+        ? `Код отправлен на ${phone}.`
+        : "Номер подтверждён. Придумайте новый пароль.";
+
   return (
     <main className="grid min-h-screen place-items-center bg-surface px-5">
-      <form
-        onSubmit={onSubmit}
+      <section
         className="w-full max-w-md rounded-3xl border border-border bg-card p-6"
-        autoComplete="off"
       >
-        <h1 className="font-display text-2xl font-bold">Восстановление пароля</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {sent
-            ? `Код для номера ${phone}. Введите OTP и новый пароль.`
-            : "Отправим одноразовый код на ваш номер."}
+        <p className="text-xs font-bold uppercase tracking-widest text-primary">
+          Шаг {step} из 3
         </p>
-        <div className="mt-6 space-y-3">
-          {!sent ? (
+        <h1 className="mt-2 font-display text-2xl font-bold">
+          Восстановление пароля
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
+
+        {step === 1 ? (
+          <form onSubmit={onSubmitPhone} className="mt-6 space-y-3">
             <input
               required
+              autoFocus
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="996555000000"
               inputMode="numeric"
+              autoComplete="tel"
+              aria-label="Номер телефона"
               className="field-control"
             />
-          ) : (
-            <>
-              <input
-                required
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="Код (dev: 123456)"
-                inputMode="numeric"
-                className="field-control"
-              />
-              <input
-                required
-                type="password"
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Новый пароль"
-                autoComplete="new-password"
-                className="field-control"
-              />
-              <input
-                required
-                type="password"
-                minLength={8}
-                value={password2}
-                onChange={(e) => setPassword2(e.target.value)}
-                placeholder="Повторите пароль"
-                autoComplete="new-password"
-                className="field-control"
-              />
-            </>
-          )}
-          {formError ? (
-            <p className="text-sm text-destructive">{formError}</p>
-          ) : null}
-          <Button disabled={submitting} className="w-full" type="submit">
-            {submitting
-              ? "Сохраняем…"
-              : sent
-                ? "Сохранить пароль"
-                : "Получить код"}
-          </Button>
-        </div>
+            {formError ? (
+              <p className="text-sm text-destructive">{formError}</p>
+            ) : null}
+            <Button disabled={submitting} className="w-full" type="submit">
+              {submitting ? "Отправляем…" : "Получить код"}
+            </Button>
+          </form>
+        ) : null}
+
+        {step === 2 ? (
+          <form onSubmit={onSubmitCode} className="mt-6 space-y-3">
+            <input
+              required
+              autoFocus
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="Код (dev: 123456)"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              aria-label="Код из SMS"
+              className="field-control"
+            />
+            {formError ? (
+              <p className="text-sm text-destructive">{formError}</p>
+            ) : null}
+            <Button disabled={submitting} className="w-full" type="submit">
+              {submitting ? "Проверяем…" : "Подтвердить"}
+            </Button>
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                className="text-sm text-primary"
+                onClick={() => {
+                  setStep(1);
+                  setOtp("");
+                  setTransactionId("");
+                  setFormError(null);
+                }}
+              >
+                Не тот номер?
+              </button>
+              <button
+                type="button"
+                disabled={cooldown > 0 || submitting}
+                className="text-sm text-primary disabled:text-muted-foreground"
+                onClick={async () => {
+                  try {
+                    await requestCode(phone);
+                    toast.success("Код отправлен повторно");
+                  } catch (err) {
+                    applyError(err, "Не удалось отправить код");
+                  }
+                }}
+              >
+                {cooldown > 0 ? `Повтор через ${cooldown} с` : "Отправить снова"}
+              </button>
+            </div>
+          </form>
+        ) : null}
+
+        {step === 3 ? (
+          <form onSubmit={onSubmitPassword} className="mt-6 space-y-3">
+            <input
+              required
+              autoFocus
+              type="password"
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Новый пароль"
+              autoComplete="new-password"
+              aria-label="Новый пароль"
+              className="field-control"
+            />
+            <input
+              required
+              type="password"
+              minLength={8}
+              value={password2}
+              onChange={(e) => setPassword2(e.target.value)}
+              placeholder="Повторите пароль"
+              autoComplete="new-password"
+              aria-label="Повторите пароль"
+              className="field-control"
+            />
+            {formError ? (
+              <p className="text-sm text-destructive">{formError}</p>
+            ) : null}
+            <Button disabled={submitting} className="w-full" type="submit">
+              {submitting ? "Сохраняем…" : "Сохранить пароль"}
+            </Button>
+          </form>
+        ) : null}
+
         <Link
           to="/login"
           search={{ redirect: undefined, phone: undefined }}
@@ -169,7 +264,7 @@ function ResetPage() {
         >
           Вернуться ко входу
         </Link>
-      </form>
+      </section>
     </main>
   );
 }

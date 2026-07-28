@@ -142,15 +142,18 @@ export async function loginWithPassword(phone: string, password: string) {
   return getSessionSnapshot();
 }
 
-export async function registerWithOtp(input: {
-  phone: string;
-  otp_code: string;
+export async function registerWithTicket(input: {
+  registration_ticket: string;
   password: string;
   full_name: string;
+  pd_consent: boolean;
+  /** Только для запоминания последнего номера в форме входа. */
+  phone: string;
 }) {
-  const tokens = await authApi.register(input);
+  const { phone, ...body } = input;
+  const tokens = await authApi.register(body);
   applyTokens(tokens.access_token, tokens.refresh_token);
-  writeLastPhone(input.phone);
+  writeLastPhone(phone);
   return getSessionSnapshot();
 }
 

@@ -82,13 +82,22 @@ export async function registerClient(
 ): Promise<void> {
   const password = input.password ?? E2E.password;
   const otp = input.otp ?? E2E.otp;
+  // Три шага: телефон → код → ФИО и пароль. Пароль спрашивается последним,
+  // чтобы он не жил в стейте, пока пользователь ходит за SMS.
   await page.goto("/register");
-  await page.getByPlaceholder("ФИО").fill(input.fullName ?? "E2E Client");
   await page.getByPlaceholder("996555000000").fill(input.phone);
-  await page.getByPlaceholder("Пароль (мин. 8)").fill(password);
   await page.getByRole("button", { name: "Получить код" }).click();
+
   await expect(page.getByText("Подтвердите номер")).toBeVisible();
   await page.getByPlaceholder("Код (dev: 123456)").fill(otp);
+  await page.getByRole("button", { name: "Подтвердить" }).click();
+
+  await expect(page.getByText("Последний шаг")).toBeVisible();
+  await page.getByPlaceholder("ФИО").fill(input.fullName ?? "E2E Client");
+  await page.getByPlaceholder("Пароль (мин. 8)").fill(password);
+  // Без согласия на обработку ПДн кнопка заблокирована, а сервер отвечает
+  // consent_required — галочка обязательна, а не косметическая.
+  await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Создать аккаунт" }).click();
   await expect(page).toHaveURL(/\/profile/, { timeout: 25_000 });
 }

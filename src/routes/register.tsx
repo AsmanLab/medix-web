@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { sendOtp } from "@/api/auth";
+import { sendOtp, verifyOtp } from "@/api/auth";
 import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { requireGuest } from "@/session/guards";
-import { registerWithOtp } from "@/session/store";
+import { registerWithTicket } from "@/session/store";
 import { isValidKgPhone, normalizePhone } from "@/lib/phone";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -15,19 +15,37 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
 });
 
-const OTP_COOLDOWN_SEC = 60;
+const FALLBACK_COOLDOWN_SEC = 60;
 
+/**
+ * Регистрация в три шага: телефон → код → ФИО и пароль.
+ *
+ * Пароль спрашивается последним намеренно. Между отправкой SMS и вводом кода
+ * пользователь уходит в приложение сообщений: на вебе он может обновить
+ * страницу, на Android процесс может быть убит. Если пароль собирать первым,
+ * он теряется вместе со стейтом, а persist'ить его некуда — sessionStorage
+ * для пароля не годится. На последнем шаге терять уже нечего: номер
+ * подтверждён и на руках тикет.
+ */
 function RegisterPage() {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const nav = useNavigate();
   const queryClient = useQueryClient();
-  const [fullName, setFullName] = useState("");
+
   const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
+  const [pdConsent, setPdConsent] = useState(false);
+
+  const [transactionId, setTransactionId] = useState("");
+  const [ticket, setTicket] = useState("");
+  const [codeExpiresAt, setCodeExpiresAt] = useState<number | null>(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -35,7 +53,30 @@ function RegisterPage() {
     return () => window.clearInterval(id);
   }, [cooldown]);
 
-  async function requestCode(e: React.FormEvent) {
+  // Обратный отсчёт по expires_at с сервера, а не по локальным часам.
+  useEffect(() => {
+    if (codeExpiresAt === null || step !== 2) return;
+    const tick = () =>
+      setSecondsLeft(Math.max(0, Math.round((codeExpiresAt - Date.now()) / 1000)));
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [codeExpiresAt, step]);
+
+  function applyError(err: unknown, fallback: string) {
+    const message = isAppError(err) ? err.message : fallback;
+    setFormError(message);
+    toast.error(message);
+  }
+
+  async function requestCode(normalized: string) {
+    const res = await sendOtp(normalized, "registration");
+    setTransactionId(res.transaction_id);
+    setCodeExpiresAt(res.expires_at ? Date.parse(res.expires_at) : null);
+    setCooldown(res.retry_after || FALLBACK_COOLDOWN_SEC);
+  }
+
+  async function onSubmitPhone(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
     const normalized = normalizePhone(phone);
@@ -43,31 +84,20 @@ function RegisterPage() {
       setFormError("Телефон в формате 996XXXXXXXXX");
       return;
     }
-    if (password.length < 8) {
-      setFormError("Пароль — минимум 8 символов");
-      return;
-    }
-    if (fullName.trim().length < 2) {
-      setFormError("Укажите ФИО");
-      return;
-    }
     setSubmitting(true);
     try {
-      await sendOtp(normalized, "registration");
+      await requestCode(normalized);
       setPhone(normalized);
       setStep(2);
-      setCooldown(OTP_COOLDOWN_SEC);
       toast.success("Код отправлен по SMS");
     } catch (err) {
-      const message = isAppError(err) ? err.message : "Не удалось отправить код";
-      setFormError(message);
-      toast.error(message);
+      applyError(err, "Не удалось отправить код");
     } finally {
       setSubmitting(false);
     }
   }
 
-  async function confirmRegister(e: React.FormEvent) {
+  async function onSubmitCode(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
     if (otp.length < 4) {
@@ -76,59 +106,93 @@ function RegisterPage() {
     }
     setSubmitting(true);
     try {
-      await registerWithOtp({
-        phone,
+      const res = await verifyOtp({
+        transaction_id: transactionId,
         otp_code: otp,
-        password,
-        full_name: fullName.trim(),
+        purpose: "registration",
       });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
-      toast.success("Аккаунт создан");
-      await nav({ to: "/profile" });
+      setTicket(res.ticket);
+      setStep(3);
     } catch (err) {
-      const message = isAppError(err)
-        ? err.message
-        : "Не удалось зарегистрироваться";
-      setFormError(message);
-      toast.error(message);
+      applyError(err, "Не удалось подтвердить код");
     } finally {
       setSubmitting(false);
     }
   }
 
+  async function onSubmitProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setFormError(null);
+    if (fullName.trim().length < 2) {
+      setFormError("Укажите ФИО");
+      return;
+    }
+    if (password.length < 8) {
+      setFormError("Пароль — минимум 8 символов");
+      return;
+    }
+    if (!pdConsent) {
+      // Дублирует серверную проверку (код consent_required): согласие должно
+      // быть осознанным действием, поэтому флаг не проставляется автоматически.
+      setFormError("Нужно согласие на обработку персональных данных");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await registerWithTicket({
+        registration_ticket: ticket,
+        password,
+        full_name: fullName.trim(),
+        pd_consent: pdConsent,
+        phone,
+      });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+      toast.success("Аккаунт создан");
+      await nav({ to: "/profile" });
+    } catch (err) {
+      applyError(err, "Не удалось зарегистрироваться");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function backToPhone() {
+    setStep(1);
+    setOtp("");
+    setTransactionId("");
+    setCodeExpiresAt(null);
+    setFormError(null);
+  }
+
+  const title =
+    step === 1
+      ? "Регистрация"
+      : step === 2
+        ? "Подтвердите номер"
+        : "Последний шаг";
+
   return (
     <main className="grid min-h-screen place-items-center bg-surface px-5">
       <section className="w-full max-w-md rounded-3xl border border-border bg-card p-6">
         <p className="text-xs font-bold uppercase tracking-widest text-primary">
-          Шаг {step} из 2
+          Шаг {step} из 3
         </p>
-        <h1 className="mt-2 font-display text-2xl font-bold">
-          {step === 1 ? "Регистрация" : "Подтвердите номер"}
-        </h1>
+        <h1 className="mt-2 font-display text-2xl font-bold">{title}</h1>
+
         {step === 1 ? (
-          <form onSubmit={requestCode} className="mt-6 space-y-3">
+          <form onSubmit={onSubmitPhone} className="mt-6 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Отправим код подтверждения по SMS.
+            </p>
             <input
               required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="ФИО"
-              className="field-control"
-            />
-            <input
-              required
+              autoFocus
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="996555000000"
               inputMode="numeric"
-              className="field-control"
-            />
-            <input
-              required
-              type="password"
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Пароль (мин. 8)"
+              autoComplete="tel"
+              aria-label="Номер телефона"
               className="field-control"
             />
             {formError ? (
@@ -138,41 +202,129 @@ function RegisterPage() {
               {submitting ? "Отправляем…" : "Получить код"}
             </Button>
           </form>
-        ) : (
-          <form onSubmit={confirmRegister} className="mt-6 space-y-3">
-            <p className="text-sm text-muted-foreground">Код для {phone}</p>
+        ) : null}
+
+        {step === 2 ? (
+          <form onSubmit={onSubmitCode} className="mt-6 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Код отправлен на {phone}
+            </p>
             <input
               required
+              autoFocus
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               placeholder="Код (dev: 123456)"
               inputMode="numeric"
+              autoComplete="one-time-code"
+              aria-label="Код из SMS"
               className="field-control"
             />
+            {secondsLeft !== null ? (
+              <p className="text-xs text-muted-foreground">
+                {secondsLeft > 0
+                  ? `Код действует ещё ${Math.floor(secondsLeft / 60)}:${String(
+                      secondsLeft % 60,
+                    ).padStart(2, "0")}`
+                  : "Срок действия кода истёк — запросите новый"}
+              </p>
+            ) : null}
             {formError ? (
               <p className="text-sm text-destructive">{formError}</p>
             ) : null}
             <Button disabled={submitting} className="w-full" type="submit">
+              {submitting ? "Проверяем…" : "Подтвердить"}
+            </Button>
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                className="text-sm text-primary"
+                onClick={backToPhone}
+              >
+                Не тот номер?
+              </button>
+              <button
+                type="button"
+                disabled={cooldown > 0 || submitting}
+                className="text-sm text-primary disabled:text-muted-foreground"
+                onClick={async () => {
+                  try {
+                    await requestCode(phone);
+                    toast.success("Код отправлен повторно");
+                  } catch (err) {
+                    applyError(err, "Не удалось отправить код");
+                  }
+                }}
+              >
+                {cooldown > 0 ? `Повтор через ${cooldown} с` : "Отправить снова"}
+              </button>
+            </div>
+          </form>
+        ) : null}
+
+        {step === 3 ? (
+          <form onSubmit={onSubmitProfile} className="mt-6 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Номер {phone} подтверждён. Осталось назвать себя и придумать
+              пароль.
+            </p>
+            <input
+              required
+              autoFocus
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="ФИО"
+              autoComplete="name"
+              aria-label="ФИО"
+              className="field-control"
+            />
+            <input
+              required
+              type="password"
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Пароль (мин. 8)"
+              autoComplete="new-password"
+              aria-label="Пароль"
+              className="field-control"
+            />
+            <p className="text-xs text-muted-foreground">
+              Данные организации можно будет заполнить позже в профиле.
+            </p>
+            <label className="flex items-start gap-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={pdConsent}
+                onChange={(e) => setPdConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0"
+              />
+              <span className="text-muted-foreground">
+                Согласен на обработку персональных данных и принимаю{" "}
+                <Link
+                  to="/pages/$slug"
+                  params={{ slug: "privacy" }}
+                  target="_blank"
+                  className="text-primary underline"
+                >
+                  условия
+                </Link>
+                .
+              </span>
+            </label>
+            {formError ? (
+              <p className="text-sm text-destructive">{formError}</p>
+            ) : null}
+            <Button
+              disabled={submitting || !pdConsent}
+              className="w-full"
+              type="submit"
+            >
               {submitting ? "Создаём…" : "Создать аккаунт"}
             </Button>
-            <button
-              type="button"
-              disabled={cooldown > 0 || submitting}
-              className="text-sm text-primary disabled:text-muted-foreground"
-              onClick={async () => {
-                try {
-                  await sendOtp(phone, "registration");
-                  setCooldown(OTP_COOLDOWN_SEC);
-                  toast.success("Код отправлен повторно");
-                } catch (err) {
-                  toast.error(isAppError(err) ? err.message : "Ошибка");
-                }
-              }}
-            >
-              {cooldown > 0 ? `Повтор через ${cooldown} с` : "Отправить снова"}
-            </button>
           </form>
-        )}
+        ) : null}
+
         <Link
           to="/login"
           search={{ redirect: undefined, phone: undefined }}

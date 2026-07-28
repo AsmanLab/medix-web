@@ -2134,45 +2134,24 @@
         "type": "object"
       },
       "PasswordResetConfirmRequest": {
+        "description": "Шаг 3 сброса. Номер берётся из тикета, полученного на verify-otp.",
         "properties": {
           "new_password": {
             "minLength": 8,
             "title": "New Password",
             "type": "string"
           },
-          "otp_code": {
-            "description": "OTP-код из SMS",
-            "maxLength": 12,
-            "minLength": 4,
-            "title": "Otp Code",
-            "type": "string"
-          },
-          "phone": {
-            "pattern": "^996\\d{9}$",
-            "title": "Phone",
+          "reset_ticket": {
+            "minLength": 16,
+            "title": "Reset Ticket",
             "type": "string"
           }
         },
         "required": [
-          "phone",
-          "otp_code",
+          "reset_ticket",
           "new_password"
         ],
         "title": "PasswordResetConfirmRequest",
-        "type": "object"
-      },
-      "PasswordResetRequest": {
-        "properties": {
-          "phone": {
-            "pattern": "^996\\d{9}$",
-            "title": "Phone",
-            "type": "string"
-          }
-        },
-        "required": [
-          "phone"
-        ],
-        "title": "PasswordResetRequest",
         "type": "object"
       },
       "PlaceOrderItemRequest": {
@@ -2918,12 +2897,12 @@
         "type": "object"
       },
       "RegisterRequest": {
+        "description": "Шаг 3. Телефон не передаётся — он берётся из тикета, подтверждённого на шаге 2.\nОрганизация, город и адрес заполняются позже через PATCH /profile.",
         "examples": [
           {
             "full_name": "Иван Иванов",
-            "otp_code": "123456",
             "password": "SecurePass1",
-            "phone": "996555123456"
+            "registration_ticket": "hK3n..."
           }
         ],
         "properties": {
@@ -2933,28 +2912,26 @@
             "title": "Full Name",
             "type": "string"
           },
-          "otp_code": {
-            "description": "OTP-код из SMS",
-            "maxLength": 12,
-            "minLength": 4,
-            "title": "Otp Code",
-            "type": "string"
-          },
           "password": {
             "description": "Минимум 8 символов",
             "minLength": 8,
             "title": "Password",
             "type": "string"
           },
-          "phone": {
-            "pattern": "^996\\d{9}$",
-            "title": "Phone",
+          "pd_consent": {
+            "default": false,
+            "description": "Согласие на обработку персональных данных. Обязательно: без него регистрация отклоняется с кодом consent_required.",
+            "title": "Pd Consent",
+            "type": "boolean"
+          },
+          "registration_ticket": {
+            "minLength": 16,
+            "title": "Registration Ticket",
             "type": "string"
           }
         },
         "required": [
-          "phone",
-          "otp_code",
+          "registration_ticket",
           "password",
           "full_name"
         ],
@@ -3133,8 +3110,26 @@
       },
       "SendOtpResponse": {
         "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Когда код перестанет действовать (ISO 8601, UTC)",
+            "title": "Expires At"
+          },
+          "retry_after": {
+            "default": 0,
+            "description": "Через сколько секунд можно запросить код повторно",
+            "title": "Retry After",
+            "type": "integer"
+          },
           "transaction_id": {
-            "description": "ID транзакции для корреляции запроса",
+            "description": "Ключ транзакции для шага verify-otp",
             "title": "Transaction Id",
             "type": "string"
           }
@@ -4096,6 +4091,62 @@
           "verification_status"
         ],
         "title": "VerificationStatusResponse",
+        "type": "object"
+      },
+      "VerifyOtpRequest": {
+        "examples": [
+          {
+            "otp_code": "123456",
+            "purpose": "registration",
+            "transaction_id": "3f2b8c1d4e5a6b7c8d9e0f1a2b3c4d5e"
+          }
+        ],
+        "properties": {
+          "otp_code": {
+            "description": "OTP-код из SMS",
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Otp Code",
+            "type": "string"
+          },
+          "purpose": {
+            "default": "registration",
+            "pattern": "^(registration|password_reset)$",
+            "title": "Purpose",
+            "type": "string"
+          },
+          "transaction_id": {
+            "maxLength": 64,
+            "minLength": 8,
+            "title": "Transaction Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_id",
+          "otp_code"
+        ],
+        "title": "VerifyOtpRequest",
+        "type": "object"
+      },
+      "VerifyOtpResponse": {
+        "properties": {
+          "expires_at": {
+            "description": "Срок годности тикета (ISO 8601, UTC)",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "ticket": {
+            "description": "Одноразовое доказательство владения номером",
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket",
+          "expires_at"
+        ],
+        "title": "VerifyOtpResponse",
         "type": "object"
       },
       "VerifyRequest": {
@@ -9452,109 +9503,9 @@
         ]
       }
     },
-    "/api/v1/auth/password-reset": {
-      "post": {
-        "description": "Отправляет OTP для сброса пароля. Всегда возвращает 204 (без утечки существования аккаунта).",
-        "operationId": "password_reset_request_api_v1_auth_password_reset_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PasswordResetRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "detail": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "detail"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Некорректный запрос"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "detail": {
-                      "items": {
-                        "properties": {
-                          "loc": {
-                            "items": {
-                              "oneOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "integer"
-                                }
-                              ]
-                            },
-                            "type": "array"
-                          },
-                          "msg": {
-                            "type": "string"
-                          },
-                          "type": {
-                            "type": "string"
-                          }
-                        },
-                        "type": "object"
-                      },
-                      "type": "array"
-                    }
-                  },
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Ошибка валидации"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "detail": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "detail"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Сервис временно недоступен"
-          }
-        },
-        "summary": "Запрос сброса пароля",
-        "tags": [
-          "identity"
-        ]
-      }
-    },
     "/api/v1/auth/password-reset/confirm": {
       "post": {
-        "description": "Проверяет OTP и устанавливает новый пароль. Инвалидирует refresh-токены.",
+        "description": "Шаг 3 сброса: ставит новый пароль по тикету с verify-otp и отзывает\nвсе refresh-токены пользователя.",
         "operationId": "password_reset_confirm_api_v1_auth_password_reset_confirm_post",
         "requestBody": {
           "content": {
@@ -9761,7 +9712,7 @@
     },
     "/api/v1/auth/register": {
       "post": {
-        "description": "Шаг 2 регистрации.\nПроверяет OTP transaction_id, создаёт аккаунт и возвращает токены.",
+        "description": "Шаг 3 регистрации.\n\nСоздаёт аккаунт по тикету с шага verify-otp: номер берётся из тикета,\nот клиента нужны ФИО, пароль и согласие на обработку ПДн. Профиль\nорганизации заполняется отдельно через PATCH /profile.",
         "operationId": "register_api_v1_auth_register_post",
         "requestBody": {
           "content": {
@@ -9886,7 +9837,7 @@
     },
     "/api/v1/auth/send-otp": {
       "post": {
-        "description": "Шаг 1 регистрации или сброса пароля.\nОтправляет OTP через smsnikita на указанный номер.\nВозвращает transaction_id для корреляции запроса на клиенте.",
+        "description": "Шаг 1 регистрации или сброса пароля.\n\nОтправляет OTP через smsnikita и возвращает transaction_id — ключ, по\nкоторому клиент подтвердит код на шаге verify-otp.\n\nДля сброса пароля ответ одинаков независимо от того, зарегистрирован ли\nномер: раньше в этом случае отдавался 204, что само по себе выдавало\nотсутствие аккаунта.",
         "operationId": "send_otp_api_v1_auth_send_otp_post",
         "requestBody": {
           "content": {
@@ -9908,9 +9859,6 @@
               }
             },
             "description": "Successful Response"
-          },
-          "204": {
-            "description": "OTP не отправлен (сброс пароля, пользователь не найден)"
           },
           "400": {
             "content": {
@@ -9989,6 +9937,113 @@
           }
         },
         "summary": "Отправить OTP на телефон",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/api/v1/auth/verify-otp": {
+      "post": {
+        "description": "Шаг 2 регистрации и сброса пароля.\n\nПроверяет код и выдаёт одноразовый тикет со сроком жизни 15 минут.\nАккаунт здесь не создаётся и пароль не запрашивается — клиенту не нужно\nхранить его, пока пользователь ходит за SMS.",
+        "operationId": "verify_otp_api_v1_auth_verify_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOtpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyOtpResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Некорректный запрос"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Сервис временно недоступен"
+          }
+        },
+        "summary": "Подтвердить OTP и получить тикет",
         "tags": [
           "identity"
         ]
