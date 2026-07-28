@@ -3,7 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { confirmPasswordReset, requestPasswordReset } from "@/api/auth";
+import {
+  confirmPasswordReset,
+  requestPasswordReset,
+  verifyOtp,
+} from "@/api/auth";
 import { isAppError } from "@/api/errors";
 import { fetchProfile } from "@/api/profile";
 import { queryKeys } from "@/api/query-keys";
@@ -24,6 +28,7 @@ function ProfileSecurityPage() {
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [sent, setSent] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
@@ -62,11 +67,12 @@ function ProfileSecurityPage() {
       }
       setSubmitting(true);
       try {
-        await requestPasswordReset(normalized);
+        const res = await requestPasswordReset(normalized);
+        setTransactionId(res.transaction_id);
         setPhone(normalized);
         writeLastPhone(normalized);
         setSent(true);
-        setCooldown(OTP_COOLDOWN_SEC);
+        setCooldown(res.retry_after || OTP_COOLDOWN_SEC);
         toast.success("Если аккаунт существует, код отправлен по SMS");
       } catch (err) {
         setFormError(isAppError(err) ? err.message : "Не удалось отправить код");
@@ -91,9 +97,15 @@ function ProfileSecurityPage() {
 
     setSubmitting(true);
     try {
-      await confirmPasswordReset({
-        phone: normalized,
+      // Тот же трёхшаговый путь, что и при сбросе: код обменивается на тикет,
+      // и уже по тикету меняется пароль.
+      const verified = await verifyOtp({
+        transaction_id: transactionId,
         otp_code: otp.trim(),
+        purpose: "password_reset",
+      });
+      await confirmPasswordReset({
+        reset_ticket: verified.ticket,
         new_password: password,
       });
       setOtp("");
