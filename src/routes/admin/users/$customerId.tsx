@@ -133,6 +133,11 @@ function CustomerDetailPage() {
     ? statusTone(customer.verification_status)
     : "muted";
 
+  // Домен разрешает verify/reject/request-info только из pending_verification
+  // (customers/domain/entities.py). Клиент попадает туда после первого RFQ или
+  // заказа. Без этой проверки кнопки активны на unverified и всегда дают 422.
+  const canModerate = customer?.verification_status === "pending_verification";
+
   return (
     <div className="space-y-6">
       <Link
@@ -219,6 +224,14 @@ function CustomerDetailPage() {
             <section className="space-y-4 rounded-3xl border border-border bg-card p-5">
               <h2 className="font-semibold">Действия верификации</h2>
 
+              {!canModerate && (
+                <p className="rounded-2xl bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+                  Действия доступны только в статусе «На проверке». Клиент
+                  попадает в него автоматически после первого запроса КП или
+                  заказа.
+                </p>
+              )}
+
               <div className="space-y-2">
                 <label
                   htmlFor="verify-comment"
@@ -236,7 +249,7 @@ function CustomerDetailPage() {
                 />
                 <Button
                   type="button"
-                  disabled={busy || customer.verification_status === "verified"}
+                  disabled={busy || !canModerate}
                   onClick={() => verifyMutation.mutate()}
                 >
                   <CheckCircle2 className="h-4 w-4" aria-hidden />
@@ -263,7 +276,7 @@ function CustomerDetailPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={busy || rejectReason.trim().length < 3}
+                  disabled={busy || !canModerate || rejectReason.trim().length < 3}
                   onClick={() => rejectMutation.mutate()}
                 >
                   <XCircle className="h-4 w-4" aria-hidden />
@@ -290,7 +303,7 @@ function CustomerDetailPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={busy || missingInfo.trim().length < 3}
+                  disabled={busy || !canModerate || missingInfo.trim().length < 3}
                   onClick={() => clarifyMutation.mutate()}
                 >
                   <HelpCircle className="h-4 w-4" aria-hidden />

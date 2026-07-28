@@ -19,7 +19,14 @@ export type MediaUploadPurpose =
   | "service-requests"
   | "cms";
 
-/** Public download URL for S3 key (cms/, products/, documents/). */
+/**
+ * Public download URL for S3 key (cms/, products/, documents/).
+ *
+ * Returns null both when there is no key and when resolution failed, because
+ * callers render a placeholder either way. The failure is logged instead of
+ * swallowed: a silently-null 403 is what hid the uploaded-media bug from UAT
+ * (a broken image is indistinguishable from "no image was set").
+ */
 export async function fetchMediaDownloadUrl(
   key: string,
   signal?: AbortSignal,
@@ -34,7 +41,12 @@ export async function fetchMediaDownloadUrl(
       retryOnUnauthorized: false,
     });
     return res.download_url || null;
-  } catch {
+  } catch (error) {
+    if (signal?.aborted) return null;
+    const appError = toAppError(error, "Не удалось получить ссылку на файл");
+    console.warn(
+      `[media] ${appError.status ?? "?"} resolving "${trimmed}": ${appError.message}`,
+    );
     return null;
   }
 }

@@ -56,6 +56,15 @@ export const queryKeys = {
     invoice: (rfqId: string) =>
       [...queryKeys.managerRfq.all, "invoice", rfqId] as const,
   },
+  managerOrders: {
+    all: ["manager-orders"] as const,
+    list: (params?: Record<string, unknown>) =>
+      [...queryKeys.managerOrders.all, "list", params ?? {}] as const,
+    detail: (id: string) =>
+      [...queryKeys.managerOrders.all, "detail", id] as const,
+    invoice: (orderId: string) =>
+      [...queryKeys.managerOrders.all, "invoice", orderId] as const,
+  },
   profile: {
     all: ["profile"] as const,
     current: () => [...queryKeys.profile.all, "current"] as const,

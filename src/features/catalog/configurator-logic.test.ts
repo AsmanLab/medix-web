@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import type { OptionGroupOut } from "@/api/generated/openapi";
+﻿import { describe, expect, it } from "vitest";
+import type { OptionGroupOut } from "@/api/generated/schemas";
 import {
   buildConfigKey,
   emptySelection,
@@ -12,12 +12,12 @@ import {
 const groups: OptionGroupOut[] = [
   {
     id: "g1",
-    name_ru: "Комплектация",
+    name_ru: "ÐšÐ¾Ð¼Ð¿Ð»ÐµÐºÑ‚Ð°Ñ†Ð¸Ñ",
     sort: 0,
     options: [
       {
         id: "v1",
-        name_ru: "Базовая",
+        name_ru: "Ð‘Ð°Ð·Ð¾Ð²Ð°Ñ",
         name_en: "Base",
         option_type: "variant",
         price: "0",
@@ -27,7 +27,7 @@ const groups: OptionGroupOut[] = [
       },
       {
         id: "v2",
-        name_ru: "Расширенная",
+        name_ru: "Ð Ð°ÑÑˆÐ¸Ñ€ÐµÐ½Ð½Ð°Ñ",
         name_en: "Pro",
         option_type: "variant",
         price: "5000.00 KGS",
@@ -39,12 +39,12 @@ const groups: OptionGroupOut[] = [
   },
   {
     id: "g2",
-    name_ru: "Дополнительно",
+    name_ru: "Ð”Ð¾Ð¿Ð¾Ð»Ð½Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾",
     sort: 1,
     options: [
       {
         id: "a1",
-        name_ru: "Гарантия +1 год",
+        name_ru: "Ð“Ð°Ñ€Ð°Ð½Ñ‚Ð¸Ñ +1 Ð³Ð¾Ð´",
         name_en: "Warranty",
         option_type: "addon",
         price: "2000.00 KGS",

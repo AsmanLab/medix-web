@@ -1,10 +1,10 @@
-import type { OptionGroupOut, ProductOptionOut } from "@/api/generated/openapi";
+﻿import type { OptionGroupOut, ProductOptionOut } from "@/api/generated/schemas";
 import { parseUnitPriceAmount } from "@/features/rfq/cart-store";
 
 export type { OptionGroupOut, ProductOptionOut };
 
 export type ConfigSelection = {
-  /** groupId → selected option id (radio / required groups) */
+  /** groupId â†’ selected option id (radio / required groups) */
   singles: Record<string, string>;
   /** optionId set for multi-select addons */
   multi: string[];
@@ -111,7 +111,7 @@ export function summarizeConfigPrice(
     return {
       hasPriceless: true,
       totalAmount: null,
-      label: "Цена по запросу",
+      label: "Ð¦ÐµÐ½Ð° Ð¿Ð¾ Ð·Ð°Ð¿Ñ€Ð¾ÑÑƒ",
     };
   }
 
