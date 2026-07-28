@@ -53,12 +53,13 @@ export type RfqInvoiceDownload = {
   expires_in?: number;
 };
 
+/**
+ * Что клиент вправе сообщить о позиции. SKU, названия и цены здесь нет —
+ * их определяет сервер по каталогу.
+ */
 export type RfqLineItemInput = {
   product_id: string;
-  sku: string;
-  name: string;
   qty: number;
-  unit_price_amount?: string | null;
   option_type?: string | null;
   parent_line_id?: string | null;
 };
@@ -71,6 +72,13 @@ export function createRfqDraft(managerId?: string | null) {
   });
 }
 
+/**
+ * Добавляет позицию в черновик RFQ.
+ *
+ * Отправляем только идентификатор и количество: SKU, название и цену сервер
+ * берёт из каталога. Раньше они шли из тела запроса, то есть цену можно было
+ * прислать любую.
+ */
 export function addRfqItem(rfqId: string, item: RfqLineItemInput) {
   return apiRequest<RfqSummary>({
     method: "POST",
@@ -78,10 +86,7 @@ export function addRfqItem(rfqId: string, item: RfqLineItemInput) {
     body: {
       item: {
         product_id: item.product_id,
-        sku: item.sku,
-        name: item.name,
         qty: item.qty,
-        unit_price_amount: item.unit_price_amount ?? null,
         option_type: item.option_type ?? null,
         parent_line_id: item.parent_line_id ?? null,
       },
@@ -159,22 +164,18 @@ export async function submitRfqFromCart(input: {
 }): Promise<string> {
   const draft = await createRfqDraft(input.managerId);
   for (const item of input.items) {
+    // sku, name и цена из корзины нужны только для отображения — на сервер
+    // они не уходят, он берёт их из каталога по product_id.
     await addRfqItem(draft.id, {
       product_id: item.productId,
-      sku: item.sku,
-      name: item.name,
       qty: item.qty,
-      unit_price_amount: item.unitPriceAmount,
       option_type: null,
     });
 
     for (const opt of item.options ?? []) {
       await addRfqItem(draft.id, {
         product_id: opt.optionId,
-        sku: opt.sku,
-        name: opt.name,
         qty: item.qty,
-        unit_price_amount: opt.unitPriceAmount,
         option_type: opt.optionType,
         parent_line_id: null,
       });

@@ -1598,7 +1598,7 @@ export interface paths {
         put?: never;
         /**
          * Добавить позицию в RFQ
-         * @description Добавляет товарную позицию в черновик RFQ.
+         * @description Добавляет товарную позицию в черновик RFQ. Цена и название — из каталога.
          */
         post: operations["add_item_api_v1_rfq__rfq_id__items_post"];
         delete?: never;
@@ -1847,6 +1847,9 @@ export interface paths {
         /**
          * Обновить статус заявки
          * @description Обновляет статус сервисной заявки с комментарием.
+         *
+         *     Инженер ведёт только свои заявки; менеджер и админ — любые. Раньше проверки
+         *     не было вовсе: любой инженер мог менять статус чужой заявки по её id.
          */
         patch: operations["update_service_request_status_api_v1_service__request_id__status_patch"];
         trace?: never;
@@ -1882,7 +1885,32 @@ export interface components {
         };
         /** AddItemRequest */
         AddItemRequest: {
-            item: components["schemas"]["LineItemRequest"];
+            item: components["schemas"]["AddRfqItemInput"];
+        };
+        /**
+         * AddRfqItemInput
+         * @description Позиция, добавляемая клиентом.
+         *
+         *     Ни цены, ни названия, ни SKU здесь нет: всё это сервер берёт из каталога.
+         *     Раньше поля принимались из тела запроса, и клиент мог отправить запрос
+         *     с произвольной ценой — это противоречит принципу ТЗ «LineItem — снимок
+         *     каталога» и политике POST /orders, который цены из запроса игнорирует.
+         */
+        AddRfqItemInput: {
+            /** Option Type */
+            option_type?: string | null;
+            /** Parent Line Id */
+            parent_line_id?: string | null;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /**
+             * Qty
+             * @default 1
+             */
+            qty: number;
         };
         /** AddServicePhotoBody */
         AddServicePhotoBody: {
@@ -3201,6 +3229,28 @@ export interface components {
              */
             token_type: string;
         };
+        /**
+         * UpdateBannerBody
+         * @description Частичное обновление; см. комментарий к UpdatePageBody.
+         */
+        UpdateBannerBody: {
+            /** Cta Text */
+            cta_text?: string | null;
+            /** Deep Link */
+            deep_link?: string | null;
+            /** Image Key */
+            image_key?: string | null;
+            /** Is Enabled */
+            is_enabled?: boolean | null;
+            /** Link Url */
+            link_url?: string | null;
+            /** Sort */
+            sort?: number | null;
+            /** Subtitle */
+            subtitle?: string | null;
+            /** Title */
+            title?: string | null;
+        };
         /** UpdateCategoryRequest */
         UpdateCategoryRequest: {
             /** Image Key */
@@ -3245,6 +3295,27 @@ export interface components {
             order_id: string;
             /** Status */
             status: string;
+        };
+        /**
+         * UpdatePageBody
+         * @description Частичное обновление. Раньше сюда принимался сырой dict и любое совпавшее
+         *     по имени поле писалось в ORM-модель через setattr — включая те, которые
+         *     менять не полагается.
+         *
+         *     exclude_unset в обработчике отличает «поле не прислали» от «прислали пустую
+         *     строку», поэтому очистить текст по-прежнему можно.
+         */
+        UpdatePageBody: {
+            /** Body Html */
+            body_html?: string | null;
+            /** Seo Description */
+            seo_description?: string | null;
+            /** Seo Title */
+            seo_title?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Title */
+            title?: string | null;
         };
         /** UpdateProductOptionRequest */
         UpdateProductOptionRequest: {
@@ -5170,9 +5241,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["UpdateBannerBody"];
             };
         };
         responses: {
@@ -5563,9 +5632,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["UpdatePageBody"];
             };
         };
         responses: {

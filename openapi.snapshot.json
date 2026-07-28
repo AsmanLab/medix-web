@@ -17,13 +17,56 @@
       "AddItemRequest": {
         "properties": {
           "item": {
-            "$ref": "#/components/schemas/LineItemRequest"
+            "$ref": "#/components/schemas/AddRfqItemInput"
           }
         },
         "required": [
           "item"
         ],
         "title": "AddItemRequest",
+        "type": "object"
+      },
+      "AddRfqItemInput": {
+        "description": "Позиция, добавляемая клиентом.\n\nНи цены, ни названия, ни SKU здесь нет: всё это сервер берёт из каталога.\nРаньше поля принимались из тела запроса, и клиент мог отправить запрос\nс произвольной ценой — это противоречит принципу ТЗ «LineItem — снимок\nкаталога» и политике POST /orders, который цены из запроса игнорирует.",
+        "properties": {
+          "option_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Type"
+          },
+          "parent_line_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Line Id"
+          },
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "qty": {
+            "default": 1,
+            "title": "Qty",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_id"
+        ],
+        "title": "AddRfqItemInput",
         "type": "object"
       },
       "AddServicePhotoBody": {
@@ -3371,6 +3414,101 @@
         "title": "TokenResponse",
         "type": "object"
       },
+      "UpdateBannerBody": {
+        "description": "Частичное обновление; см. комментарий к UpdatePageBody.",
+        "properties": {
+          "cta_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cta Text"
+          },
+          "deep_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deep Link"
+          },
+          "image_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Key"
+          },
+          "is_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Enabled"
+          },
+          "link_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link Url"
+          },
+          "sort": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtitle"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "UpdateBannerBody",
+        "type": "object"
+      },
       "UpdateCategoryRequest": {
         "properties": {
           "image_key": {
@@ -3539,6 +3677,68 @@
           "status"
         ],
         "title": "UpdateOrderStatusResponse",
+        "type": "object"
+      },
+      "UpdatePageBody": {
+        "description": "Частичное обновление. Раньше сюда принимался сырой dict и любое совпавшее\nпо имени поле писалось в ORM-модель через setattr — включая те, которые\nменять не полагается.\n\nexclude_unset в обработчике отличает «поле не прислали» от «прислали пустую\nстроку», поэтому очистить текст по-прежнему можно.",
+        "properties": {
+          "body_html": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Html"
+          },
+          "seo_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seo Description"
+          },
+          "seo_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seo Title"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "UpdatePageBody",
         "type": "object"
       },
       "UpdateProductOptionRequest": {
@@ -7479,9 +7679,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "title": "Body",
-                "type": "object"
+                "$ref": "#/components/schemas/UpdateBannerBody"
               }
             }
           },
@@ -8201,9 +8399,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "title": "Body",
-                "type": "object"
+                "$ref": "#/components/schemas/UpdatePageBody"
               }
             }
           },
@@ -16001,7 +16197,7 @@
     },
     "/api/v1/rfq/{rfq_id}/items": {
       "post": {
-        "description": "Добавляет товарную позицию в черновик RFQ.",
+        "description": "Добавляет товарную позицию в черновик RFQ. Цена и название — из каталога.",
         "operationId": "add_item_api_v1_rfq__rfq_id__items_post",
         "parameters": [
           {
@@ -17642,7 +17838,7 @@
     },
     "/api/v1/service/{request_id}/status": {
       "patch": {
-        "description": "Обновляет статус сервисной заявки с комментарием.",
+        "description": "Обновляет статус сервисной заявки с комментарием.\n\nИнженер ведёт только свои заявки; менеджер и админ — любые. Раньше проверки\nне было вовсе: любой инженер мог менять статус чужой заявки по её id.",
         "operationId": "update_service_request_status_api_v1_service__request_id__status_patch",
         "parameters": [
           {
