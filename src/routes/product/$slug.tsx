@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
+import { addToCart } from "@/api/cart";
 import { fetchProductBySlug } from "@/api/catalog";
 import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
@@ -11,7 +12,6 @@ import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import { availabilityLabel } from "@/features/catalog/availability";
 import {
-  buildConfigKey,
   emptySelection,
   missingRequiredGroups,
   selectedOptionsFromState,
@@ -19,11 +19,7 @@ import {
   type ConfigSelection,
 } from "@/features/catalog/configurator-logic";
 import { ProductConfigurator } from "@/features/catalog/ProductConfigurator";
-import {
-  parseUnitPriceAmount,
-  rfqCartStore,
-  type RfqCartOption,
-} from "@/features/rfq/cart-store";
+import { useSession } from "@/session/store";
 
 export const Route = createFileRoute("/product/$slug")({
   component: ProductDetailPage,
@@ -44,9 +40,13 @@ function ProductDetailPage() {
   const product = query.data;
   const groups = product?.option_groups ?? [];
   const [selection, setSelection] = useState<ConfigSelection>(emptySelection);
+  const [qty, setQty] = useState(1);
+  const session = useSession();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setSelection(emptySelection());
+    setQty(1);
   }, [slug]);
 
   const selected = useMemo(
@@ -65,8 +65,43 @@ function ProductDetailPage() {
   const primaryImage =
     product?.images?.find((i) => i.is_primary) ?? product?.images?.[0];
 
-  function addToRfq() {
+  const addMutation = useMutation({
+    mutationFn: () =>
+      addToCart({
+        productId: product!.id,
+        qty,
+        optionIds: selected.map((o) => o.id),
+      }),
+    onSuccess: (cart) => {
+      queryClient.setQueryData(queryKeys.cart.detail(), cart);
+      toast.success("Добавлено в корзину", {
+        action: {
+          label: "Корзина",
+          onClick: () => {
+            void navigate({ to: "/cart" });
+          },
+        },
+      });
+    },
+    onError: (err) =>
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось добавить в корзину",
+      ),
+  });
+
+  async function addToCartClick() {
     if (!product) return;
+
+    // Корзина хранится на сервере, поэтому анонимному пользователю её негде
+    // держать — отправляем на вход и возвращаем обратно на карточку.
+    if (session.status !== "authenticated") {
+      toast.message("Войдите, чтобы добавить товар в корзину");
+      await navigate({
+        to: "/login",
+        search: { redirect: `/product/${slug}`, phone: undefined },
+      });
+      return;
+    }
 
     if (missing.length > 0) {
       toast.error(
@@ -75,34 +110,7 @@ function ProductDetailPage() {
       return;
     }
 
-    const options: RfqCartOption[] = selected.map((o) => ({
-      optionId: o.id,
-      name: o.name_ru,
-      sku: `${product.sku}::${o.id.slice(0, 8)}`,
-      optionType: o.option_type,
-      priceLabel: o.price,
-      unitPriceAmount: parseUnitPriceAmount(o.price),
-    }));
-
-    rfqCartStore.add({
-      lineKey: buildConfigKey(product.id, selected),
-      productId: product.id,
-      slug: product.slug,
-      sku: product.sku,
-      name: product.name_ru,
-      // Display: configured total; API base line uses unitPriceAmount only.
-      priceLabel: summary.label,
-      unitPriceAmount: parseUnitPriceAmount(product.price),
-      options,
-    });
-    toast.success("Добавлено в запрос", {
-      action: {
-        label: "Корзина",
-        onClick: () => {
-          void navigate({ to: "/cart" });
-        },
-      },
-    });
+    addMutation.mutate();
   }
 
   return (
@@ -163,10 +171,41 @@ function ProductDetailPage() {
                       {availabilityLabel(product.availability)}
                     </span>
                   </div>
-                  <Button className="mt-5 w-full sm:w-auto" onClick={addToRfq}>
-                    <ShoppingCart className="h-4 w-4" />
-                    В запрос (RFQ)
-                  </Button>
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                    <div className="inline-flex items-center rounded-xl border border-border">
+                      <button
+                        type="button"
+                        aria-label="Уменьшить количество"
+                        disabled={qty <= 1}
+                        onClick={() => setQty((q) => Math.max(1, q - 1))}
+                        className="px-3 py-2 text-muted-foreground disabled:opacity-40"
+                      >
+                        <Minus className="h-4 w-4" aria-hidden />
+                      </button>
+                      <span
+                        aria-live="polite"
+                        className="min-w-10 text-center text-sm font-semibold"
+                      >
+                        {qty}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Увеличить количество"
+                        onClick={() => setQty((q) => q + 1)}
+                        className="px-3 py-2 text-muted-foreground"
+                      >
+                        <Plus className="h-4 w-4" aria-hidden />
+                      </button>
+                    </div>
+                    <Button
+                      className="w-full sm:w-auto"
+                      disabled={addMutation.isPending}
+                      onClick={addToCartClick}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      {addMutation.isPending ? "Добавляем…" : "В корзину"}
+                    </Button>
+                  </div>
                 </div>
               </div>
 

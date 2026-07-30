@@ -24,18 +24,18 @@ test.describe("E2E #34 — register → catalog → RFQ", () => {
 
     await gotoAuthed(page, `/product/${product!.slug}`, phone, password);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await page.getByRole("button", { name: "В запрос (RFQ)" }).click();
+    await page.getByRole("button", { name: "В корзину" }).click();
 
     await gotoAuthed(page, "/cart", phone, password);
-    await expect(page.getByRole("heading", { name: "Корзина RFQ" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Корзина" })).toBeVisible();
     await expect(page.getByText(product!.name_ru)).toBeVisible();
 
-    await page.getByRole("button", { name: "Отправить запрос" }).click();
+    await page.getByRole("button", { name: "Отправить запрос на КП" }).click();
 
     const gate = page.getByRole("dialog");
     if (await gate.isVisible().catch(() => false)) {
-      await expect(page.getByText("Аккаунт на проверке")).toBeVisible();
-      await page.getByRole("button", { name: "Отправить всё равно" }).click();
+      await expect(page.getByText("Организация ещё не подтверждена")).toBeVisible();
+      await page.getByRole("button", { name: "Отправить запрос" }).click();
     }
 
     await expect(page).toHaveURL(/\/cart\/success/, { timeout: 30_000 });

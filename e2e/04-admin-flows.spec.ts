@@ -162,12 +162,12 @@ test.describe("E2E #35 — manager RFQ UI quote", () => {
     await registerClient(page, { phone, password });
 
     await gotoAuthed(page, `/product/${product!.slug}`, phone, password);
-    await page.getByRole("button", { name: "В запрос (RFQ)" }).click();
+    await page.getByRole("button", { name: "В корзину" }).click();
     await gotoAuthed(page, "/cart", phone, password);
-    await page.getByRole("button", { name: "Отправить запрос" }).click();
+    await page.getByRole("button", { name: "Отправить запрос на КП" }).click();
     const gate = page.getByRole("dialog");
     if (await gate.isVisible().catch(() => false)) {
-      await page.getByRole("button", { name: "Отправить всё равно" }).click();
+      await page.getByRole("button", { name: "Отправить запрос" }).click();
     }
     await expect(page).toHaveURL(/\/cart\/success/, { timeout: 30_000 });
 

@@ -43,6 +43,10 @@ export const queryKeys = {
       [...queryKeys.cms.all, "admin-promotion", id] as const,
     adminBanners: () => [...queryKeys.cms.all, "admin-banners"] as const,
   },
+  cart: {
+    all: ["cart"] as const,
+    detail: () => [...queryKeys.cart.all, "detail"] as const,
+  },
   rfq: {
     all: ["rfq"] as const,
     list: () => [...queryKeys.rfq.all, "list"] as const,
