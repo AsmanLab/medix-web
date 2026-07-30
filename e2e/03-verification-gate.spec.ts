@@ -23,14 +23,14 @@ test.describe("E2E #34 — verification gate", () => {
     await registerClient(page, { phone, password });
 
     await gotoAuthed(page, `/product/${product!.slug}`, phone, password);
-    await page.getByRole("button", { name: "В запрос (RFQ)" }).click();
+    await page.getByRole("button", { name: "В корзину" }).click();
     await gotoAuthed(page, "/cart", phone, password);
-    await page.getByRole("button", { name: "Отправить запрос" }).click();
+    await page.getByRole("button", { name: "Отправить запрос на КП" }).click();
 
     await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.getByText("Аккаунт на проверке")).toBeVisible();
+    await expect(page.getByText("Организация ещё не подтверждена")).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Отправить всё равно" }),
+      page.getByRole("button", { name: "Отправить запрос" }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Отмена" })).toBeVisible();
   });

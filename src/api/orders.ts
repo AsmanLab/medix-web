@@ -96,36 +96,3 @@ export function placeOrder(body: {
     },
   });
 }
-
-/** Place order from local cart lines (base + option rows). */
-export async function placeOrderFromCart(input: {
-  items: Array<{
-    productId: string;
-    qty: number;
-    options?: Array<{
-      optionId: string;
-      optionType: string;
-    }>;
-  }>;
-  managerId?: string | null;
-}): Promise<PlaceOrderResult> {
-  const items: PlaceOrderItemInput[] = [];
-  for (const item of input.items) {
-    items.push({
-      product_id: item.productId,
-      qty: item.qty,
-      option_type: null,
-    });
-    for (const opt of item.options ?? []) {
-      items.push({
-        product_id: opt.optionId,
-        qty: item.qty,
-        option_type: opt.optionType,
-        // Связь с базовой позицией: parent_line_id — это product_id родителя
-        // в этой же отправке, а не идентификатор строки (строк ещё нет).
-        parent_line_id: item.productId,
-      });
-    }
-  }
-  return placeOrder({ items, manager_id: input.managerId });
-}

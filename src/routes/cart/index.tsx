@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   ArrowRight,
   Minus,
   Plus,
@@ -9,114 +10,94 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  checkoutCart,
+  fetchCart,
+  groupCartItems,
+  removeCartItem,
+  setCartItemQty,
+  type CartOut,
+} from "@/api/cart";
 import { isAppError } from "@/api/errors";
-import { placeOrderFromCart } from "@/api/orders";
 import { fetchProfile } from "@/api/profile";
-import { submitRfqFromCart } from "@/api/rfq";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
-import { rfqCartStore, useRfqCart } from "@/features/rfq/cart-store";
 import { useSession } from "@/session/store";
 
 export const Route = createFileRoute("/cart/")({
   component: CartPage,
 });
 
+/**
+ * Корзина хранится на сервере — это черновик запроса (ТЗ v2.0 §5.3).
+ *
+ * Развилку «заказ или запрос» принимает сервер в POST /cart/checkout, здесь
+ * она только показывается: клиент не должен угадывать исход, он ветвится
+ * по полю `type` в ответе.
+ */
 function CartPage() {
-  const cart = useRfqCart();
   const session = useSession();
   const navigate = useNavigate();
-  const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
+  const [comment, setComment] = useState("");
   const [showVerifyGate, setShowVerifyGate] = useState(false);
+
+  const authenticated = session.status === "authenticated";
+
+  const cartQuery = useQuery({
+    queryKey: queryKeys.cart.detail(),
+    queryFn: ({ signal }) => fetchCart(signal),
+    enabled: authenticated,
+  });
 
   const profileQuery = useQuery({
     queryKey: queryKeys.profile.current(),
     queryFn: ({ signal }) => fetchProfile(signal),
-    enabled: session.status === "authenticated",
+    enabled: authenticated,
     staleTime: 30_000,
   });
 
-  const verification = profileQuery.data?.verification_status ?? "unverified";
-  const isVerified = verification === "verified";
-  const totalQty = cart.items.reduce((s, i) => s + i.qty, 0);
-  const hasPriceless =
-    cart.items.some((i) => !i.unitPriceAmount) ||
-    cart.items.some((i) => i.options.some((o) => !o.unitPriceAmount));
+  const cart = cartQuery.data;
+  const groups = groupCartItems(cart);
+  const isVerified = profileQuery.data?.verification_status === "verified";
+  const hasPriceless = cart?.has_priceless ?? false;
+  const hasUnavailable = cart?.has_unavailable ?? false;
+  const isEmpty = groups.length === 0;
 
-  /** Verified + all priced → direct order; otherwise RFQ. */
-  const canDirectOrder = isVerified && !hasPriceless && cart.items.length > 0;
+  /** Что произойдёт при оформлении — только для подписи, решает сервер. */
+  const willBeOrder = isVerified && !hasPriceless && !isEmpty;
 
-  async function doSubmitRfq() {
-    if (cart.items.length === 0 || submitting) return;
-
-    if (session.status !== "authenticated") {
-      toast.message("Войдите, чтобы отправить запрос");
-      await navigate({
-        to: "/login",
-        search: { redirect: "/cart", phone: undefined },
-      });
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const rfqId = await submitRfqFromCart({
-        items: cart.items.map((i) => ({
-          productId: i.productId,
-          sku: i.sku,
-          name: i.name,
-          qty: i.qty,
-          unitPriceAmount: i.unitPriceAmount,
-          options: i.options.map((o) => ({
-            optionId: o.optionId,
-            name: o.name,
-            sku: o.sku,
-            optionType: o.optionType,
-            unitPriceAmount: o.unitPriceAmount,
-          })),
-        })),
-      });
-      rfqCartStore.clear();
-      toast.success("Запрос отправлен менеджеру");
-      await navigate({
-        to: "/cart/success",
-        search: { rfqId },
-      });
-    } catch (err) {
-      toast.error(
-        isAppError(err) ? err.message : "Не удалось отправить запрос",
-      );
-    } finally {
-      setSubmitting(false);
-      setShowVerifyGate(false);
-    }
+  function applyCart(next: CartOut) {
+    queryClient.setQueryData(queryKeys.cart.detail(), next);
   }
 
-  async function doPlaceOrder() {
-    if (!canDirectOrder || submitting) return;
-    if (session.status !== "authenticated") {
-      toast.message("Войдите, чтобы оформить заказ");
-      await navigate({
-        to: "/login",
-        search: { redirect: "/cart", phone: undefined },
-      });
-      return;
-    }
+  function onMutationError(err: unknown, fallback: string) {
+    toast.error(isAppError(err) ? err.message : fallback);
+    void cartQuery.refetch();
+  }
 
-    setSubmitting(true);
-    try {
-      const result = await placeOrderFromCart({
-        items: cart.items.map((i) => ({
-          productId: i.productId,
-          qty: i.qty,
-          options: i.options.map((o) => ({
-            optionId: o.optionId,
-            optionType: o.optionType,
-          })),
-        })),
-      });
-      rfqCartStore.clear();
+  const qtyMutation = useMutation({
+    mutationFn: ({ lineId, qty }: { lineId: string; qty: number }) =>
+      setCartItemQty(lineId, qty),
+    onSuccess: applyCart,
+    onError: (err) => onMutationError(err, "Не удалось изменить количество"),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (lineId: string) => removeCartItem(lineId),
+    onSuccess: applyCart,
+    onError: (err) => onMutationError(err, "Не удалось убрать позицию"),
+  });
+
+  const checkoutMutation = useMutation({
+    mutationFn: (forceRfq: boolean) =>
+      checkoutCart({ comment: comment.trim() || null, forceRfq }),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.cart.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.rfq.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+      setShowVerifyGate(false);
       if (result.type === "order") {
         toast.success("Заказ оформлен");
         await navigate({
@@ -124,44 +105,76 @@ function CartPage() {
           params: { orderId: result.id },
         });
       } else {
-        toast.message("Оформлен запрос — менеджер подготовит КП");
-        await navigate({
-          to: "/cart/success",
-          search: { rfqId: result.id },
-        });
+        toast.success("Запрос отправлен менеджеру");
+        await navigate({ to: "/cart/success", search: { rfqId: result.id } });
       }
-    } catch (err) {
-      toast.error(
-        isAppError(err) ? err.message : "Не удалось оформить заказ",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    },
+    onError: (err) =>
+      toast.error(isAppError(err) ? err.message : "Не удалось оформить"),
+  });
+
+  const busy =
+    qtyMutation.isPending ||
+    removeMutation.isPending ||
+    checkoutMutation.isPending;
 
   function onPrimaryClick() {
-    if (cart.items.length === 0 || submitting) return;
-    if (canDirectOrder) {
-      void doPlaceOrder();
-      return;
-    }
-    if (session.status === "authenticated" && !isVerified) {
+    if (isEmpty || busy) return;
+    // Неверифицированному объясняем, что уйдёт запрос, а не заказ, — иначе
+    // кнопка «Оформить» молча делает не то, чего он ждёт.
+    if (!isVerified && !hasPriceless) {
       setShowVerifyGate(true);
       return;
     }
-    void doSubmitRfq();
+    checkoutMutation.mutate(false);
+  }
+
+  if (!authenticated) {
+    return (
+      <AppShell>
+        <h1 className="font-display text-3xl font-bold">Корзина</h1>
+        <div className="mt-10 text-center">
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary-soft text-primary">
+            <ShoppingCart className="h-7 w-7" />
+          </div>
+          <h2 className="mt-4 text-lg font-semibold">Войдите в аккаунт</h2>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+            Корзина хранится в вашем аккаунте, поэтому доступна с любого
+            устройства.
+          </p>
+          <Link
+            to="/login"
+            search={{ redirect: "/cart", phone: undefined }}
+            className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+          >
+            Войти <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </AppShell>
+    );
   }
 
   return (
     <AppShell>
       <h1 className="font-display text-3xl font-bold">Корзина</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {cart.items.length
-          ? `${cart.items.length} позиций · ${totalQty} ед.`
-          : "Добавьте оборудование из каталога"}
+        {cartQuery.isPending
+          ? "Загружаем…"
+          : isEmpty
+            ? "Добавьте оборудование из каталога"
+            : `${groups.length} позиций`}
       </p>
 
-      {cart.items.length === 0 ? (
+      {cartQuery.isError ? (
+        <div className="mt-8 rounded-2xl border border-border bg-card p-5">
+          <p className="text-sm text-destructive">Не удалось загрузить корзину</p>
+          <Button className="mt-3" onClick={() => void cartQuery.refetch()}>
+            Повторить
+          </Button>
+        </div>
+      ) : null}
+
+      {!cartQuery.isPending && !cartQuery.isError && isEmpty ? (
         <div className="mt-10 text-center">
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary-soft text-primary">
             <ShoppingCart className="h-7 w-7" />
@@ -180,59 +193,75 @@ function CartPage() {
             Перейти в каталог <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-      ) : (
+      ) : null}
+
+      {!isEmpty ? (
         <div className="mt-8 space-y-8">
+          {hasUnavailable ? (
+            <div className="flex items-start gap-2.5 rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
+              <AlertTriangle
+                className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
+                aria-hidden
+              />
+              <p className="text-sm text-muted-foreground">
+                Отмеченные позиции больше не продаются — уберите их, чтобы
+                оформить корзину.
+              </p>
+            </div>
+          ) : null}
+
           <ul className="space-y-3">
-            {cart.items.map((item) => (
+            {groups.map(({ base, options }) => (
               <li
-                key={item.lineKey}
+                key={base.id}
                 className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
-                  <Link
-                    to="/product/$slug"
-                    params={{ slug: item.slug }}
-                    className="font-semibold hover:text-primary"
-                  >
-                    {item.name}
-                  </Link>
+                  <p className="font-semibold">{base.name}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Арт. {item.sku}
+                    Арт. {base.sku}
                   </p>
-                  {item.options.length > 0 ? (
+                  {!base.is_available ? (
+                    <p className="mt-1 text-xs font-semibold text-destructive">
+                      Товар снят с продажи
+                    </p>
+                  ) : null}
+                  {options.length > 0 ? (
                     <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
-                      {item.options.map((o) => (
-                        <li key={o.optionId}>
+                      {options.map((o) => (
+                        <li key={o.id}>
                           + {o.name}
-                          {o.priceLabel ? ` · ${o.priceLabel}` : " · по запросу"}
+                          {o.unit_price ? ` · ${o.unit_price}` : " · по запросу"}
                         </li>
                       ))}
                     </ul>
                   ) : null}
                   <p className="mt-2 text-sm font-semibold text-primary">
-                    {item.priceLabel ?? "Цена по запросу"}
+                    {base.line_total ?? "Цена по запросу"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     aria-label="Уменьшить"
-                    className="grid h-9 w-9 place-items-center rounded-xl border border-border"
+                    disabled={busy || base.qty <= 1}
+                    className="grid h-9 w-9 place-items-center rounded-xl border border-border disabled:opacity-40"
                     onClick={() =>
-                      rfqCartStore.setQty(item.lineKey, item.qty - 1)
+                      qtyMutation.mutate({ lineId: base.id, qty: base.qty - 1 })
                     }
                   >
                     <Minus className="h-4 w-4" />
                   </button>
                   <span className="w-8 text-center text-sm font-semibold">
-                    {item.qty}
+                    {base.qty}
                   </span>
                   <button
                     type="button"
                     aria-label="Увеличить"
-                    className="grid h-9 w-9 place-items-center rounded-xl border border-border"
+                    disabled={busy}
+                    className="grid h-9 w-9 place-items-center rounded-xl border border-border disabled:opacity-40"
                     onClick={() =>
-                      rfqCartStore.setQty(item.lineKey, item.qty + 1)
+                      qtyMutation.mutate({ lineId: base.id, qty: base.qty + 1 })
                     }
                   >
                     <Plus className="h-4 w-4" />
@@ -240,8 +269,9 @@ function CartPage() {
                   <button
                     type="button"
                     aria-label="Удалить"
-                    className="ml-1 grid h-9 w-9 place-items-center rounded-xl text-destructive"
-                    onClick={() => rfqCartStore.remove(item.lineKey)}
+                    disabled={busy}
+                    className="ml-1 grid h-9 w-9 place-items-center rounded-xl text-destructive disabled:opacity-40"
+                    onClick={() => removeMutation.mutate(base.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -253,20 +283,14 @@ function CartPage() {
           <section className="rounded-2xl border border-border bg-card p-5">
             <h2 className="font-semibold">Итого</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {canDirectOrder
+              {willBeOrder
                 ? "Организация подтверждена — можно оформить заказ с ценами из каталога."
                 : hasPriceless
                   ? "Есть позиции без цены — менеджер подготовит коммерческое предложение (КП)."
-                  : !isVerified
-                    ? "После подтверждения организации станет доступен прямой заказ. Сейчас можно отправить запрос на КП."
-                    : "Сумма будет подтверждена в КП."}
+                  : "После подтверждения организации станет доступен прямой заказ. Сейчас можно отправить запрос на КП."}
             </p>
             <p className="mt-3 text-lg font-bold text-primary">
-              {canDirectOrder
-                ? "Готово к заказу"
-                : hasPriceless
-                  ? "Цена по запросу"
-                  : "Запрос / котировка"}
+              {cart?.total ?? "Цена по запросу"}
             </p>
           </section>
 
@@ -279,40 +303,40 @@ function CartPage() {
             </label>
             <textarea
               id="rfq-comment"
-              value={cart.comment}
-              onChange={(e) => rfqCartStore.setComment(e.target.value)}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
               rows={3}
               placeholder="Сроки, комплектация, адрес доставки…"
               className="field-control mt-2 min-h-[96px] resize-y"
-              disabled={canDirectOrder}
+              disabled={willBeOrder}
             />
           </section>
 
           <div className="flex flex-wrap gap-3">
             <Button
               className="h-12 w-full sm:w-auto"
-              disabled={submitting}
+              disabled={busy || hasUnavailable}
               onClick={onPrimaryClick}
             >
-              {submitting
+              {checkoutMutation.isPending
                 ? "Отправка…"
-                : canDirectOrder
+                : willBeOrder
                   ? "Оформить заказ"
                   : "Отправить запрос на КП"}
             </Button>
-            {canDirectOrder ? (
+            {willBeOrder ? (
               <Button
                 variant="outline"
                 className="h-12 w-full sm:w-auto"
-                disabled={submitting}
-                onClick={() => void doSubmitRfq()}
+                disabled={busy || hasUnavailable}
+                onClick={() => checkoutMutation.mutate(true)}
               >
                 Всё же запросить КП
               </Button>
             ) : null}
           </div>
         </div>
-      )}
+      ) : null}
 
       {showVerifyGate ? (
         <div
@@ -335,12 +359,15 @@ function CartPage() {
               принятии КП).
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button disabled={submitting} onClick={() => void doSubmitRfq()}>
-                {submitting ? "Отправка…" : "Отправить запрос"}
+              <Button
+                disabled={busy}
+                onClick={() => checkoutMutation.mutate(false)}
+              >
+                {checkoutMutation.isPending ? "Отправка…" : "Отправить запрос"}
               </Button>
               <Button
                 variant="outline"
-                disabled={submitting}
+                disabled={busy}
                 onClick={() => setShowVerifyGate(false)}
               >
                 Отмена

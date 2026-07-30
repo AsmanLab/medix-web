@@ -24,3 +24,7 @@ export type ProductOptionOut = Schemas["ProductOptionOut"];
 export type OptionGroupOut = Schemas["OptionGroupOut"];
 export type ProfileResponse = Schemas["ProfileResponse"];
 export type UpdateProfileRequest = Schemas["UpdateProfileRequest"];
+export type CartOut = Schemas["CartOut"];
+export type CartItemOut = Schemas["CartItemOut"];
+export type AddCartItemRequest = Schemas["AddCartItemRequest"];
+export type PlaceOrderResponse = Schemas["PlaceOrderResponse"];

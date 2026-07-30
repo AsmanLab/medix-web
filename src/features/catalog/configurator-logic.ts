@@ -1,7 +1,19 @@
 ﻿import type { OptionGroupOut, ProductOptionOut } from "@/api/generated/schemas";
-import { parseUnitPriceAmount } from "@/features/rfq/cart-store";
 
 export type { OptionGroupOut, ProductOptionOut };
+
+/**
+ * Достаёт число из строки цены каталога («125000.00 KGS» → «125000.00»).
+ * Нужен только для локального подсчёта итога конфигурации — на сервер цены
+ * не уходят, он берёт их из каталога сам.
+ */
+export function parseUnitPriceAmount(
+  price: string | null | undefined,
+): string | null {
+  if (!price) return null;
+  const match = price.replace(",", ".").match(/\d+(?:\.\d+)?/);
+  return match ? match[0] : null;
+}
 
 export type ConfigSelection = {
   /** groupId â†’ selected option id (radio / required groups) */

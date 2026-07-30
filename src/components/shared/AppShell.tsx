@@ -19,7 +19,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { fetchCategories } from "@/api/catalog";
 import { listNotifications } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
-import { useRfqCart } from "@/features/rfq/cart-store";
+import { fetchCart } from "@/api/cart";
 import {
   buildCategoryTree,
   type CatalogCategoryNode,
@@ -293,8 +293,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const session = useSession();
-  const cart = useRfqCart();
-  const cartCount = cart.items.reduce((sum, item) => sum + item.qty, 0);
   const authenticated = session.status === "authenticated";
   const [headerQuery, setHeaderQuery] = useState("");
 
@@ -312,6 +310,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     refetchInterval: 60_000,
   });
   const unreadCount = notificationsQuery.data?.unread_count ?? 0;
+
+  // Корзина серверная, поэтому у гостя её просто нет — бейдж не показываем.
+  const cartQuery = useQuery({
+    queryKey: queryKeys.cart.detail(),
+    queryFn: ({ signal }) => fetchCart(signal),
+    enabled: authenticated,
+    staleTime: 30_000,
+  });
+  const cartCount = cartQuery.data?.items_count ?? 0;
 
   const categoryTree = useMemo(
     () => buildCategoryTree(categoriesQuery.data ?? []),
