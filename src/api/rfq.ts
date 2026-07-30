@@ -177,7 +177,10 @@ export async function submitRfqFromCart(input: {
         product_id: opt.optionId,
         qty: item.qty,
         option_type: opt.optionType,
-        parent_line_id: null,
+        // Связь с базовой позицией: parent_line_id — это product_id родителя,
+        // а не идентификатор строки. Базовая позиция добавлена выше, поэтому
+        // сервер её уже видит в черновике.
+        parent_line_id: item.productId,
       });
     }
   }

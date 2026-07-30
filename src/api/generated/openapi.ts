@@ -2696,16 +2696,22 @@ export interface components {
         };
         /** OrderDetailResponse */
         OrderDetailResponse: {
+            /** Created At */
+            created_at: string;
             /** Id */
             id: string;
             /** Items */
             items: components["schemas"]["OrderLineItemOut"][];
+            /** Rfq Id */
+            rfq_id?: string | null;
             /** Source */
             source: string;
             /** Status */
             status: string;
             /** Status History */
             status_history: components["schemas"]["OrderStatusHistoryOut"][];
+            /** Total */
+            total?: string | null;
         };
         /** OrderInvoiceResponse */
         OrderInvoiceResponse: {
@@ -2722,8 +2728,14 @@ export interface components {
         OrderLineItemOut: {
             /** Name */
             name: string;
+            /** Option Type */
+            option_type?: string | null;
+            /** Parent Line Id */
+            parent_line_id?: string | null;
             /** Price */
             price: string | null;
+            /** Product Id */
+            product_id: string;
             /** Qty */
             qty: number;
             /** Sku */
@@ -2743,6 +2755,8 @@ export interface components {
             source: string;
             /** Status */
             status: string;
+            /** Total */
+            total?: string | null;
         };
         /** OrderStatusHistoryOut */
         OrderStatusHistoryOut: {

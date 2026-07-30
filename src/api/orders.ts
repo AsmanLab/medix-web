@@ -121,6 +121,9 @@ export async function placeOrderFromCart(input: {
         product_id: opt.optionId,
         qty: item.qty,
         option_type: opt.optionType,
+        // Связь с базовой позицией: parent_line_id — это product_id родителя
+        // в этой же отправке, а не идентификатор строки (строк ещё нет).
+        parent_line_id: item.productId,
       });
     }
   }

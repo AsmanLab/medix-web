@@ -1689,8 +1689,8 @@
           "source",
           "items",
           "status_history",
-          "client_id",
-          "created_at"
+          "created_at",
+          "client_id"
         ],
         "title": "ManagerOrderDetailResponse",
         "type": "object"
@@ -1971,6 +1971,10 @@
       },
       "OrderDetailResponse": {
         "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -1981,6 +1985,17 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "rfq_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rfq Id"
           },
           "source": {
             "title": "Source",
@@ -1996,6 +2011,17 @@
             },
             "title": "Status History",
             "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
           }
         },
         "required": [
@@ -2003,7 +2029,8 @@
           "status",
           "source",
           "items",
-          "status_history"
+          "status_history",
+          "created_at"
         ],
         "title": "OrderDetailResponse",
         "type": "object"
@@ -2055,6 +2082,28 @@
             "title": "Name",
             "type": "string"
           },
+          "option_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Type"
+          },
+          "parent_line_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Line Id"
+          },
           "price": {
             "anyOf": [
               {
@@ -2066,6 +2115,10 @@
             ],
             "title": "Price"
           },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
           "qty": {
             "title": "Qty",
             "type": "integer"
@@ -2076,6 +2129,7 @@
           }
         },
         "required": [
+          "product_id",
           "sku",
           "name",
           "qty",
@@ -2109,6 +2163,17 @@
           "status": {
             "title": "Status",
             "type": "string"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
           }
         },
         "required": [
