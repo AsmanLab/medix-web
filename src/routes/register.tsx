@@ -7,6 +7,13 @@ import { queryKeys } from "@/api/query-keys";
 import { requireGuest } from "@/session/guards";
 import { registerWithTicket } from "@/session/store";
 import { isValidKgPhone, normalizePhone } from "@/lib/phone";
+import {
+  clearOtpFlow,
+  cooldownLeft,
+  loadOtpFlow,
+  OTP_FLOW_KEYS,
+  saveOtpFlow,
+} from "@/lib/otp-flow-storage";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +33,11 @@ const FALLBACK_COOLDOWN_SEC = 60;
  * он теряется вместе со стейтом, а persist'ить его некуда — sessionStorage
  * для пароля не годится. На последнем шаге терять уже нечего: номер
  * подтверждён и на руках тикет.
+ *
+ * Чтобы это «терять нечего» стало правдой, шаг и тикет переживают
+ * перезагрузку через sessionStorage (@/lib/otp-flow-storage). Без этого F5
+ * возвращал на ввод номера и требовал новой SMS — то есть весь смысл
+ * трёхшаговой схемы пропадал.
  */
 function RegisterPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -46,6 +58,19 @@ function RegisterPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+
+  // Восстановление после перезагрузки: пароля в хранилище нет, поэтому
+  // возвращаемся ровно туда, где пользователь был, не запрашивая новую SMS.
+  useEffect(() => {
+    const saved = loadOtpFlow(OTP_FLOW_KEYS.registration);
+    if (!saved) return;
+    setPhone(saved.phone);
+    setTransactionId(saved.transactionId);
+    setTicket(saved.ticket);
+    setCodeExpiresAt(saved.codeExpiresAt);
+    setCooldown(cooldownLeft(saved.cooldownUntil));
+    setStep(saved.step);
+  }, []);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -71,9 +96,22 @@ function RegisterPage() {
 
   async function requestCode(normalized: string) {
     const res = await sendOtp(normalized, "registration");
+    const codeExpires = res.expires_at ? Date.parse(res.expires_at) : null;
+    const cooldownSec = res.retry_after || FALLBACK_COOLDOWN_SEC;
     setTransactionId(res.transaction_id);
-    setCodeExpiresAt(res.expires_at ? Date.parse(res.expires_at) : null);
-    setCooldown(res.retry_after || FALLBACK_COOLDOWN_SEC);
+    setCodeExpiresAt(codeExpires);
+    setCooldown(cooldownSec);
+    // Кулдаун сохраняем дедлайном, а не остатком: иначе перезагрузка обнуляла
+    // бы его и позволяла жечь SMS обновлением страницы.
+    saveOtpFlow(OTP_FLOW_KEYS.registration, {
+      step: 2,
+      phone: normalized,
+      transactionId: res.transaction_id,
+      ticket: "",
+      ticketExpiresAt: null,
+      cooldownUntil: Date.now() + cooldownSec * 1000,
+      codeExpiresAt: codeExpires,
+    });
   }
 
   async function onSubmitPhone(e: React.FormEvent) {
@@ -113,6 +151,15 @@ function RegisterPage() {
       });
       setTicket(res.ticket);
       setStep(3);
+      saveOtpFlow(OTP_FLOW_KEYS.registration, {
+        step: 3,
+        phone,
+        transactionId,
+        ticket: res.ticket,
+        ticketExpiresAt: res.expires_at ? Date.parse(res.expires_at) : null,
+        cooldownUntil: null,
+        codeExpiresAt: null,
+      });
     } catch (err) {
       applyError(err, "Не удалось подтвердить код");
     } finally {
@@ -146,6 +193,7 @@ function RegisterPage() {
         pd_consent: pdConsent,
         phone,
       });
+      clearOtpFlow(OTP_FLOW_KEYS.registration);
       await queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
       toast.success("Аккаунт создан");
       await nav({ to: "/profile" });
@@ -162,6 +210,7 @@ function RegisterPage() {
     setTransactionId("");
     setCodeExpiresAt(null);
     setFormError(null);
+    clearOtpFlow(OTP_FLOW_KEYS.registration);
   }
 
   const title =
