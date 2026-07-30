@@ -189,10 +189,13 @@ function ManagerRfqDetailPage() {
   const tone = rfq ? rfqStatusTone(rfq.status) : "muted";
   const isMine = !!rfq?.manager_id && rfq.manager_id === user?.userId;
   const canTake = rfq && !rfq.manager_id && rfq.status === "submitted";
+  // Только in_review: из quoted сервер второй раз КП не примет — переход
+  // quoted → quoted запрещён и вернёт 422. Пока сюда входил и quoted, кнопка
+  // «Отправить КП клиенту» оставалась активной рядом с «Опубликовать счёт»
+  // и вела в ошибку. Секция ниже продолжает показываться и на quoted/accepted,
+  // но уже только на чтение.
   const canQuote =
-    rfq &&
-    (rfq.status === "in_review" || rfq.status === "quoted") &&
-    (isMine || user?.role === "admin");
+    rfq && rfq.status === "in_review" && (isMine || user?.role === "admin");
   const canConvert = rfq?.status === "accepted" && (isMine || user?.role === "admin");
   const invoice = invoiceQuery.data;
   const canManageInvoice = isMine || user?.role === "admin";
