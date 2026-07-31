@@ -1652,6 +1652,107 @@
         "title": "InvoiceLineItemOut",
         "type": "object"
       },
+      "InvoiceSettingsBody": {
+        "description": "Реквизиты организации для счёта (договор п. 5.2, ТЗ п. 10.1).",
+        "properties": {
+          "bank_account": {
+            "default": "",
+            "title": "Bank Account",
+            "type": "string"
+          },
+          "bank_name": {
+            "default": "",
+            "title": "Bank Name",
+            "type": "string"
+          },
+          "bik": {
+            "default": "",
+            "title": "Bik",
+            "type": "string"
+          },
+          "company_name": {
+            "default": "",
+            "title": "Company Name",
+            "type": "string"
+          },
+          "extra_note": {
+            "default": "",
+            "title": "Extra Note",
+            "type": "string"
+          },
+          "inn": {
+            "default": "",
+            "title": "Inn",
+            "type": "string"
+          },
+          "legal_address": {
+            "default": "",
+            "title": "Legal Address",
+            "type": "string"
+          },
+          "phone": {
+            "default": "",
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "title": "InvoiceSettingsBody",
+        "type": "object"
+      },
+      "InvoiceSettingsOut": {
+        "description": "То же плюс собранный текст — чтобы админка показывала предпросмотр.",
+        "properties": {
+          "bank_account": {
+            "default": "",
+            "title": "Bank Account",
+            "type": "string"
+          },
+          "bank_name": {
+            "default": "",
+            "title": "Bank Name",
+            "type": "string"
+          },
+          "bik": {
+            "default": "",
+            "title": "Bik",
+            "type": "string"
+          },
+          "company_name": {
+            "default": "",
+            "title": "Company Name",
+            "type": "string"
+          },
+          "extra_note": {
+            "default": "",
+            "title": "Extra Note",
+            "type": "string"
+          },
+          "inn": {
+            "default": "",
+            "title": "Inn",
+            "type": "string"
+          },
+          "legal_address": {
+            "default": "",
+            "title": "Legal Address",
+            "type": "string"
+          },
+          "phone": {
+            "default": "",
+            "title": "Phone",
+            "type": "string"
+          },
+          "preview": {
+            "title": "Preview",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preview"
+        ],
+        "title": "InvoiceSettingsOut",
+        "type": "object"
+      },
       "LineItemOut": {
         "properties": {
           "id": {
@@ -9825,6 +9926,217 @@
         "summary": "Обновить акцию",
         "tags": [
           "cms"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/invoice": {
+      "get": {
+        "operationId": "get_invoice_settings_api_v1_admin_settings_invoice_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Реквизиты организации для счёта",
+        "tags": [
+          "commerce"
+        ]
+      },
+      "put": {
+        "description": "Реквизиты попадают в счёт снимком в момент его создания, поэтому правка\nздесь не меняет уже выставленные документы — только будущие.",
+        "operationId": "update_invoice_settings_api_v1_admin_settings_invoice_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceSettingsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Сохранить реквизиты организации",
+        "tags": [
+          "commerce"
         ]
       }
     },
