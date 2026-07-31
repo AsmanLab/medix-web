@@ -23,6 +23,7 @@ import {
   orderStatusTone,
 } from "@/features/orders/status";
 import { formatRfqDate } from "@/features/rfq/status";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/orders/$orderId")({
@@ -196,7 +197,7 @@ function OrderDetailPage() {
                         </p>
                       </div>
                       <p className="shrink-0 text-sm font-semibold text-primary">
-                        {item.price ?? "—"}
+                        {formatMoney(item.price, "—")}
                       </p>
                     </li>
                   ))}

@@ -16,6 +16,7 @@ import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { BannerSkeleton } from "@/components/shared/skeletons";
 import { availabilityLabel } from "@/features/catalog/availability";
+import { formatMoney } from "@/lib/money";
 import { buildCategoryTree } from "@/features/catalog/map-category";
 import { BannerSlider } from "@/features/home/BannerSlider";
 
@@ -232,7 +233,7 @@ function HomePage() {
                           {availabilityLabel(p.availability)}
                         </span>
                         <span className="font-semibold text-primary">
-                          {p.price ? `${p.price}` : "По запросу"}
+                          {formatMoney(p.price, "По запросу")}
                         </span>
                       </div>
                     </div>

@@ -1,4 +1,5 @@
 ﻿import type { OptionGroupOut, ProductOptionOut } from "@/api/generated/schemas";
+import { formatAmount } from "@/lib/money";
 
 export type { OptionGroupOut, ProductOptionOut };
 
@@ -131,6 +132,6 @@ export function summarizeConfigPrice(
   return {
     hasPriceless: false,
     totalAmount: total,
-    label: `${total.toFixed(2)} KGS`,
+    label: formatAmount(total),
   };
 }

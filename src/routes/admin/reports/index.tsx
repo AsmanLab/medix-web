@@ -7,6 +7,7 @@ import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { fetchManagersReport, fetchManagersReportCsv } from "@/api/reports";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { formatAmount } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { requireStaffPanel } from "@/session/guards";
 
@@ -165,7 +166,7 @@ function ReportsAdminPage() {
                     {row.orders_count}
                   </td>
                   <td className="px-4 py-3 text-right font-semibold tabular-nums">
-                    {row.total_amount}
+                    {formatAmount(Number(row.total_amount), "")}
                   </td>
                 </tr>
               ))}
@@ -180,7 +181,7 @@ function ReportsAdminPage() {
                   {totals.orders}
                 </td>
                 <td className="px-4 py-3 text-right font-semibold tabular-nums">
-                  {totals.amount.toFixed(2)}
+                  {formatAmount(totals.amount, "")}
                 </td>
               </tr>
             </tfoot>
