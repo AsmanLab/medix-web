@@ -5,6 +5,8 @@ export type AppError = {
   fieldErrors?: Record<string, string>;
   requestId?: string;
   retryable?: boolean;
+  /** Секунды до конца окна rate limit — из заголовка Retry-After при 429. */
+  retryAfter?: number;
   cause?: unknown;
 };
 
@@ -109,7 +111,16 @@ export async function normalizeResponseError(
     fieldErrors,
     requestId: body?.request_id ?? requestId,
     retryable: response.status >= 500 || response.status === 429,
+    retryAfter: retryAfterSeconds(response),
   };
+}
+
+/** Retry-After отдаётся сервером при 429 — по нему клиент ведёт обратный отсчёт. */
+function retryAfterSeconds(response: Response): number | undefined {
+  const raw = response.headers.get("retry-after");
+  if (!raw) return undefined;
+  const seconds = Number.parseInt(raw, 10);
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined;
 }
 
 function defaultMessageForStatus(status: number): string {
@@ -126,6 +137,8 @@ function defaultMessageForStatus(status: number): string {
       return "Конфликт данных";
     case 422:
       return "Ошибка валидации";
+    case 429:
+      return "Слишком много попыток. Попробуйте позже";
     default:
       if (status >= 500) return "Ошибка сервера. Попробуйте позже";
       return `Ошибка запроса (${status})`;

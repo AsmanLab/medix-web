@@ -2240,6 +2240,11 @@ export interface components {
         CheckoutCartRequest: {
             /** Comment */
             comment?: string | null;
+            /**
+             * Force Rfq
+             * @default false
+             */
+            force_rfq: boolean;
             /** Manager Id */
             manager_id?: string | null;
         };
@@ -6466,6 +6471,17 @@ export interface operations {
                     };
                 };
             };
+            /** @description Слишком много попыток, см. заголовок Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
             /** @description Сервис временно недоступен */
             503: {
                 headers: {
@@ -6522,6 +6538,17 @@ export interface operations {
                             msg?: string;
                             type?: string;
                         }[];
+                    };
+                };
+            };
+            /** @description Слишком много попыток, см. заголовок Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
                     };
                 };
             };
@@ -6584,6 +6611,17 @@ export interface operations {
                     };
                 };
             };
+            /** @description Слишком много попыток, см. заголовок Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
             /** @description Сервис временно недоступен */
             503: {
                 headers: {
@@ -6642,6 +6680,17 @@ export interface operations {
                             msg?: string;
                             type?: string;
                         }[];
+                    };
+                };
+            };
+            /** @description Слишком много попыток, см. заголовок Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
                     };
                 };
             };
@@ -6717,6 +6766,17 @@ export interface operations {
                     };
                 };
             };
+            /** @description Слишком много попыток, см. заголовок Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
             /** @description Сервис временно недоступен */
             503: {
                 headers: {
@@ -6778,6 +6838,17 @@ export interface operations {
                     };
                 };
             };
+            /** @description Слишком много попыток, см. заголовок Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
             /** @description Сервис временно недоступен */
             503: {
                 headers: {
@@ -6836,6 +6907,17 @@ export interface operations {
                             msg?: string;
                             type?: string;
                         }[];
+                    };
+                };
+            };
+            /** @description Слишком много попыток, см. заголовок Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
                     };
                 };
             };

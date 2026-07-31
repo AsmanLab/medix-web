@@ -75,6 +75,10 @@ function ProfileSecurityPage() {
         setCooldown(res.retry_after || OTP_COOLDOWN_SEC);
         toast.success("Если аккаунт существует, код отправлен по SMS");
       } catch (err) {
+        // 429 от серверного лимита: держим кнопку закрытой до конца окна.
+        if (isAppError(err) && err.status === 429 && err.retryAfter) {
+          setCooldown(err.retryAfter);
+        }
         setFormError(isAppError(err) ? err.message : "Не удалось отправить код");
       } finally {
         setSubmitting(false);

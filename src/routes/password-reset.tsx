@@ -68,6 +68,10 @@ function ResetPage() {
 
   function applyError(err: unknown, fallback: string) {
     const message = isAppError(err) ? err.message : fallback;
+    // При 429 от серверного лимита гасим «Отправить снова» до конца окна.
+    if (isAppError(err) && err.status === 429 && err.retryAfter) {
+      setCooldown(err.retryAfter);
+    }
     setFormError(message);
     toast.error(message);
   }
