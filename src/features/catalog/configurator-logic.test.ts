@@ -12,12 +12,12 @@ import {
 const groups: OptionGroupOut[] = [
   {
     id: "g1",
-    name_ru: "ÐšÐ¾Ð¼Ð¿Ð»ÐµÐºÑ‚Ð°Ñ†Ð¸Ñ",
+    name_ru: "Комплектация",
     sort: 0,
     options: [
       {
         id: "v1",
-        name_ru: "Ð‘Ð°Ð·Ð¾Ð²Ð°Ñ",
+        name_ru: "Базовая",
         name_en: "Base",
         option_type: "variant",
         price: "0",
@@ -27,7 +27,7 @@ const groups: OptionGroupOut[] = [
       },
       {
         id: "v2",
-        name_ru: "Ð Ð°ÑÑˆÐ¸Ñ€ÐµÐ½Ð½Ð°Ñ",
+        name_ru: "Расширенная",
         name_en: "Pro",
         option_type: "variant",
         price: "5000.00 KGS",
@@ -39,12 +39,12 @@ const groups: OptionGroupOut[] = [
   },
   {
     id: "g2",
-    name_ru: "Ð”Ð¾Ð¿Ð¾Ð»Ð½Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾",
+    name_ru: "Дополнительно",
     sort: 1,
     options: [
       {
         id: "a1",
-        name_ru: "Ð“Ð°Ñ€Ð°Ð½Ñ‚Ð¸Ñ +1 Ð³Ð¾Ð´",
+        name_ru: "Гарантия +1 год",
         name_en: "Warranty",
         option_type: "addon",
         price: "2000.00 KGS",

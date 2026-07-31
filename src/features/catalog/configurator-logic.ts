@@ -16,7 +16,7 @@ export function parseUnitPriceAmount(
 }
 
 export type ConfigSelection = {
-  /** groupId â†’ selected option id (radio / required groups) */
+  /** groupId → selected option id (radio / required groups) */
   singles: Record<string, string>;
   /** optionId set for multi-select addons */
   multi: string[];
@@ -123,7 +123,7 @@ export function summarizeConfigPrice(
     return {
       hasPriceless: true,
       totalAmount: null,
-      label: "Ð¦ÐµÐ½Ð° Ð¿Ð¾ Ð·Ð°Ð¿Ñ€Ð¾ÑÑƒ",
+      label: "Цена по запросу",
     };
   }
 
