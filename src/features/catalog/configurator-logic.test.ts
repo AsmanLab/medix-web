@@ -74,9 +74,11 @@ describe("configurator-logic", () => {
     sel.singles.g1 = "v2";
     sel.multi = ["a1"];
     const selected = selectedOptionsFromState(groups, sel);
-    expect(summarizeConfigPrice("10000.00 KGS", selected).label).toBe(
-      "17000.00 KGS",
-    );
+    // Итог показывается человеку, поэтому формат человеческий: разделённые
+    // разряды и «сом» вместо кода валюты. Число — в totalAmount.
+    const summary = summarizeConfigPrice("10000.00 KGS", selected);
+    expect(summary.totalAmount).toBe(17000);
+    expect(summary.label.replace(/[\s ]/g, " ")).toBe("17 000 сом");
     expect(summarizeConfigPrice(null, selected).hasPriceless).toBe(true);
   });
 

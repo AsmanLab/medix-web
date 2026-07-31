@@ -42,6 +42,7 @@ import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import { slugifyCategoryName } from "@/features/catalog/slugify";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 const fieldClass =
@@ -829,7 +830,7 @@ function OptionsPanel({
                     {OPTION_TYPE_LABEL[option.option_type as OptionType] ??
                       option.option_type}
                     {" · "}
-                    {option.price ?? "цена по запросу"}
+                    {formatMoney(option.price, "цена по запросу")}
                     {option.is_required ? " · обязательная" : ""}
                   </p>
                 </div>

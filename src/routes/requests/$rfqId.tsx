@@ -29,6 +29,7 @@ import {
   rfqStatusTone,
   type TimelineStep,
 } from "@/features/rfq/status";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/requests/$rfqId")({
@@ -201,7 +202,7 @@ function RequestDetailPage() {
                         </p>
                       </div>
                       <p className="shrink-0 text-sm font-semibold text-primary">
-                        {item.unit_price ?? "По запросу"}
+                        {formatMoney(item.unit_price, "По запросу")}
                       </p>
                     </li>
                   ))}
@@ -234,7 +235,7 @@ function RequestDetailPage() {
                           </p>
                         </div>
                         <p className="shrink-0 text-sm font-semibold">
-                          {item.unit_price ?? "—"}
+                          {formatMoney(item.unit_price, "—")}
                         </p>
                       </li>
                     ))}
@@ -242,7 +243,7 @@ function RequestDetailPage() {
                   <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                     <span className="text-sm font-semibold">Итого</span>
                     <span className="text-lg font-bold text-primary">
-                      {rfq.quote.total ?? "По запросу"}
+                      {formatMoney(rfq.quote.total, "По запросу")}
                     </span>
                   </div>
                   {rfq.quote.conditions ? (

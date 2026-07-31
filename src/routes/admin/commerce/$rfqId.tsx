@@ -27,6 +27,7 @@ import {
 } from "@/features/rfq/status";
 import { requireStaffPanel } from "@/session/guards";
 import { useSession } from "@/session/store";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 const fieldClass =
@@ -297,7 +298,7 @@ function ManagerRfqDetailPage() {
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Создан {formatRfqDate(rfq.created_at)}
-                  {rfq.quote?.total ? ` · КП итого ${rfq.quote.total}` : ""}
+                  {rfq.quote?.total ? ` · КП итого ${formatMoney(rfq.quote.total)}` : ""}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -395,7 +396,7 @@ function ManagerRfqDetailPage() {
                     </div>
                     <div className="text-xs">
                       ×{item.qty}
-                      {item.unit_price ? ` · ${item.unit_price}` : ""}
+                      {item.unit_price ? ` · ${formatMoney(item.unit_price)}` : ""}
                     </div>
                   </li>
                 ))}
@@ -566,7 +567,7 @@ function ManagerRfqDetailPage() {
                       <span>
                         Итого:{" "}
                         <span className="font-semibold text-foreground">
-                          {invoice.total ?? "—"}
+                          {formatMoney(invoice.total, "—")}
                         </span>
                       </span>
                       <span className="font-mono text-xs">
@@ -588,10 +589,10 @@ function ManagerRfqDetailPage() {
                           </div>
                           <div className="text-xs text-right">
                             ×{item.qty}
-                            {item.unit_price ? ` · ${item.unit_price}` : ""}
+                            {item.unit_price ? ` · ${formatMoney(item.unit_price)}` : ""}
                             {item.line_total ? (
                               <div className="font-semibold text-foreground">
-                                {item.line_total}
+                                {formatMoney(item.line_total)}
                               </div>
                             ) : null}
                           </div>

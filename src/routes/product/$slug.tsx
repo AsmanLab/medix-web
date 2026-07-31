@@ -21,6 +21,7 @@ import {
 import { ProductConfigurator } from "@/features/catalog/ProductConfigurator";
 import { ProductDescription } from "@/features/catalog/ProductDescription";
 import { ProductGallery } from "@/features/catalog/ProductGallery";
+import { formatPrice } from "@/lib/money";
 import { useSession } from "@/session/store";
 
 export const Route = createFileRoute("/product/$slug")({
@@ -153,9 +154,7 @@ function ProductDetailPage() {
                     <p className="text-2xl font-bold text-primary">
                       {groups.length > 0
                         ? summary.label
-                        : product.price
-                          ? product.price
-                          : "Цена по запросу"}
+                        : formatPrice(product.price)}
                     </p>
                     <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">
                       {availabilityLabel(product.availability)}
