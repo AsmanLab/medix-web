@@ -35,7 +35,7 @@ test.describe("E2E #34 — register → catalog → RFQ", () => {
     const gate = page.getByRole("dialog");
     if (await gate.isVisible().catch(() => false)) {
       await expect(page.getByText("Организация ещё не подтверждена")).toBeVisible();
-      await page.getByRole("button", { name: "Отправить запрос" }).click();
+      await gate.getByRole("button", { name: "Отправить запрос", exact: true }).click();
     }
 
     await expect(page).toHaveURL(/\/cart\/success/, { timeout: 30_000 });

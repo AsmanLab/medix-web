@@ -31,7 +31,7 @@ test.describe("E2E #34 — quote accept + invoice", () => {
     await page.getByRole("button", { name: "Отправить запрос на КП" }).click();
     const gate = page.getByRole("dialog");
     if (await gate.isVisible().catch(() => false)) {
-      await page.getByRole("button", { name: "Отправить запрос" }).click();
+      await gate.getByRole("button", { name: "Отправить запрос", exact: true }).click();
     }
     await expect(page).toHaveURL(/\/cart\/success/, { timeout: 30_000 });
 

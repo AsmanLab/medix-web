@@ -27,11 +27,14 @@ test.describe("E2E #34 — verification gate", () => {
     await gotoAuthed(page, "/cart", phone, password);
     await page.getByRole("button", { name: "Отправить запрос на КП" }).click();
 
-    await expect(page.getByRole("dialog")).toBeVisible();
+    const gate = page.getByRole("dialog");
+    await expect(gate).toBeVisible();
     await expect(page.getByText("Организация ещё не подтверждена")).toBeVisible();
+    // Ищем внутри диалога: на странице корзины есть кнопка «Отправить запрос
+    // на КП», и поиск по всей странице находит обе.
     await expect(
-      page.getByRole("button", { name: "Отправить запрос" }),
+      gate.getByRole("button", { name: "Отправить запрос", exact: true }),
     ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Отмена" })).toBeVisible();
+    await expect(gate.getByRole("button", { name: "Отмена" })).toBeVisible();
   });
 });
