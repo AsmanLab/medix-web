@@ -149,7 +149,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
         icon: ({ className }) => (
           <FileUp className={className} aria-hidden />
         ),
-        allowedRoles: ["admin"],
+        // Менеджеру нужен свой отчёт за месяц (ТЗ п. 9.1); чужие строки
+        // отсекает сервер.
+        allowedRoles: ["admin", "manager"],
       },
     ];
 

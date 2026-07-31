@@ -1299,6 +1299,12 @@
       },
       "CreateStaffUserRequest": {
         "properties": {
+          "full_name": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Full Name",
+            "type": "string"
+          },
           "password": {
             "minLength": 8,
             "title": "Password",
@@ -1967,6 +1973,97 @@
           "created_at"
         ],
         "title": "ManagerOrderOut",
+        "type": "object"
+      },
+      "ManagerOut": {
+        "description": "Менеджер в публичном списке для выбора клиентом (Б7).\n\nТолько идентификатор и имя: телефон и роль сотрудника — внутренние данные,\nклиенту для выбора они не нужны.",
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "full_name"
+        ],
+        "title": "ManagerOut",
+        "type": "object"
+      },
+      "ManagerReportRowOut": {
+        "description": "Строка отчёта по менеджеру. `manager_id: null` — сделки без менеджера.",
+        "properties": {
+          "manager_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manager Id"
+          },
+          "manager_name": {
+            "title": "Manager Name",
+            "type": "string"
+          },
+          "orders_count": {
+            "title": "Orders Count",
+            "type": "integer"
+          },
+          "rfq_count": {
+            "title": "Rfq Count",
+            "type": "integer"
+          },
+          "total_amount": {
+            "title": "Total Amount",
+            "type": "string"
+          }
+        },
+        "required": [
+          "manager_id",
+          "manager_name",
+          "rfq_count",
+          "orders_count",
+          "total_amount"
+        ],
+        "title": "ManagerReportRowOut",
+        "type": "object"
+      },
+      "ManagersReportResponse": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "month": {
+            "title": "Month",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ManagerReportRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "month",
+          "currency",
+          "rows"
+        ],
+        "title": "ManagersReportResponse",
         "type": "object"
       },
       "MediaDownloadResponse": {
@@ -3603,6 +3700,13 @@
           "status": {
             "title": "Status",
             "type": "string"
+          },
+          "status_history": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceStatusHistoryOut"
+            },
+            "title": "Status History",
+            "type": "array"
           }
         },
         "required": [
@@ -3616,6 +3720,30 @@
           "created_at"
         ],
         "title": "ServiceRequestOut",
+        "type": "object"
+      },
+      "ServiceStatusHistoryOut": {
+        "description": "Переход статуса заявки: когда и с каким комментарием.",
+        "properties": {
+          "comment": {
+            "default": "",
+            "title": "Comment",
+            "type": "string"
+          },
+          "occurred_at": {
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "occurred_at"
+        ],
+        "title": "ServiceStatusHistoryOut",
         "type": "object"
       },
       "SetCartQtyRequest": {
@@ -3635,6 +3763,10 @@
         "properties": {
           "created_at": {
             "title": "Created At",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
             "type": "string"
           },
           "id": {
@@ -3657,6 +3789,7 @@
         "required": [
           "id",
           "phone",
+          "full_name",
           "role",
           "is_active",
           "created_at"
@@ -8100,9 +8233,9 @@
       }
     },
     "/api/v1/admin/cms/contacts": {
-      "put": {
-        "description": "Создаёт или обновляет контакт офиса по имени.",
-        "operationId": "upsert_contacts_api_v1_admin_cms_contacts_put",
+      "post": {
+        "description": "Создаёт офис на странице «Контакты» (ТЗ п. 10.3.4).",
+        "operationId": "create_contact_office_api_v1_admin_cms_contacts_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -8114,7 +8247,7 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
@@ -8205,7 +8338,272 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Создать/обновить контакты",
+        "summary": "Добавить офис",
+        "tags": [
+          "cms"
+        ]
+      }
+    },
+    "/api/v1/admin/cms/contacts/{office_id}": {
+      "delete": {
+        "description": "Убирает офис со страницы «Контакты».",
+        "operationId": "delete_contact_office_api_v1_admin_cms_contacts__office_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "office_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Office Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Удалить офис",
+        "tags": [
+          "cms"
+        ]
+      },
+      "patch": {
+        "description": "Обновляет офис по идентификатору.\n\nРаньше единственной операцией был upsert по имени: переименование офиса\nсоздавало второй, а исходный оставался на странице «Контакты» навсегда —\nудалить его было нечем.",
+        "operationId": "update_contact_office_api_v1_admin_cms_contacts__office_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "office_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Office Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertContactBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Изменить офис",
         "tags": [
           "cms"
         ]
@@ -14130,7 +14528,7 @@
     },
     "/api/v1/manager/reports": {
       "get": {
-        "description": "Возвращает агрегированный отчёт по заказам за месяц.",
+        "description": "Агрегированный отчёт по заказам за месяц.\n\nБез параметров — текущий месяц. Раньше по умолчанию стояли 2026 и 7:\nотчёт молча показывал июль независимо от того, когда его открыли.",
         "operationId": "manager_monthly_report_api_v1_manager_reports_get",
         "parameters": [
           {
@@ -14138,9 +14536,15 @@
             "name": "year",
             "required": false,
             "schema": {
-              "default": 2026,
-              "title": "Year",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
             }
           },
           {
@@ -14148,9 +14552,15 @@
             "name": "month",
             "required": false,
             "schema": {
-              "default": 7,
-              "title": "Month",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
             }
           }
         ],
@@ -14247,6 +14657,278 @@
           }
         ],
         "summary": "Месячный отчёт",
+        "tags": [
+          "commerce"
+        ]
+      }
+    },
+    "/api/v1/manager/reports/managers": {
+      "get": {
+        "description": "Разбивка месяца по менеджерам (ТЗ п. 9.1, 11.3, 14.5): запросы, заказы\nи сумма на каждого, отсортированные по сумме — это «топ менеджеров».\n\nБез параметров — текущий месяц. Строка `manager_id: null` собирает сделки,\nу которых менеджера нет: без неё сумма по строкам не сходится с общей.",
+        "operationId": "managers_report_api_v1_manager_reports_managers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagersReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Отчёт за месяц по менеджерам",
+        "tags": [
+          "commerce"
+        ]
+      }
+    },
+    "/api/v1/manager/reports/managers.csv": {
+      "get": {
+        "description": "Тот же отчёт в CSV (ТЗ п. 11.3: «менеджер, кол-во запросов, кол-во заказов,\nсумма»).\n\nРазделитель — точка с запятой, кодировка — UTF-8 с BOM: Excel в русской\nлокали иначе открывает файл одной колонкой и ломает кириллицу.",
+        "operationId": "managers_report_csv_api_v1_manager_reports_managers_csv_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Экспорт отчёта по менеджерам в CSV",
         "tags": [
           "commerce"
         ]
@@ -15155,6 +15837,112 @@
         "summary": "Все заявки (менеджер)",
         "tags": [
           "service-desk"
+        ]
+      }
+    },
+    "/api/v1/managers": {
+      "get": {
+        "description": "Активные менеджеры, из которых клиент может выбрать своего при оформлении\n(Б7 ТЗ — выбор необязательный, нужен для учёта продаж).\n\nПолный список сотрудников с телефонами и ролями остаётся за `/admin/users`.",
+        "operationId": "list_managers_api_v1_managers_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ManagerOut"
+                  },
+                  "title": "Response List Managers Api V1 Managers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Список менеджеров для выбора клиентом",
+        "tags": [
+          "identity"
         ]
       }
     },

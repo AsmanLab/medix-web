@@ -20,6 +20,11 @@ export type ApiRequestOptions = {
   accessToken?: string | null;
   /** When false, do not attempt refresh on 401 (default true). */
   retryOnUnauthorized?: boolean;
+  /**
+   * Что ждать в ответе. По умолчанию JSON; "blob" нужен экспортам вроде
+   * CSV-отчёта — их отдаёт не JSON, и обычный путь вернул бы undefined.
+   */
+  responseType?: "json" | "blob";
 };
 
 type RefreshHandler = () => Promise<string | null>;
@@ -76,6 +81,7 @@ export async function apiRequest<T>(options: ApiRequestOptions): Promise<T> {
     rawBody,
     accessToken,
     retryOnUnauthorized = true,
+    responseType = "json",
   } = options;
 
   const run = async (token: string | null | undefined): Promise<Response> => {
@@ -120,6 +126,10 @@ export async function apiRequest<T>(options: ApiRequestOptions): Promise<T> {
 
     if (!response.ok) {
       throw await normalizeResponseError(response);
+    }
+
+    if (responseType === "blob") {
+      return (await response.blob()) as T;
     }
 
     const contentType = response.headers.get("content-type") ?? "";

@@ -33,6 +33,7 @@ const ROLE_LABEL: Record<StaffRole, string> = {
 function StaffAdminPage() {
   const queryClient = useQueryClient();
   const [phone, setPhone] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<StaffRole>("manager");
   const [includeInactive, setIncludeInactive] = useState(false);
@@ -48,10 +49,12 @@ function StaffAdminPage() {
         phone: phone.trim(),
         password,
         role,
+        full_name: fullName.trim(),
       }),
     onSuccess: async () => {
       toast.success("Сотрудник создан");
       setPhone("");
+      setFullName("");
       setPassword("");
       setRole("manager");
       await queryClient.invalidateQueries({ queryKey: queryKeys.staff.all });
@@ -108,6 +111,19 @@ function StaffAdminPage() {
             />
             <span className="mt-1 block text-[11px] font-normal text-muted-foreground">
               Формат 996XXXXXXXXX
+            </span>
+          </label>
+          <label className="text-xs font-semibold">
+            ФИО
+            <input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Асель Жумабекова"
+              maxLength={200}
+              className={fieldClass}
+            />
+            <span className="mt-1 block text-[11px] font-normal text-muted-foreground">
+              Под этим именем менеджер виден клиенту при оформлении
             </span>
           </label>
           <label className="text-xs font-semibold">
@@ -169,8 +185,11 @@ function StaffAdminPage() {
                 className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
               >
                 <div>
-                  <p className="font-semibold">{user.phone}</p>
+                  <p className="font-semibold">
+                    {user.full_name || user.phone}
+                  </p>
                   <p className="text-xs text-muted-foreground">
+                    {user.full_name ? `${user.phone} · ` : ""}
                     {ROLE_LABEL[user.role as StaffRole] ?? user.role}
                     {!user.is_active ? " · неактивен" : ""}
                   </p>

@@ -177,19 +177,42 @@ export function deleteAdminPromotion(id: string) {
   });
 }
 
-export function upsertAdminContact(body: UpsertContactInput) {
+function contactBody(body: UpsertContactInput) {
+  return {
+    name: body.name,
+    address: body.address ?? "",
+    phone_sales: body.phone_sales ?? "",
+    phone_service: body.phone_service ?? "",
+    phone_accounting: body.phone_accounting ?? "",
+    working_hours: body.working_hours ?? "",
+    map_embed_url: body.map_embed_url ?? "",
+  };
+}
+
+export function createAdminContact(body: UpsertContactInput) {
   return apiRequest<{ id: string }>({
-    method: "PUT",
+    method: "POST",
     path: "/admin/cms/contacts",
-    body: {
-      name: body.name,
-      address: body.address ?? "",
-      phone_sales: body.phone_sales ?? "",
-      phone_service: body.phone_service ?? "",
-      phone_accounting: body.phone_accounting ?? "",
-      working_hours: body.working_hours ?? "",
-      map_embed_url: body.map_embed_url ?? "",
-    },
+    body: contactBody(body),
+  });
+}
+
+/**
+ * Правка офиса по id. Раньше единственной операцией был upsert по имени:
+ * переименование создавало второй офис, а первый оставался навсегда.
+ */
+export function updateAdminContact(id: string, body: UpsertContactInput) {
+  return apiRequest<{ id: string }>({
+    method: "PATCH",
+    path: `/admin/cms/contacts/${encodeURIComponent(id)}`,
+    body: contactBody(body),
+  });
+}
+
+export function deleteAdminContact(id: string) {
+  return apiRequest<void>({
+    method: "DELETE",
+    path: `/admin/cms/contacts/${encodeURIComponent(id)}`,
   });
 }
 

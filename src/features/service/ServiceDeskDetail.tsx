@@ -266,6 +266,32 @@ export function ServiceDeskDetail({ requestId, allowAssign = false }: Props) {
             </section>
           ) : null}
 
+          {sr.status_history.length > 0 ? (
+            <section className="space-y-3 rounded-3xl border border-border bg-card p-5">
+              <h2 className="text-sm font-bold">История статусов</h2>
+              <ol className="space-y-2.5">
+                {sr.status_history.map((h, index) => (
+                  <li
+                    key={`${h.status}-${h.occurred_at}-${index}`}
+                    className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm"
+                  >
+                    <span className="font-semibold">
+                      {serviceStatusLabel(h.status)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatServiceDate(h.occurred_at)}
+                    </span>
+                    {h.comment ? (
+                      <span className="basis-full text-xs text-muted-foreground">
+                        {h.comment}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+
           <section className="space-y-3 rounded-3xl border border-border bg-card p-5">
             <h2 className="text-sm font-bold">Комментарий клиенту</h2>
             <textarea
