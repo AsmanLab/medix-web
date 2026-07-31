@@ -124,7 +124,25 @@ export async function registerClient(
   await page.getByPlaceholder("996555000000").fill(input.phone);
   await page.getByRole("button", { name: "Получить код" }).click();
 
-  await expect(page.getByText("Подтвердите номер")).toBeVisible();
+  // Стенд может быть настроен так, что регистрация в принципе невозможна:
+  // с боевым ключом SMS мок-код отключён и send-otp отвечает 503, а серверный
+  // лимит даёт 429. Без этой проверки тест падал на невидимом поле ввода кода,
+  // и причина выглядела как поломка UI.
+  try {
+    await expect(page.getByText("Подтвердите номер")).toBeVisible({
+      timeout: 20_000,
+    });
+  } catch (cause) {
+    const body = await page.locator("body").innerText();
+    const reason = /SMS-шлюз[^\n]*|Слишком много попыток[^\n]*/.exec(body)?.[0];
+    throw new Error(
+      reason
+        ? `E2E: стенд не выдаёт код подтверждения — «${reason}». ` +
+          `Нужен мок-OTP (пустой SMS_NIKITA_API_KEY) и свободный лимит /auth/send-otp.`
+        : `E2E: шаг подтверждения номера не открылся. Экран: ${body.slice(0, 200)}`,
+      { cause },
+    );
+  }
   await page.getByPlaceholder("Код (dev: 123456)").fill(otp);
   await page.getByRole("button", { name: "Подтвердить" }).click();
 
