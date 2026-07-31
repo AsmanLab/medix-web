@@ -55,6 +55,7 @@ import { Route as AdminOrdersOrderIdRouteImport } from './routes/admin/orders/$o
 import { Route as AdminReportsIndexRouteImport } from './routes/admin/reports/index'
 import { Route as AdminServiceDeskIndexRouteImport } from './routes/admin/service-desk/index'
 import { Route as AdminServiceDeskRequestIdRouteImport } from './routes/admin/service-desk/$requestId'
+import { Route as AdminSettingsIndexRouteImport } from './routes/admin/settings/index'
 import { Route as AdminStaffIndexRouteImport } from './routes/admin/staff/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUsersCustomerIdRouteImport } from './routes/admin/users/$customerId'
@@ -304,6 +305,11 @@ const AdminServiceDeskRequestIdRoute =
     path: '/service-desk/$requestId',
     getParentRoute: () => AdminRouteRoute,
   } as any)
+const AdminSettingsIndexRoute = AdminSettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminStaffIndexRoute = AdminStaffIndexRouteImport.update({
   id: '/staff/',
   path: '/staff/',
@@ -446,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/admin/service-desk/': typeof AdminServiceDeskIndexRoute
+  '/admin/settings/': typeof AdminSettingsIndexRoute
   '/admin/staff/': typeof AdminStaffIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/service/requests/': typeof ServiceRequestsIndexRoute
@@ -505,6 +512,7 @@ export interface FileRoutesByTo {
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/reports': typeof AdminReportsIndexRoute
   '/admin/service-desk': typeof AdminServiceDeskIndexRoute
+  '/admin/settings': typeof AdminSettingsIndexRoute
   '/admin/staff': typeof AdminStaffIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/service/requests': typeof ServiceRequestsIndexRoute
@@ -571,6 +579,7 @@ export interface FileRoutesById {
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/admin/service-desk/': typeof AdminServiceDeskIndexRoute
+  '/admin/settings/': typeof AdminSettingsIndexRoute
   '/admin/staff/': typeof AdminStaffIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/service/requests/': typeof ServiceRequestsIndexRoute
@@ -638,6 +647,7 @@ export interface FileRouteTypes {
     | '/admin/orders/'
     | '/admin/reports/'
     | '/admin/service-desk/'
+    | '/admin/settings/'
     | '/admin/staff/'
     | '/admin/users/'
     | '/service/requests/'
@@ -697,6 +707,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/reports'
     | '/admin/service-desk'
+    | '/admin/settings'
     | '/admin/staff'
     | '/admin/users'
     | '/service/requests'
@@ -762,6 +773,7 @@ export interface FileRouteTypes {
     | '/admin/orders/'
     | '/admin/reports/'
     | '/admin/service-desk/'
+    | '/admin/settings/'
     | '/admin/staff/'
     | '/admin/users/'
     | '/service/requests/'
@@ -1130,6 +1142,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminServiceDeskRequestIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/settings/': {
+      id: '/admin/settings/'
+      path: '/settings'
+      fullPath: '/admin/settings/'
+      preLoaderRoute: typeof AdminSettingsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/staff/': {
       id: '/admin/staff/'
       path: '/staff'
@@ -1266,6 +1285,7 @@ interface AdminRouteRouteChildren {
   AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
   AdminReportsIndexRoute: typeof AdminReportsIndexRoute
   AdminServiceDeskIndexRoute: typeof AdminServiceDeskIndexRoute
+  AdminSettingsIndexRoute: typeof AdminSettingsIndexRoute
   AdminStaffIndexRoute: typeof AdminStaffIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
   AdminCatalogCategoriesCategoryIdRoute: typeof AdminCatalogCategoriesCategoryIdRoute
@@ -1296,6 +1316,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminOrdersIndexRoute: AdminOrdersIndexRoute,
   AdminReportsIndexRoute: AdminReportsIndexRoute,
   AdminServiceDeskIndexRoute: AdminServiceDeskIndexRoute,
+  AdminSettingsIndexRoute: AdminSettingsIndexRoute,
   AdminStaffIndexRoute: AdminStaffIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
   AdminCatalogCategoriesCategoryIdRoute: AdminCatalogCategoriesCategoryIdRoute,

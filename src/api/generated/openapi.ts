@@ -466,6 +466,28 @@ export interface paths {
         patch: operations["update_promotion_api_v1_admin_cms_promotions__promotion_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/settings/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Реквизиты организации для счёта */
+        get: operations["get_invoice_settings_api_v1_admin_settings_invoice_get"];
+        /**
+         * Сохранить реквизиты организации
+         * @description Реквизиты попадают в счёт снимком в момент его создания, поэтому правка
+         *     здесь не меняет уже выставленные документы — только будущие.
+         */
+        put: operations["update_invoice_settings_api_v1_admin_settings_invoice_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -2784,6 +2806,100 @@ export interface components {
             sku: string;
             /** Unit Price */
             unit_price: string | null;
+        };
+        /**
+         * InvoiceSettingsBody
+         * @description Реквизиты организации для счёта (договор п. 5.2, ТЗ п. 10.1).
+         */
+        InvoiceSettingsBody: {
+            /**
+             * Bank Account
+             * @default
+             */
+            bank_account: string;
+            /**
+             * Bank Name
+             * @default
+             */
+            bank_name: string;
+            /**
+             * Bik
+             * @default
+             */
+            bik: string;
+            /**
+             * Company Name
+             * @default
+             */
+            company_name: string;
+            /**
+             * Extra Note
+             * @default
+             */
+            extra_note: string;
+            /**
+             * Inn
+             * @default
+             */
+            inn: string;
+            /**
+             * Legal Address
+             * @default
+             */
+            legal_address: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone: string;
+        };
+        /**
+         * InvoiceSettingsOut
+         * @description То же плюс собранный текст — чтобы админка показывала предпросмотр.
+         */
+        InvoiceSettingsOut: {
+            /**
+             * Bank Account
+             * @default
+             */
+            bank_account: string;
+            /**
+             * Bank Name
+             * @default
+             */
+            bank_name: string;
+            /**
+             * Bik
+             * @default
+             */
+            bik: string;
+            /**
+             * Company Name
+             * @default
+             */
+            company_name: string;
+            /**
+             * Extra Note
+             * @default
+             */
+            extra_note: string;
+            /**
+             * Inn
+             * @default
+             */
+            inn: string;
+            /**
+             * Legal Address
+             * @default
+             */
+            legal_address: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone: string;
+            /** Preview */
+            preview: string;
         };
         /** LineItemOut */
         LineItemOut: {
@@ -6515,6 +6631,124 @@ export interface operations {
             };
             /** @description Ресурс не найден */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    get_invoice_settings_api_v1_admin_settings_invoice_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceSettingsOut"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    update_invoice_settings_api_v1_admin_settings_invoice_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceSettingsBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceSettingsOut"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

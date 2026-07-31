@@ -106,6 +106,10 @@ export const queryKeys = {
     managers: (year: number, month: number) =>
       [...queryKeys.reports.all, "managers", year, month] as const,
   },
+  settings: {
+    all: ["settings"] as const,
+    invoice: () => [...queryKeys.settings.all, "invoice"] as const,
+  },
   adminCustomers: {
     all: ["admin-customers"] as const,
     list: (status?: string | null) =>

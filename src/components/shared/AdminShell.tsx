@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Boxes,
+  Building2,
   FileUp,
   HeartPulse,
   LayoutDashboard,
@@ -28,7 +29,8 @@ type AdminNavKey =
   | "service_desk"
   | "cms"
   | "banners"
-  | "reports";
+  | "reports"
+  | "settings";
 
 type AdminNavItem = {
   key: AdminNavKey;
@@ -152,6 +154,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
         // Менеджеру нужен свой отчёт за месяц (ТЗ п. 9.1); чужие строки
         // отсекает сервер.
         allowedRoles: ["admin", "manager"],
+      },
+      {
+        key: "settings",
+        to: "/admin/settings",
+        label: "Настройки",
+        icon: ({ className }) => <Building2 className={className} aria-hidden />,
+        allowedRoles: ["admin"],
       },
     ];
 
