@@ -1,7 +1,7 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import {
   apiAuthHeaders,
-  apiHealthy,
+  requireApi,
   apiLogin,
   E2E,
   firstPublishedProduct,
@@ -16,7 +16,7 @@ test.describe("E2E #35 — admin catalog publish", () => {
     page,
     request,
   }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const stamp = Date.now().toString(36);
     const catName = `E2E Cat ${stamp}`;
@@ -77,7 +77,7 @@ test.describe("E2E #35 — admin catalog publish", () => {
 
 test.describe("E2E #35 — admin verify client", () => {
   test("Test 2: admin verifies client", async ({ page, request }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const phone = uniquePhone("9967007");
     await registerClient(page, {
@@ -112,7 +112,7 @@ test.describe("E2E #35 — banners (API + home)", () => {
     page,
     request,
   }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const title = `E2E Banner ${Date.now().toString(36)}`;
     const token = await apiLogin(request, E2E.adminPhone, E2E.adminPassword);
@@ -152,7 +152,7 @@ test.describe("E2E #35 — manager RFQ UI quote", () => {
     page,
     request,
   }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const product = await firstPublishedProduct(request);
     test.skip(!product, "No published products — run Test 1 or seed catalog");

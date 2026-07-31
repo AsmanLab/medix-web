@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import {
-  apiHealthy,
+  requireApi,
   E2E,
   firstPublishedProduct,
   gotoAuthed,
@@ -13,7 +13,7 @@ test.describe("E2E #34 — verification gate", () => {
     page,
     request,
   }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const product = await firstPublishedProduct(request);
     test.skip(!product, "No published products");

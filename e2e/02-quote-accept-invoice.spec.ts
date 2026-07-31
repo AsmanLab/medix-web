@@ -1,7 +1,7 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import {
   apiAuthHeaders,
-  apiHealthy,
+  requireApi,
   apiLogin,
   E2E,
   firstPublishedProduct,
@@ -16,7 +16,7 @@ test.describe("E2E #34 — quote accept + invoice", () => {
     page,
     request,
   }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const product = await firstPublishedProduct(request);
     test.skip(!product, "No published products");
