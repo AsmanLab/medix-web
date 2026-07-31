@@ -19,6 +19,8 @@ import {
   type ConfigSelection,
 } from "@/features/catalog/configurator-logic";
 import { ProductConfigurator } from "@/features/catalog/ProductConfigurator";
+import { ProductDescription } from "@/features/catalog/ProductDescription";
+import { ProductGallery } from "@/features/catalog/ProductGallery";
 import { useSession } from "@/session/store";
 
 export const Route = createFileRoute("/product/$slug")({
@@ -61,9 +63,6 @@ function ProductDetailPage() {
     () => summarizeConfigPrice(product?.price ?? null, selected),
     [product?.price, selected],
   );
-
-  const primaryImage =
-    product?.images?.find((i) => i.is_primary) ?? product?.images?.[0];
 
   const addMutation = useMutation({
     mutationFn: () =>
@@ -134,19 +133,10 @@ function ProductDetailPage() {
           {product ? (
             <article className="space-y-6">
               <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)]">
-                {primaryImage?.url ? (
-                  <img
-                    src={primaryImage.url}
-                    alt={product.name_ru}
-                    fetchPriority="high"
-                    decoding="async"
-                    className="aspect-[16/9] w-full object-cover"
-                  />
-                ) : (
-                  <div className="grid aspect-[16/9] place-items-center bg-primary-soft text-sm text-muted-foreground">
-                    Нет изображения
-                  </div>
-                )}
+                <ProductGallery
+                  images={product.images ?? []}
+                  alt={product.name_ru}
+                />
                 <div className="p-5 sm:p-6">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                     {product.sku}
@@ -219,12 +209,7 @@ function ProductDetailPage() {
               ) : null}
 
               {product.description_ru ? (
-                <section className="rounded-3xl border border-border bg-card p-5">
-                  <h2 className="font-semibold">Описание</h2>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-                    {product.description_ru}
-                  </p>
-                </section>
+                <ProductDescription text={product.description_ru} />
               ) : null}
 
               {product.documents?.length ? (
