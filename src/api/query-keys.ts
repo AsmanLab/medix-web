@@ -97,6 +97,15 @@ export const queryKeys = {
     list: (includeInactive = false) =>
       [...queryKeys.staff.all, "list", includeInactive] as const,
   },
+  managers: {
+    all: ["managers"] as const,
+    list: () => [...queryKeys.managers.all, "list"] as const,
+  },
+  reports: {
+    all: ["reports"] as const,
+    managers: (year: number, month: number) =>
+      [...queryKeys.reports.all, "managers", year, month] as const,
+  },
   adminCustomers: {
     all: ["admin-customers"] as const,
     list: (status?: string | null) =>
