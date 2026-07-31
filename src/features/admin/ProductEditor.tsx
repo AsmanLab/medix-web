@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   FileText,
   ImagePlus,
+  Plus,
   Save,
   Trash2,
   Upload,
@@ -24,6 +25,17 @@ import {
   updateAdminProduct,
   type ProductDetailOut,
 } from "@/api/catalog";
+import {
+  createOptionGroup,
+  createProductOption,
+  deleteOptionGroup,
+  deleteProductOption,
+  parseOptionPrice,
+  updateOptionGroup,
+  updateProductOption,
+  OPTION_TYPE_LABEL,
+  type OptionType,
+} from "@/api/catalog-options";
 import { isAppError } from "@/api/errors";
 import { fetchMediaDownloadUrl, uploadMediaFile } from "@/api/media";
 import { queryKeys } from "@/api/query-keys";
@@ -37,7 +49,7 @@ const fieldClass =
 const textareaClass =
   "mt-1.5 min-h-[100px] w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-type Tab = "main" | "price" | "images" | "documents";
+type Tab = "main" | "price" | "images" | "documents" | "options";
 
 type ProductEditorProps = {
   productId?: string;
@@ -310,6 +322,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
     () => [
       ["main", "Основное"],
       ["price", "Цена и наличие"],
+      ["options", "Комплектация"],
       ["images", "Изображения"],
       ["documents", "Документы"],
     ],
@@ -540,6 +553,26 @@ export function ProductEditor({ productId }: ProductEditorProps) {
             </div>
           ) : null}
 
+          {tab === "options" ? (
+            <OptionsPanel
+              productId={productId}
+              product={existing}
+              onChanged={(updated) => {
+                if (!productId) return;
+                queryClient.setQueryData(
+                  queryKeys.catalog.adminProduct(productId),
+                  updated,
+                );
+              }}
+              onInvalidate={() => {
+                if (!productId) return;
+                void queryClient.invalidateQueries({
+                  queryKey: queryKeys.catalog.adminProduct(productId),
+                });
+              }}
+            />
+          ) : null}
+
           {tab === "images" ? (
             <ImagesPanel
               product={existing}
@@ -587,6 +620,361 @@ export function ProductEditor({ productId }: ProductEditorProps) {
           </div>
         </form>
       </StateBlock>
+    </div>
+  );
+}
+
+/**
+ * Конфигуратор комплектаций (ТЗ п. 10.1: «варианты, дополнения, аксессуары
+ * на товар»).
+ *
+ * Каждая операция возвращает карточку товара целиком, поэтому кэш обновляется
+ * ответом мутации — без лишнего перезапроса.
+ *
+ * Все кнопки здесь `type="button"`: панель живёт внутри формы товара, и кнопка
+ * по умолчанию отправила бы её.
+ */
+function OptionsPanel({
+  productId,
+  product,
+  onChanged,
+  onInvalidate,
+}: {
+  productId?: string;
+  product: ProductDetailOut | null;
+  onChanged: (updated: ProductDetailOut) => void;
+  onInvalidate: () => void;
+}) {
+  const [groupName, setGroupName] = useState("");
+  const [renaming, setRenaming] = useState<Record<string, string>>({});
+
+  const groups = product?.option_groups ?? [];
+
+  const addGroup = useMutation({
+    mutationFn: () => createOptionGroup(productId!, { name_ru: groupName.trim() }),
+    onSuccess: (updated) => {
+      setGroupName("");
+      onChanged(updated);
+      toast.success("Группа добавлена");
+    },
+    onError: (err) =>
+      toast.error(isAppError(err) ? err.message : "Не удалось добавить группу"),
+  });
+
+  const renameGroup = useMutation({
+    mutationFn: ({ groupId, name }: { groupId: string; name: string }) =>
+      updateOptionGroup(productId!, groupId, { name_ru: name }),
+    onSuccess: (updated, { groupId }) => {
+      setRenaming((prev) => {
+        const next = { ...prev };
+        delete next[groupId];
+        return next;
+      });
+      onChanged(updated);
+      toast.success("Группа переименована");
+    },
+    onError: (err) =>
+      toast.error(isAppError(err) ? err.message : "Не удалось переименовать"),
+  });
+
+  const removeGroup = useMutation({
+    mutationFn: (groupId: string) => deleteOptionGroup(productId!, groupId),
+    onSuccess: () => {
+      onInvalidate();
+      toast.success("Группа удалена");
+    },
+    onError: (err) =>
+      toast.error(isAppError(err) ? err.message : "Не удалось удалить группу"),
+  });
+
+  const toggleOption = useMutation({
+    mutationFn: ({
+      groupId,
+      optionId,
+      isActive,
+    }: {
+      groupId: string;
+      optionId: string;
+      isActive: boolean;
+    }) =>
+      updateProductOption(productId!, groupId, optionId, { is_active: isActive }),
+    onSuccess: onChanged,
+    onError: (err) =>
+      toast.error(isAppError(err) ? err.message : "Не удалось изменить опцию"),
+  });
+
+  const removeOption = useMutation({
+    mutationFn: ({ groupId, optionId }: { groupId: string; optionId: string }) =>
+      deleteProductOption(productId!, groupId, optionId),
+    onSuccess: () => {
+      onInvalidate();
+      toast.success("Опция удалена");
+    },
+    onError: (err) =>
+      toast.error(isAppError(err) ? err.message : "Не удалось удалить опцию"),
+  });
+
+  if (!productId) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Сохраните товар, чтобы настроить комплектацию.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl bg-muted/40 p-4 text-xs leading-5 text-muted-foreground">
+        Группа — это один выбор на карточке товара: «Комплектация», «Гарантия»,
+        «Пусконаладка». Внутри группы <b>вариант</b> выбирается один (radio),
+        а дополнения, аксессуары и услуги — флажками. Опция без цены считается
+        «по запросу» и переводит всю сделку в запрос КП, даже если клиент
+        верифицирован.
+      </div>
+
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="min-w-[220px] flex-1 text-xs font-semibold">
+          Новая группа
+          <input
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            placeholder="Гарантия"
+            className={fieldClass}
+          />
+        </label>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!groupName.trim() || addGroup.isPending}
+          onClick={() => addGroup.mutate()}
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          Добавить
+        </Button>
+      </div>
+
+      {groups.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Комплектаций нет — товар продаётся как есть.
+        </p>
+      ) : null}
+
+      {groups.map((group) => (
+        <section
+          key={group.id}
+          className="space-y-3 rounded-2xl border border-border p-4"
+        >
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="min-w-[200px] flex-1 text-xs font-semibold">
+              Название группы
+              <input
+                value={renaming[group.id] ?? group.name_ru}
+                onChange={(e) =>
+                  setRenaming((prev) => ({ ...prev, [group.id]: e.target.value }))
+                }
+                className={fieldClass}
+              />
+            </label>
+            {renaming[group.id] !== undefined &&
+            renaming[group.id] !== group.name_ru ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={renameGroup.isPending}
+                onClick={() =>
+                  renameGroup.mutate({
+                    groupId: group.id,
+                    name: renaming[group.id].trim(),
+                  })
+                }
+              >
+                Сохранить
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              className="text-destructive"
+              disabled={removeGroup.isPending}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Удалить группу «${group.name_ru}» вместе со всеми опциями?`,
+                  )
+                ) {
+                  removeGroup.mutate(group.id);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+            </Button>
+          </div>
+
+          <ul className="divide-y divide-border">
+            {group.options.map((option) => (
+              <li
+                key={option.id}
+                className="flex flex-wrap items-center justify-between gap-2 py-2"
+              >
+                <div className="min-w-0">
+                  <p
+                    className={cn(
+                      "text-sm font-semibold",
+                      !option.is_active && "text-muted-foreground line-through",
+                    )}
+                  >
+                    {option.name_ru}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {OPTION_TYPE_LABEL[option.option_type as OptionType] ??
+                      option.option_type}
+                    {" · "}
+                    {option.price ?? "цена по запросу"}
+                    {option.is_required ? " · обязательная" : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={toggleOption.isPending}
+                    onClick={() =>
+                      toggleOption.mutate({
+                        groupId: group.id,
+                        optionId: option.id,
+                        isActive: !option.is_active,
+                      })
+                    }
+                  >
+                    {option.is_active ? "Скрыть" : "Вернуть"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive"
+                    disabled={removeOption.isPending}
+                    onClick={() => {
+                      if (window.confirm(`Удалить опцию «${option.name_ru}»?`)) {
+                        removeOption.mutate({
+                          groupId: group.id,
+                          optionId: option.id,
+                        });
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <NewOptionForm
+            productId={productId}
+            groupId={group.id}
+            onCreated={onChanged}
+          />
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function NewOptionForm({
+  productId,
+  groupId,
+  onCreated,
+}: {
+  productId: string;
+  groupId: string;
+  onCreated: (updated: ProductDetailOut) => void;
+}) {
+  const [name, setName] = useState("");
+  const [optionType, setOptionType] = useState<OptionType>("addon");
+  const [price, setPrice] = useState("");
+  const [required, setRequired] = useState(false);
+
+  const parsedPrice = parseOptionPrice(price);
+
+  const create = useMutation({
+    mutationFn: () =>
+      createProductOption(productId, groupId, {
+        name_ru: name.trim(),
+        option_type: optionType,
+        // Пустая цена — это «по запросу», а не ноль.
+        price_amount: parsedPrice ?? null,
+        is_required: required,
+      }),
+    onSuccess: (updated) => {
+      setName("");
+      setPrice("");
+      setRequired(false);
+      onCreated(updated);
+      toast.success("Опция добавлена");
+    },
+    onError: (err) =>
+      toast.error(isAppError(err) ? err.message : "Не удалось добавить опцию"),
+  });
+
+  const priceInvalid = parsedPrice === undefined;
+
+  return (
+    <div className="grid gap-2 rounded-xl bg-muted/40 p-3 sm:grid-cols-[2fr_1.4fr_1fr_auto]">
+      <label className="text-[11px] font-semibold">
+        Название
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="+1 год гарантии"
+          className={fieldClass}
+        />
+      </label>
+      <label className="text-[11px] font-semibold">
+        Тип
+        <select
+          value={optionType}
+          onChange={(e) => setOptionType(e.target.value as OptionType)}
+          className={fieldClass}
+        >
+          {Object.entries(OPTION_TYPE_LABEL).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-[11px] font-semibold">
+        Цена, KGS
+        <input
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          placeholder="по запросу"
+          inputMode="decimal"
+          className={fieldClass}
+        />
+      </label>
+      <div className="flex items-end gap-2">
+        <label className="inline-flex items-center gap-1.5 pb-3 text-[11px] font-semibold">
+          <input
+            type="checkbox"
+            checked={required}
+            onChange={(e) => setRequired(e.target.checked)}
+            className="h-4 w-4 rounded border-border"
+          />
+          Обяз.
+        </label>
+        <Button
+          type="button"
+          variant="outline"
+          className="mb-1"
+          disabled={!name.trim() || priceInvalid || create.isPending}
+          onClick={() => create.mutate()}
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+        </Button>
+      </div>
     </div>
   );
 }
