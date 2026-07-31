@@ -90,6 +90,11 @@ function RegisterPage() {
 
   function applyError(err: unknown, fallback: string) {
     const message = isAppError(err) ? err.message : fallback;
+    // Сервер тоже лимитирует отправку кода: при 429 гасим кнопку до конца
+    // окна, иначе пользователь жмёт «Отправить снова» и получает ту же ошибку.
+    if (isAppError(err) && err.status === 429 && err.retryAfter) {
+      setCooldown(err.retryAfter);
+    }
     setFormError(message);
     toast.error(message);
   }
