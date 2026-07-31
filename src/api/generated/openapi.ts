@@ -322,16 +322,44 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        put?: never;
         /**
-         * Создать/обновить контакты
-         * @description Создаёт или обновляет контакт офиса по имени.
+         * Добавить офис
+         * @description Создаёт офис на странице «Контакты» (ТЗ п. 10.3.4).
          */
-        put: operations["upsert_contacts_api_v1_admin_cms_contacts_put"];
-        post?: never;
+        post: operations["create_contact_office_api_v1_admin_cms_contacts_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cms/contacts/{office_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Удалить офис
+         * @description Убирает офис со страницы «Контакты».
+         */
+        delete: operations["delete_contact_office_api_v1_admin_cms_contacts__office_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Изменить офис
+         * @description Обновляет офис по идентификатору.
+         *
+         *     Раньше единственной операцией был upsert по имени: переименование офиса
+         *     создавало второй, а исходный оставался на странице «Контакты» навсегда —
+         *     удалить его было нечем.
+         */
+        patch: operations["update_contact_office_api_v1_admin_cms_contacts__office_id__patch"];
         trace?: never;
     };
     "/api/v1/admin/cms/pages": {
@@ -1203,9 +1231,60 @@ export interface paths {
         };
         /**
          * Месячный отчёт
-         * @description Возвращает агрегированный отчёт по заказам за месяц.
+         * @description Агрегированный отчёт по заказам за месяц.
+         *
+         *     Без параметров — текущий месяц. Раньше по умолчанию стояли 2026 и 7:
+         *     отчёт молча показывал июль независимо от того, когда его открыли.
          */
         get: operations["manager_monthly_report_api_v1_manager_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/manager/reports/managers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Отчёт за месяц по менеджерам
+         * @description Разбивка месяца по менеджерам (ТЗ п. 9.1, 11.3, 14.5): запросы, заказы
+         *     и сумма на каждого, отсортированные по сумме — это «топ менеджеров».
+         *
+         *     Без параметров — текущий месяц. Строка `manager_id: null` собирает сделки,
+         *     у которых менеджера нет: без неё сумма по строкам не сходится с общей.
+         */
+        get: operations["managers_report_api_v1_manager_reports_managers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/manager/reports/managers.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Экспорт отчёта по менеджерам в CSV
+         * @description Тот же отчёт в CSV (ТЗ п. 11.3: «менеджер, кол-во запросов, кол-во заказов,
+         *     сумма»).
+         *
+         *     Разделитель — точка с запятой, кодировка — UTF-8 с BOM: Excel в русской
+         *     локали иначе открывает файл одной колонкой и ломает кириллицу.
+         */
+        get: operations["managers_report_csv_api_v1_manager_reports_managers_csv_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1342,6 +1421,29 @@ export interface paths {
          * @description Возвращает последние 100 сервисных заявок для менеджера.
          */
         get: operations["manager_service_requests_api_v1_manager_service_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/managers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Список менеджеров для выбора клиентом
+         * @description Активные менеджеры, из которых клиент может выбрать своего при оформлении
+         *     (Б7 ТЗ — выбор необязательный, нужен для учёта продаж).
+         *
+         *     Полный список сотрудников с телефонами и ролями остаётся за `/admin/users`.
+         */
+        get: operations["list_managers_api_v1_managers_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2561,6 +2663,11 @@ export interface components {
         };
         /** CreateStaffUserRequest */
         CreateStaffUserRequest: {
+            /**
+             * Full Name
+             * @default
+             */
+            full_name: string;
             /** Password */
             password: string;
             /** Phone */
@@ -2788,6 +2895,46 @@ export interface components {
             status: string;
             /** Total */
             total?: string | null;
+        };
+        /**
+         * ManagerOut
+         * @description Менеджер в публичном списке для выбора клиентом (Б7).
+         *
+         *     Только идентификатор и имя: телефон и роль сотрудника — внутренние данные,
+         *     клиенту для выбора они не нужны.
+         */
+        ManagerOut: {
+            /** Full Name */
+            full_name: string;
+            /** Id */
+            id: string;
+        };
+        /**
+         * ManagerReportRowOut
+         * @description Строка отчёта по менеджеру. `manager_id: null` — сделки без менеджера.
+         */
+        ManagerReportRowOut: {
+            /** Manager Id */
+            manager_id: string | null;
+            /** Manager Name */
+            manager_name: string;
+            /** Orders Count */
+            orders_count: number;
+            /** Rfq Count */
+            rfq_count: number;
+            /** Total Amount */
+            total_amount: string;
+        };
+        /** ManagersReportResponse */
+        ManagersReportResponse: {
+            /** Currency */
+            currency: string;
+            /** Month */
+            month: number;
+            /** Rows */
+            rows: components["schemas"]["ManagerReportRowOut"][];
+            /** Year */
+            year: number;
         };
         /** MediaDownloadResponse */
         MediaDownloadResponse: {
@@ -3394,6 +3541,23 @@ export interface components {
             serial_number: string;
             /** Status */
             status: string;
+            /** Status History */
+            status_history?: components["schemas"]["ServiceStatusHistoryOut"][];
+        };
+        /**
+         * ServiceStatusHistoryOut
+         * @description Переход статуса заявки: когда и с каким комментарием.
+         */
+        ServiceStatusHistoryOut: {
+            /**
+             * Comment
+             * @default
+             */
+            comment: string;
+            /** Occurred At */
+            occurred_at: string;
+            /** Status */
+            status: string;
         };
         /** SetCartQtyRequest */
         SetCartQtyRequest: {
@@ -3404,6 +3568,8 @@ export interface components {
         StaffUserOut: {
             /** Created At */
             created_at: string;
+            /** Full Name */
+            full_name: string;
             /** Id */
             id: string;
             /** Is Active */
@@ -5512,11 +5678,142 @@ export interface operations {
             };
         };
     };
-    upsert_contacts_api_v1_admin_cms_contacts_put: {
+    create_contact_office_api_v1_admin_cms_contacts_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertContactBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdOut"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    delete_contact_office_api_v1_admin_cms_contacts__office_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                office_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    update_contact_office_api_v1_admin_cms_contacts__office_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                office_id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -5547,6 +5844,17 @@ export interface operations {
             };
             /** @description Доступ запрещён */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8761,8 +9069,8 @@ export interface operations {
     manager_monthly_report_api_v1_manager_reports_get: {
         parameters: {
             query?: {
-                year?: number;
-                month?: number;
+                year?: number | null;
+                month?: number | null;
             };
             header?: never;
             path?: never;
@@ -8777,6 +9085,126 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MonthlyReportResponse"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    managers_report_api_v1_manager_reports_managers_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+                month?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagersReportResponse"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    managers_report_csv_api_v1_manager_reports_managers_csv_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+                month?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
                 };
             };
             /** @description Требуется аутентификация */
@@ -9246,6 +9674,63 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceRequestOut"][];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    list_managers_api_v1_managers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagerOut"][];
                 };
             };
             /** @description Требуется аутентификация */

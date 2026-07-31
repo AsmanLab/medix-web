@@ -7,6 +7,12 @@ export type ServiceRequestComment = {
   created_at: string;
 };
 
+export type ServiceStatusHistoryEntry = {
+  status: string;
+  occurred_at: string;
+  comment: string;
+};
+
 export type ServiceRequest = {
   id: string;
   status: string;
@@ -25,6 +31,8 @@ export type ServiceRequest = {
   product_id: string | null;
   photo_urls: string[];
   comments: ServiceRequestComment[];
+  /** Timeline переходов статуса (чеклист v2.6 §2.5). */
+  status_history: ServiceStatusHistoryEntry[];
 };
 
 export type CreateServiceRequestInput = {

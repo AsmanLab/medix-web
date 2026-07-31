@@ -5,6 +5,7 @@ export type StaffRole = "manager" | "service_engineer" | "admin";
 export type StaffUser = {
   id: string;
   phone: string;
+  full_name: string;
   role: StaffRole | string;
   is_active: boolean;
   created_at: string;
@@ -14,6 +15,8 @@ export type CreateStaffBody = {
   phone: string;
   password: string;
   role: StaffRole;
+  /** ФИО: по нему сотрудник виден клиенту в списке менеджеров (Б7). */
+  full_name?: string;
 };
 
 export function listStaffUsers(

@@ -1,9 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Save } from "lucide-react";
+import { Plus, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { fetchContacts } from "@/api/cms";
-import { upsertAdminContact } from "@/api/cms-admin";
+import {
+  createAdminContact,
+  deleteAdminContact,
+  updateAdminContact,
+} from "@/api/cms-admin";
 import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
@@ -14,6 +18,8 @@ const fieldClass =
 
 type OfficeDraft = {
   key: string;
+  /** id с сервера; null у офиса, который ещё не сохраняли. */
+  id: string | null;
   name: string;
   address: string;
   phone_sales: string;
@@ -37,6 +43,7 @@ export function ContactsEditor() {
     setOffices(
       listQuery.data.map((o) => ({
         key: o.id,
+        id: o.id,
         name: o.name,
         address: o.address ?? "",
         phone_sales: o.phone_sales ?? "",
@@ -57,7 +64,7 @@ export function ContactsEditor() {
             message: "У офиса должно быть имя",
           });
         }
-        await upsertAdminContact({
+        const payload = {
           name: office.name.trim(),
           address: office.address.trim(),
           phone_sales: office.phone_sales.trim(),
@@ -65,7 +72,14 @@ export function ContactsEditor() {
           phone_accounting: office.phone_accounting.trim(),
           working_hours: office.working_hours.trim(),
           map_embed_url: office.map_embed_url.trim(),
-        });
+        };
+        // Сохраняем по id, а не по имени: иначе переименование офиса
+        // создавало второй, а исходный оставался на странице «Контакты».
+        if (office.id) {
+          await updateAdminContact(office.id, payload);
+        } else {
+          await createAdminContact(payload);
+        }
       }
     },
     onSuccess: async () => {
@@ -76,6 +90,32 @@ export function ContactsEditor() {
       toast.error(isAppError(err) ? err.message : "Не удалось сохранить");
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteAdminContact(id),
+    onSuccess: async () => {
+      toast.success("Офис удалён");
+      await queryClient.invalidateQueries({ queryKey: queryKeys.cms.contacts() });
+    },
+    onError: (err) => {
+      toast.error(isAppError(err) ? err.message : "Не удалось удалить");
+    },
+  });
+
+  function removeOffice(office: OfficeDraft) {
+    // Несохранённый офис убираем из формы — на сервере его ещё нет.
+    if (!office.id) {
+      setOffices((prev) => prev.filter((o) => o.key !== office.key));
+      return;
+    }
+    if (
+      window.confirm(
+        `Удалить офис «${office.name || "без названия"}»? Он исчезнет со страницы «Контакты».`,
+      )
+    ) {
+      deleteMutation.mutate(office.id);
+    }
+  }
 
   function updateOffice(key: string, patch: Partial<OfficeDraft>) {
     setOffices((prev) =>
@@ -100,6 +140,7 @@ export function ContactsEditor() {
                 ...prev,
                 {
                   key: `new-${Date.now()}`,
+                  id: null,
                   name: "",
                   address: "",
                   phone_sales: "",
@@ -139,16 +180,28 @@ export function ContactsEditor() {
               key={office.key}
               className="space-y-3 rounded-3xl border border-border bg-card p-5"
             >
-              <label className="block text-xs font-semibold">
-                Название офиса (ключ upsert)
-                <input
-                  value={office.name}
-                  onChange={(e) =>
-                    updateOffice(office.key, { name: e.target.value })
-                  }
-                  className={fieldClass}
-                />
-              </label>
+              <div className="flex items-start justify-between gap-3">
+                <label className="block flex-1 text-xs font-semibold">
+                  Название офиса
+                  <input
+                    value={office.name}
+                    onChange={(e) =>
+                      updateOffice(office.key, { name: e.target.value })
+                    }
+                    className={fieldClass}
+                  />
+                </label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-5 text-destructive"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => removeOffice(office)}
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden />
+                  Удалить
+                </Button>
+              </div>
               <label className="block text-xs font-semibold">
                 Адрес
                 <textarea

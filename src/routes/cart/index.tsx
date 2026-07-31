@@ -19,6 +19,7 @@ import {
   type CartOut,
 } from "@/api/cart";
 import { isAppError } from "@/api/errors";
+import { fetchManagers } from "@/api/managers";
 import { fetchProfile } from "@/api/profile";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
@@ -41,6 +42,7 @@ function CartPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [comment, setComment] = useState("");
+  const [managerId, setManagerId] = useState("");
   const [showVerifyGate, setShowVerifyGate] = useState(false);
 
   const authenticated = session.status === "authenticated";
@@ -56,6 +58,15 @@ function CartPage() {
     queryFn: ({ signal }) => fetchProfile(signal),
     enabled: authenticated,
     staleTime: 30_000,
+  });
+
+  // Список меняется редко — держим подольше, чтобы не дёргать его на каждый
+  // заход в корзину.
+  const managersQuery = useQuery({
+    queryKey: queryKeys.managers.list(),
+    queryFn: ({ signal }) => fetchManagers(signal),
+    enabled: authenticated,
+    staleTime: 5 * 60_000,
   });
 
   const cart = cartQuery.data;
@@ -92,7 +103,11 @@ function CartPage() {
 
   const checkoutMutation = useMutation({
     mutationFn: (forceRfq: boolean) =>
-      checkoutCart({ comment: comment.trim() || null, forceRfq }),
+      checkoutCart({
+        comment: comment.trim() || null,
+        managerId: managerId || null,
+        forceRfq,
+      }),
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.cart.all });
       await queryClient.invalidateQueries({ queryKey: queryKeys.rfq.all });
@@ -293,6 +308,38 @@ function CartPage() {
               {cart?.total ?? "Цена по запросу"}
             </p>
           </section>
+
+          {managersQuery.data && managersQuery.data.length > 0 ? (
+            <section>
+              <label
+                className="block text-sm font-semibold"
+                htmlFor="rfq-manager"
+              >
+                Менеджер{" "}
+                <span className="font-normal text-muted-foreground">
+                  (необязательно)
+                </span>
+              </label>
+              <select
+                id="rfq-manager"
+                value={managerId}
+                onChange={(e) => setManagerId(e.target.value)}
+                className="field-control mt-2"
+                disabled={busy}
+              >
+                <option value="">Любой свободный менеджер</option>
+                {managersQuery.data.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.full_name || "Без имени"}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Если вы уже работаете с кем-то из отдела продаж, выберите его —
+                заявка попадёт сразу к нему.
+              </p>
+            </section>
+          ) : null}
 
           <section>
             <label className="block text-sm font-semibold" htmlFor="rfq-comment">
