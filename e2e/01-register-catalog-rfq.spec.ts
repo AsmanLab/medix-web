@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import {
-  apiHealthy,
+  requireApi,
   firstPublishedProduct,
   gotoAuthed,
   registerClient,
@@ -13,7 +13,7 @@ test.describe("E2E #34 — register → catalog → RFQ", () => {
     page,
     request,
   }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const product = await firstPublishedProduct(request);
     test.skip(!product, "No published products in catalog");
@@ -35,7 +35,7 @@ test.describe("E2E #34 — register → catalog → RFQ", () => {
     const gate = page.getByRole("dialog");
     if (await gate.isVisible().catch(() => false)) {
       await expect(page.getByText("Организация ещё не подтверждена")).toBeVisible();
-      await page.getByRole("button", { name: "Отправить запрос" }).click();
+      await gate.getByRole("button", { name: "Отправить запрос", exact: true }).click();
     }
 
     await expect(page).toHaveURL(/\/cart\/success/, { timeout: 30_000 });

@@ -37,11 +37,22 @@ jobs:
       - run: npm ci
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
+      - name: Warn when E2E run is a no-op
+        if: ${{ !secrets.E2E_API_BASE_URL }}
+        run: |
+          echo "::warning title=E2E без API::Секрет E2E_API_BASE_URL не задан — \
+          сценарии будут пропущены, и зелёный статус этого job ничего не доказывает. \
+          Задайте секрет, чтобы прогон стал обязательным."
       - name: Run Playwright E2E
         env:
-          # Set repo secret E2E_API_BASE_URL to staging to exercise real flows.
-          # Without it (or without reachable API) specs skip via apiHealthy().
-          E2E_API_BASE_URL: ${{ secrets.E2E_API_BASE_URL || 'http://127.0.0.1:8000/api/v1' }}
+          # Задайте секрет E2E_API_BASE_URL, чтобы гонять сценарии против живого
+          # стенда. Без него спеки пропускаются — и job печатает предупреждение
+          # выше, чтобы «зелёный e2e» не читался как пройденный.
+          # Fallback на localhost убран намеренно: с ним переменная всегда была
+          # непустой, и отличить «API задан» от «API не задан» было нельзя.
+          E2E_API_BASE_URL: ${{ secrets.E2E_API_BASE_URL }}
+          # Если адрес задан, недоступный API обязан ронять job, а не скипать его.
+          E2E_REQUIRE_API: ${{ secrets.E2E_API_BASE_URL && '1' || '' }}
           E2E_BASE_URL: http://127.0.0.1:8080
           E2E_CLIENT_PHONE: ${{ secrets.E2E_CLIENT_PHONE }}
           E2E_CLIENT_PASSWORD: ${{ secrets.E2E_CLIENT_PASSWORD }}

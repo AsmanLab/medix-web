@@ -1,9 +1,16 @@
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test";
 
 export const E2E = {
+  // `||`, а не `??`: в CI переменная может прийти пустой строкой, когда секрет
+  // не задан, и `??` оставил бы apiBase пустым.
   apiBase:
-    process.env.E2E_API_BASE_URL ??
-    process.env.VITE_PUBLIC_API_BASE_URL ??
+    process.env.E2E_API_BASE_URL ||
+    process.env.VITE_PUBLIC_API_BASE_URL ||
     "http://127.0.0.1:8000/api/v1",
   clientPhone: process.env.E2E_CLIENT_PHONE ?? "996700111001",
   clientPassword: process.env.E2E_CLIENT_PASSWORD ?? "SecurePass1",
@@ -37,6 +44,35 @@ export async function apiHealthy(request: APIRequestContext): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Требовать живой API, если он вообще предполагался.
+ *
+ * Раньше каждый спек начинался с `test.skip(!(await apiHealthy(request)))`,
+ * и без API все сценарии молча пропускались, а job в CI горел зелёным —
+ * то есть «зелёный e2e» не означал ровно ничего.
+ *
+ * Теперь: если адрес API задан явно (`E2E_API_BASE_URL`) или выставлен
+ * `E2E_REQUIRE_API=1`, недоступный API роняет тест. Локальный прогон без
+ * поднятого бэкенда по-прежнему скипается — иначе разработчик не сможет
+ * гонять юнит-часть.
+ */
+export async function requireApi(request: APIRequestContext): Promise<void> {
+  if (await apiHealthy(request)) return;
+
+  const required =
+    process.env.E2E_REQUIRE_API === "1" || !!process.env.E2E_API_BASE_URL;
+
+  if (required) {
+    throw new Error(
+      `E2E: API ${E2E.apiBase} недоступен, а прогон объявлен обязательным ` +
+        `(E2E_API_BASE_URL задан или E2E_REQUIRE_API=1). ` +
+        `Молчаливый skip здесь запрещён: он маскирует нерабочий стенд.`,
+    );
+  }
+
+  test.skip(true, `API ${E2E.apiBase} недоступен — сценарий пропущен`);
 }
 
 export async function loginAs(
@@ -88,7 +124,25 @@ export async function registerClient(
   await page.getByPlaceholder("996555000000").fill(input.phone);
   await page.getByRole("button", { name: "Получить код" }).click();
 
-  await expect(page.getByText("Подтвердите номер")).toBeVisible();
+  // Стенд может быть настроен так, что регистрация в принципе невозможна:
+  // с боевым ключом SMS мок-код отключён и send-otp отвечает 503, а серверный
+  // лимит даёт 429. Без этой проверки тест падал на невидимом поле ввода кода,
+  // и причина выглядела как поломка UI.
+  try {
+    await expect(page.getByText("Подтвердите номер")).toBeVisible({
+      timeout: 20_000,
+    });
+  } catch (cause) {
+    const body = await page.locator("body").innerText();
+    const reason = /SMS-шлюз[^\n]*|Слишком много попыток[^\n]*/.exec(body)?.[0];
+    throw new Error(
+      reason
+        ? `E2E: стенд не выдаёт код подтверждения — «${reason}». ` +
+          `Нужен мок-OTP (пустой SMS_NIKITA_API_KEY) и свободный лимит /auth/send-otp.`
+        : `E2E: шаг подтверждения номера не открылся. Экран: ${body.slice(0, 200)}`,
+      { cause },
+    );
+  }
   await page.getByPlaceholder("Код (dev: 123456)").fill(otp);
   await page.getByRole("button", { name: "Подтвердить" }).click();
 

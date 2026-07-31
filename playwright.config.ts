@@ -33,9 +33,11 @@ export default defineConfig({
         timeout: 120_000,
         env: {
           ...process.env,
+          // `||`: пустая строка из незаданного секрета CI не должна
+          // подставляться как адрес API.
           VITE_PUBLIC_API_BASE_URL:
-            process.env.E2E_API_BASE_URL ??
-            process.env.VITE_PUBLIC_API_BASE_URL ??
+            process.env.E2E_API_BASE_URL ||
+            process.env.VITE_PUBLIC_API_BASE_URL ||
             "http://127.0.0.1:8000/api/v1",
         },
       },

@@ -1,7 +1,7 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import {
   apiAuthHeaders,
-  apiHealthy,
+  requireApi,
   apiLogin,
   E2E,
   firstPublishedProduct,
@@ -16,7 +16,7 @@ test.describe("E2E #35 — admin catalog publish", () => {
     page,
     request,
   }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const stamp = Date.now().toString(36);
     const catName = `E2E Cat ${stamp}`;
@@ -58,7 +58,11 @@ test.describe("E2E #35 — admin catalog publish", () => {
     await page.getByText(catName, { exact: true }).click();
     await page.getByRole("button", { name: "Сохранить" }).click();
 
-    await expect(page.getByText("Черновик")).toBeVisible({ timeout: 25_000 });
+    // exact: иначе подстрочный поиск ловит ещё и подзаголовок
+    // «Сначала сохраните черновик, потом загрузите фото».
+    await expect(page.getByText("Черновик", { exact: true })).toBeVisible({
+      timeout: 25_000,
+    });
     await expect(page).toHaveURL(/\/admin\/catalog\/products\/[^/]+$/, {
       timeout: 25_000,
     });
@@ -77,7 +81,7 @@ test.describe("E2E #35 — admin catalog publish", () => {
 
 test.describe("E2E #35 — admin verify client", () => {
   test("Test 2: admin verifies client", async ({ page, request }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const phone = uniquePhone("9967007");
     await registerClient(page, {
@@ -85,6 +89,24 @@ test.describe("E2E #35 — admin verify client", () => {
       password: E2E.password,
       fullName: `E2E Verify ${phone.slice(-4)}`,
     });
+
+    // Кнопка «Верифицировать» заблокирована, пока клиент не в статусе
+    // «На проверке», а туда он попадает только после первого запроса КП.
+    // Раньше тест жал по заблокированной кнопке и висел до таймаута.
+    const product = await firstPublishedProduct(request);
+    test.skip(!product, "No published products in catalog");
+    const token = await apiLogin(request, phone, E2E.password);
+    const headers = await apiAuthHeaders(token);
+    const added = await request.post(`${E2E.apiBase}/cart/items`, {
+      headers,
+      data: { product_id: product!.id, qty: 1, option_ids: [] },
+    });
+    expect(added.ok(), `cart/items: ${added.status()}`).toBeTruthy();
+    const checkout = await request.post(`${E2E.apiBase}/cart/checkout`, {
+      headers,
+      data: { manager_id: null, comment: null, force_rfq: true },
+    });
+    expect(checkout.ok(), `cart/checkout: ${checkout.status()}`).toBeTruthy();
 
     await loginAs(page, E2E.adminPhone, E2E.adminPassword);
     await gotoAuthed(page, "/admin/users", E2E.adminPhone, E2E.adminPassword);
@@ -112,7 +134,7 @@ test.describe("E2E #35 — banners (API + home)", () => {
     page,
     request,
   }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const title = `E2E Banner ${Date.now().toString(36)}`;
     const token = await apiLogin(request, E2E.adminPhone, E2E.adminPassword);
@@ -152,7 +174,7 @@ test.describe("E2E #35 — manager RFQ UI quote", () => {
     page,
     request,
   }) => {
-    test.skip(!(await apiHealthy(request)), "API not reachable");
+    await requireApi(request);
 
     const product = await firstPublishedProduct(request);
     test.skip(!product, "No published products — run Test 1 or seed catalog");
@@ -167,7 +189,7 @@ test.describe("E2E #35 — manager RFQ UI quote", () => {
     await page.getByRole("button", { name: "Отправить запрос на КП" }).click();
     const gate = page.getByRole("dialog");
     if (await gate.isVisible().catch(() => false)) {
-      await page.getByRole("button", { name: "Отправить запрос" }).click();
+      await gate.getByRole("button", { name: "Отправить запрос", exact: true }).click();
     }
     await expect(page).toHaveURL(/\/cart\/success/, { timeout: 30_000 });
 
