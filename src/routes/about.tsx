@@ -6,12 +6,15 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { CmsHtml } from "@/features/cms/CmsHtml";
+import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/about")({
   component: AboutPage,
 });
 
 function AboutPage() {
+  usePageMeta({ title: "О компании", description: null });
+
   const query = useQuery({
     queryKey: queryKeys.cms.page("about"),
     queryFn: ({ signal }) => fetchCmsPage("about", signal),

@@ -27,6 +27,7 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/session/store";
+import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/cart/")({
   component: CartPage,
@@ -40,6 +41,8 @@ export const Route = createFileRoute("/cart/")({
  * по полю `type` в ответе.
  */
 function CartPage() {
+  usePageMeta({ title: "Корзина", description: null });
+
   const session = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

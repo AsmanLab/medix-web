@@ -1,9 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Package, Plus, Search, Upload } from "lucide-react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
+  ADMIN_PRODUCTS_PAGE_SIZE,
   fetchAdminCategories,
   fetchAdminProducts,
   importCatalogFile,
@@ -63,14 +69,24 @@ function AdminProductsPage() {
       category_id: category_id ?? null,
       is_published:
         status === "published" ? true : status === "draft" ? false : null,
-      limit: 80,
     }),
     [q, status, category_id],
   );
 
-  const listQuery = useQuery({
+  /*
+   * Список обрывался на 80 товарах: курсор в API есть, но фронт его не
+   * использовал, поэтому в каталоге больше 80 позиций остальные были
+   * недоступны — и админка об этом молчала, список просто заканчивался.
+   */
+  const listQuery = useInfiniteQuery({
     queryKey: queryKeys.catalog.adminProducts(listParams),
-    queryFn: ({ signal }) => fetchAdminProducts(listParams, signal),
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam, signal }) =>
+      fetchAdminProducts({ ...listParams, cursor: pageParam }, signal),
+    getNextPageParam: (lastPage) =>
+      lastPage.length < ADMIN_PRODUCTS_PAGE_SIZE
+        ? undefined
+        : (lastPage.at(-1)?.id ?? undefined),
   });
 
   const categoriesQuery = useQuery({
@@ -105,7 +121,7 @@ function AdminProductsPage() {
     },
   });
 
-  const items = listQuery.data ?? [];
+  const items = listQuery.data?.pages.flat() ?? [];
   const categories = categoriesQuery.data ?? [];
 
   return (
@@ -119,7 +135,7 @@ function AdminProductsPage() {
             <h1 className="font-display text-2xl font-bold">Товары</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {items.length
-                ? `${items.length} в выборке · черновики и опубликованные`
+                ? `${items.length}${listQuery.hasNextPage ? "+" : ""} в выборке · черновики и опубликованные`
                 : "Каталог товаров"}
             </p>
           </div>
@@ -311,6 +327,18 @@ function AdminProductsPage() {
               </label>
             </div>
           ))}
+          {listQuery.hasNextPage ? (
+            <div className="flex justify-center border-t border-border p-4">
+              <button
+                type="button"
+                disabled={listQuery.isFetchingNextPage}
+                onClick={() => void listQuery.fetchNextPage()}
+                className="inline-flex h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-semibold disabled:opacity-60"
+              >
+                {listQuery.isFetchingNextPage ? "Загружаем…" : "Показать ещё"}
+              </button>
+            </div>
+          ) : null}
         </div>
       </StateBlock>
     </div>

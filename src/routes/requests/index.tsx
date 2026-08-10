@@ -12,12 +12,15 @@ import {
   rfqStatusTone,
 } from "@/features/rfq/status";
 import { StatusPill } from "@/components/ui/status-pill";
+import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/requests/")({
   component: RequestsListPage,
 });
 
 function RequestsListPage() {
+  usePageMeta({ title: "Запросы КП", description: null });
+
   const query = useQuery({
     queryKey: queryKeys.rfq.list(),
     queryFn: ({ signal }) => listRfqs(signal),

@@ -2,13 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, ChevronDown, Filter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { fetchCategories, fetchProducts } from "@/api/catalog";
+import { fetchCategories } from "@/api/catalog";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/features/catalog/ProductGrid";
 import { buildCategoryTree } from "@/features/catalog/map-category";
+import { useProductPages } from "@/features/catalog/use-product-pages";
+import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
+import { usePageMeta } from "@/lib/page-meta";
 
 type CatalogSearch = {
   q?: string;
@@ -24,6 +28,12 @@ export const Route = createFileRoute("/catalog/")({
 });
 
 function CatalogIndexPage() {
+  usePageMeta({
+    title: "Каталог",
+    description:
+      "Медицинское оборудование и расходные материалы для клиник Кыргызстана.",
+  });
+
   const { q: qFromUrl, category: categoryFromUrl } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [draftQ, setDraftQ] = useState(qFromUrl ?? "");
@@ -54,23 +64,11 @@ function CatalogIndexPage() {
     return null;
   }, [categoryFromUrl, tree]);
 
-  const productsQuery = useQuery({
-    queryKey: queryKeys.catalog.products({
-      q: qFromUrl ?? "",
-      category_id: selectedCategory?.id ?? "",
-    }),
-    queryFn: ({ signal }) =>
-      fetchProducts(
-        {
-          q: qFromUrl,
-          category_id: selectedCategory?.id ?? null,
-          limit: 48,
-        },
-        signal,
-      ),
+  const productsQuery = useProductPages({
+    q: qFromUrl,
+    categoryId: selectedCategory?.id ?? null,
   });
-
-  const products = (productsQuery.data ?? []).filter((p) => p.is_published);
+  const products = productsQuery.products;
 
   function onSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -246,6 +244,13 @@ function CatalogIndexPage() {
               {selectedCategory?.name ?? "Все опубликованные товары"}
             </p>
           </div>
+          {products.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {productsQuery.hasNextPage
+                ? `Показано ${products.length}`
+                : plural(products.length, "товар", "товара", "товаров")}
+            </p>
+          ) : null}
         </div>
 
         <StateBlock
@@ -268,7 +273,23 @@ function CatalogIndexPage() {
               : "Товары появятся после публикации."
           }
         >
-          <ProductGrid products={products} />
+          <>
+            <ProductGrid products={products} />
+            {productsQuery.hasNextPage ? (
+              <div className="mt-8 flex justify-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  disabled={productsQuery.isFetchingNextPage}
+                  onClick={() => void productsQuery.fetchNextPage()}
+                >
+                  {productsQuery.isFetchingNextPage
+                    ? "Загружаем…"
+                    : "Показать ещё"}
+                </Button>
+              </div>
+            ) : null}
+          </>
         </StateBlock>
       </div>
     </AppShell>

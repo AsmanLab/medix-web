@@ -34,6 +34,7 @@ import {
   type PhotoDraft,
 } from "@/features/service/submit";
 import { useSession } from "@/session/store";
+import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/service/")({
   component: ServicePage,
@@ -63,6 +64,12 @@ const services = [
 ] as const;
 
 function ServicePage() {
+  usePageMeta({
+    title: "Сервис и ремонт",
+    description:
+      "Диагностика, ремонт, гарантийное обслуживание и выезд инженера.",
+  });
+
   const session = useSession();
   const navigate = useNavigate();
   const authenticated = session.status === "authenticated";

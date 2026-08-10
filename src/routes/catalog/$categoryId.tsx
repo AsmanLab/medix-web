@@ -13,6 +13,7 @@ import {
   type CatalogCategoryNode,
 } from "@/features/catalog/map-category";
 import { ProductGrid } from "@/features/catalog/ProductGrid";
+import { usePageMeta } from "@/lib/page-meta";
 import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
@@ -89,6 +90,14 @@ function CategoryPage() {
   });
 
   const products = (productsQuery.data ?? []).filter((p) => p.is_published);
+
+  // seo_title/seo_description заполняются в админке для каждой категории —
+  // до сих пор они никуда не попадали.
+  const metaSource = selectedChild ?? section;
+  usePageMeta({
+    title: metaSource?.seoTitle || metaSource?.name,
+    description: metaSource?.seoDescription,
+  });
 
   function selectSubcategory(next?: CatalogCategoryNode) {
     if (!section) return;
