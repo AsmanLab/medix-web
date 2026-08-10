@@ -66,7 +66,9 @@ export function ProductCard({
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-4 sm:p-5">
+      {/* Отступ одинаковый на всех размерах: в плотной сетке карточка
+          уже ~230–310px, и увеличенный padding съедал бы место у названия. */}
+      <div className="flex flex-1 flex-col p-4">
         <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
           {product.sku}
         </p>
