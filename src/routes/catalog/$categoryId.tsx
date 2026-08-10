@@ -13,6 +13,7 @@ import {
   type CatalogCategoryNode,
 } from "@/features/catalog/map-category";
 import { ProductGrid } from "@/features/catalog/ProductGrid";
+import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
 type CategorySearch = {
@@ -171,7 +172,7 @@ function CategoryPage() {
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 {section.children.length > 0
-                  ? `${section.children.length} подкатегорий · выберите направление или смотрите все товары раздела`
+                  ? `${plural(section.children.length, "подкатегория", "подкатегории", "подкатегорий")} · выберите направление или смотрите все товары раздела`
                   : "Товары в этом разделе"}
               </p>
             </header>

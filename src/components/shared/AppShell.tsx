@@ -25,6 +25,7 @@ import {
   type CatalogCategoryNode,
 } from "@/features/catalog/map-category";
 import { useSession } from "@/session/store";
+import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
 type Tab = {
@@ -201,7 +202,12 @@ function CatalogMegaMenu({
                   <div>
                     <p className="text-[10px] font-bold tracking-[0.14em] text-primary uppercase">
                       {menuCategory.children.length > 0
-                        ? `${menuCategory.children.length} подкатегорий`
+                        ? plural(
+                            menuCategory.children.length,
+                            "подкатегория",
+                            "подкатегории",
+                            "подкатегорий",
+                          )
                         : "Раздел"}
                     </p>
                     <p className="mt-1 font-display text-xl font-bold">
@@ -289,7 +295,29 @@ function NotificationsBell({
   );
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+/**
+ * Ширина контентной колонки.
+ *
+ * `account` — узкие экраны кабинета (списки в одну колонку, формы).
+ * `storefront` — витрина. `wide` — страницы, которым нужна вторая колонка,
+ * но не вся ширина витрины: корзина с липким итогом.
+ */
+type ContentWidth = "account" | "storefront" | "wide";
+
+const CONTENT_WIDTH: Record<ContentWidth, string> = {
+  account: "max-w-[820px]",
+  wide: "max-w-[1100px]",
+  storefront: "max-w-[1320px]",
+};
+
+export function AppShell({
+  children,
+  width,
+}: {
+  children: ReactNode;
+  /** Переопределяет ширину, вычисленную по адресу страницы. */
+  width?: ContentWidth;
+}) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const session = useSession();
@@ -369,10 +397,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             </a>
           </div>
           <div className="flex items-center gap-5">
-            <Link to="/service" className="transition-colors hover:text-primary">
+            <Link
+              to="/service"
+              className="transition-colors hover:text-primary"
+            >
               Сервис и ремонт
             </Link>
-            <Link to="/contacts" className="transition-colors hover:text-primary">
+            <Link
+              to="/contacts"
+              className="transition-colors hover:text-primary"
+            >
               Контакты
             </Link>
             <button
@@ -454,7 +488,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             />
           </form>
 
-          <NotificationsBell unreadCount={unreadCount} className="hidden lg:grid" />
+          <NotificationsBell
+            unreadCount={unreadCount}
+            className="hidden lg:grid"
+          />
 
           <Link
             to="/cart"
@@ -491,7 +528,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         tabIndex={-1}
         className={cn(
           "mx-auto min-h-[70vh] w-full max-w-full px-5 py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:px-6 lg:pb-8",
-          accountPage ? "max-w-[820px]" : "max-w-[1320px]",
+          CONTENT_WIDTH[width ?? (accountPage ? "account" : "storefront")],
         )}
       >
         {children}

@@ -22,6 +22,7 @@ import { isAppError } from "@/api/errors";
 import { fetchManagers } from "@/api/managers";
 import { fetchProfile } from "@/api/profile";
 import { formatMoney } from "@/lib/money";
+import { plural } from "@/lib/plural";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
@@ -171,19 +172,21 @@ function CartPage() {
   }
 
   return (
-    <AppShell>
+    <AppShell width="wide">
       <h1 className="font-display text-3xl font-bold">Корзина</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         {cartQuery.isPending
           ? "Загружаем…"
           : isEmpty
             ? "Добавьте оборудование из каталога"
-            : `${groups.length} позиций`}
+            : plural(groups.length, "позиция", "позиции", "позиций")}
       </p>
 
       {cartQuery.isError ? (
         <div className="mt-8 rounded-2xl border border-border bg-card p-5">
-          <p className="text-sm text-destructive">Не удалось загрузить корзину</p>
+          <p className="text-sm text-destructive">
+            Не удалось загрузить корзину
+          </p>
           <Button className="mt-3" onClick={() => void cartQuery.refetch()}>
             Повторить
           </Button>
@@ -212,190 +215,210 @@ function CartPage() {
       ) : null}
 
       {!isEmpty ? (
-        <div className="mt-8 space-y-8">
-          {hasUnavailable ? (
-            <div className="flex items-start gap-2.5 rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
-              <AlertTriangle
-                className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
-                aria-hidden
-              />
-              <p className="text-sm text-muted-foreground">
-                Отмеченные позиции больше не продаются — уберите их, чтобы
-                оформить корзину.
-              </p>
-            </div>
-          ) : null}
+        /*
+         * Две колонки на десктопе: слева позиции, справа липкий итог
+         * с кнопками оформления. В одну колонку итог уезжал под список,
+         * и при пяти позициях с комплектациями кнопка «Оформить» уходила
+         * за пределы экрана — приходилось скроллить вниз, чтобы увидеть
+         * сумму, и вверх, чтобы поправить количество.
+         */
+        <div className="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8">
+          <div className="space-y-6 lg:col-start-1">
+            {hasUnavailable ? (
+              <div className="flex items-start gap-2.5 rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
+                <AlertTriangle
+                  className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
+                  aria-hidden
+                />
+                <p className="text-sm text-muted-foreground">
+                  Отмеченные позиции больше не продаются — уберите их, чтобы
+                  оформить корзину.
+                </p>
+              </div>
+            ) : null}
 
-          <ul className="space-y-3">
-            {groups.map(({ base, options }) => (
-              <li
-                key={base.id}
-                className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="font-semibold">{base.name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Арт. {base.sku}
-                  </p>
-                  {!base.is_available ? (
-                    <p className="mt-1 text-xs font-semibold text-destructive">
-                      Товар снят с продажи
+            <ul className="space-y-3">
+              {groups.map(({ base, options }) => (
+                <li
+                  key={base.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold">{base.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Арт. {base.sku}
                     </p>
-                  ) : null}
-                  {options.length > 0 ? (
-                    <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
-                      {options.map((o) => (
-                        <li key={o.id}>
-                          + {o.name}
-                          {o.unit_price
-                            ? ` · ${formatMoney(o.unit_price)}`
-                            : " · по запросу"}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  <p className="mt-2 text-sm font-semibold text-primary">
-                    {formatMoney(base.line_total, "Цена по запросу")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    aria-label="Уменьшить"
-                    disabled={busy || base.qty <= 1}
-                    className="grid h-9 w-9 place-items-center rounded-xl border border-border disabled:opacity-40"
-                    onClick={() =>
-                      qtyMutation.mutate({ lineId: base.id, qty: base.qty - 1 })
-                    }
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-8 text-center text-sm font-semibold">
-                    {base.qty}
+                    {!base.is_available ? (
+                      <p className="mt-1 text-xs font-semibold text-destructive">
+                        Товар снят с продажи
+                      </p>
+                    ) : null}
+                    {options.length > 0 ? (
+                      <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+                        {options.map((o) => (
+                          <li key={o.id}>
+                            + {o.name}
+                            {o.unit_price
+                              ? ` · ${formatMoney(o.unit_price)}`
+                              : " · по запросу"}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    <p className="mt-2 text-sm font-semibold text-primary">
+                      {formatMoney(base.line_total, "Цена по запросу")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="Уменьшить"
+                      disabled={busy || base.qty <= 1}
+                      className="grid h-9 w-9 place-items-center rounded-xl border border-border disabled:opacity-40"
+                      onClick={() =>
+                        qtyMutation.mutate({
+                          lineId: base.id,
+                          qty: base.qty - 1,
+                        })
+                      }
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-8 text-center text-sm font-semibold">
+                      {base.qty}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Увеличить"
+                      disabled={busy}
+                      className="grid h-9 w-9 place-items-center rounded-xl border border-border disabled:opacity-40"
+                      onClick={() =>
+                        qtyMutation.mutate({
+                          lineId: base.id,
+                          qty: base.qty + 1,
+                        })
+                      }
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Удалить"
+                      disabled={busy}
+                      className="ml-1 grid h-9 w-9 place-items-center rounded-xl text-destructive disabled:opacity-40"
+                      onClick={() => removeMutation.mutate(base.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {managersQuery.data && managersQuery.data.length > 0 ? (
+              <section>
+                <label
+                  className="block text-sm font-semibold"
+                  htmlFor="rfq-manager"
+                >
+                  Менеджер{" "}
+                  <span className="font-normal text-muted-foreground">
+                    (необязательно)
                   </span>
-                  <button
-                    type="button"
-                    aria-label="Увеличить"
-                    disabled={busy}
-                    className="grid h-9 w-9 place-items-center rounded-xl border border-border disabled:opacity-40"
-                    onClick={() =>
-                      qtyMutation.mutate({ lineId: base.id, qty: base.qty + 1 })
-                    }
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Удалить"
-                    disabled={busy}
-                    className="ml-1 grid h-9 w-9 place-items-center rounded-xl text-destructive disabled:opacity-40"
-                    onClick={() => removeMutation.mutate(base.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </label>
+                <select
+                  id="rfq-manager"
+                  value={managerId}
+                  onChange={(e) => setManagerId(e.target.value)}
+                  className="field-control mt-2"
+                  disabled={busy}
+                >
+                  <option value="">Любой свободный менеджер</option>
+                  {managersQuery.data.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.full_name || "Без имени"}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Если вы уже работаете с кем-то из отдела продаж, выберите его
+                  — заявка попадёт сразу к нему.
+                </p>
+              </section>
+            ) : null}
 
-          <section className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="font-semibold">Итого</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {willBeOrder
-                ? "Организация подтверждена — можно оформить заказ с ценами из каталога."
-                : hasPriceless
-                  ? "Есть позиции без цены — менеджер подготовит коммерческое предложение (КП)."
-                  : "После подтверждения организации станет доступен прямой заказ. Сейчас можно отправить запрос на КП."}
-            </p>
-            <p className="mt-3 text-lg font-bold text-primary">
-              {formatMoney(cart?.total, "Цена по запросу")}
-            </p>
-          </section>
-
-          {managersQuery.data && managersQuery.data.length > 0 ? (
             <section>
               <label
                 className="block text-sm font-semibold"
-                htmlFor="rfq-manager"
+                htmlFor="rfq-comment"
               >
-                Менеджер{" "}
+                Комментарий{" "}
                 <span className="font-normal text-muted-foreground">
-                  (необязательно)
+                  (необязательно, уйдёт с запросом КП)
                 </span>
               </label>
-              <select
-                id="rfq-manager"
-                value={managerId}
-                onChange={(e) => setManagerId(e.target.value)}
-                className="field-control mt-2"
-                disabled={busy}
-              >
-                <option value="">Любой свободный менеджер</option>
-                {managersQuery.data.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.full_name || "Без имени"}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                Если вы уже работаете с кем-то из отдела продаж, выберите его —
-                заявка попадёт сразу к нему.
-              </p>
-            </section>
-          ) : null}
-
-          <section>
-            <label className="block text-sm font-semibold" htmlFor="rfq-comment">
-              Комментарий{" "}
-              <span className="font-normal text-muted-foreground">
-                (необязательно, уйдёт с запросом КП)
-              </span>
-            </label>
-            {/*
+              {/*
               Поле было disabled, когда оформление ведёт к заказу, — но рядом
               стоит кнопка «Всё же запросить КП», которая этот комментарий
               отправляет. Написать его было физически нельзя.
             */}
-            <textarea
-              id="rfq-comment"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={3}
-              placeholder="Сроки, комплектация, адрес доставки…"
-              className="field-control mt-2 min-h-[96px] resize-y"
-              disabled={busy}
-            />
-            {willBeOrder ? (
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                К прямому заказу комментарий не прикладывается — он уйдёт,
-                если выбрать «Всё же запросить КП».
-              </p>
-            ) : null}
-          </section>
-
-          <div className="flex flex-wrap gap-3">
-            <Button
-              className="h-12 w-full sm:w-auto"
-              disabled={busy || hasUnavailable}
-              onClick={onPrimaryClick}
-            >
-              {checkoutMutation.isPending
-                ? "Отправка…"
-                : willBeOrder
-                  ? "Оформить заказ"
-                  : "Отправить запрос на КП"}
-            </Button>
-            {willBeOrder ? (
-              <Button
-                variant="outline"
-                className="h-12 w-full sm:w-auto"
-                disabled={busy || hasUnavailable}
-                onClick={() => checkoutMutation.mutate(true)}
-              >
-                Всё же запросить КП
-              </Button>
-            ) : null}
+              <textarea
+                id="rfq-comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+                placeholder="Сроки, комплектация, адрес доставки…"
+                className="field-control mt-2 min-h-[96px] resize-y"
+                disabled={busy}
+              />
+              {willBeOrder ? (
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  К прямому заказу комментарий не прикладывается — он уйдёт,
+                  если выбрать «Всё же запросить КП».
+                </p>
+              ) : null}
+            </section>
           </div>
+
+          <aside className="mt-8 lg:col-start-2 lg:mt-0 lg:sticky lg:top-24">
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+              <h2 className="font-semibold">Итого</h2>
+              <p className="mt-3 text-2xl font-bold text-primary">
+                {formatMoney(cart?.total, "Цена по запросу")}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {willBeOrder
+                  ? "Организация подтверждена — можно оформить заказ с ценами из каталога."
+                  : hasPriceless
+                    ? "Есть позиции без цены — менеджер подготовит коммерческое предложение (КП)."
+                    : "После подтверждения организации станет доступен прямой заказ. Сейчас можно отправить запрос на КП."}
+              </p>
+
+              <div className="mt-5 flex flex-col gap-3">
+                <Button
+                  className="h-12 w-full"
+                  disabled={busy || hasUnavailable}
+                  onClick={onPrimaryClick}
+                >
+                  {checkoutMutation.isPending
+                    ? "Отправка…"
+                    : willBeOrder
+                      ? "Оформить заказ"
+                      : "Отправить запрос на КП"}
+                </Button>
+                {willBeOrder ? (
+                  <Button
+                    variant="outline"
+                    className="h-12 w-full"
+                    disabled={busy || hasUnavailable}
+                    onClick={() => checkoutMutation.mutate(true)}
+                  >
+                    Всё же запросить КП
+                  </Button>
+                ) : null}
+              </div>
+            </section>
+          </aside>
         </div>
       ) : null}
 
