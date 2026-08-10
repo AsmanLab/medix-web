@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Package, Plus, Search, Upload } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   fetchAdminCategories,
@@ -38,6 +38,18 @@ export const Route = createFileRoute("/admin/catalog/products/")({
   component: AdminProductsPage,
 });
 
+/** Ячейка списка: до sm показывает подпись колонки, начиная с sm — только значение. */
+function Cell({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <span className="flex items-baseline gap-2 text-xs">
+      <span className="w-20 shrink-0 text-muted-foreground sm:hidden">
+        {label}
+      </span>
+      <span className="min-w-0 truncate">{children}</span>
+    </span>
+  );
+}
+
 function AdminProductsPage() {
   const { q, status, category_id } = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -67,13 +79,7 @@ function AdminProductsPage() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: async ({
-      id,
-      next,
-    }: {
-      id: string;
-      next: boolean;
-    }) => {
+    mutationFn: async ({ id, next }: { id: string; next: boolean }) => {
       if (next) await publishAdminProduct(id);
       else await unpublishAdminProduct(id);
     },
@@ -255,6 +261,12 @@ function AdminProductsPage() {
             <span>Цена</span>
             <span>Статус</span>
           </div>
+          {/*
+            На мобильном строка складывалась в столбик, но заголовки колонок
+            остаются скрытыми — было видно «MED-001 / В наличии / 50 000 сом»
+            без единой подписи, и понять, что есть что, можно было только
+            по догадке. Ниже sm подписи выводятся рядом со значением.
+          */}
           {items.map((p) => (
             <div
               key={p.id}
@@ -272,12 +284,18 @@ function AdminProductsPage() {
                   {p.manufacturer || "—"} · {p.slug}
                 </p>
               </div>
-              <span className="font-mono text-xs">{p.sku}</span>
-              <span className="text-xs">{availabilityLabel(p.availability)}</span>
-              <span className="text-xs">{formatMoney(p.price, "по запросу")}</span>
-              <label className="flex items-center gap-2 text-xs">
+              <Cell label="SKU">
+                <span className="font-mono">{p.sku}</span>
+              </Cell>
+              <Cell label="Наличие">{availabilityLabel(p.availability)}</Cell>
+              <Cell label="Цена">{formatMoney(p.price, "по запросу")}</Cell>
+              <label className="flex min-h-11 items-center gap-2 text-xs sm:min-h-0">
+                <span className="w-20 shrink-0 text-muted-foreground sm:hidden">
+                  Статус
+                </span>
                 <input
                   type="checkbox"
+                  className="h-4 w-4"
                   checked={p.is_published}
                   disabled={publishMutation.isPending}
                   onChange={(e) =>
@@ -287,7 +305,9 @@ function AdminProductsPage() {
                     })
                   }
                 />
-                {p.is_published ? "Pub" : "Draft"}
+                {/* Было «Pub» / «Draft» — английские сокращения в русской
+                    админке, которой пользуются сотрудники заказчика. */}
+                {p.is_published ? "Опубликован" : "Черновик"}
               </label>
             </div>
           ))}

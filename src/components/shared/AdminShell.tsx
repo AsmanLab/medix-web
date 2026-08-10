@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Megaphone,
+  Menu,
   Package,
   ShoppingCart,
   UserCog,
@@ -14,7 +15,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getAppQueryClient } from "@/app/providers";
 import { logoutSession, useSession } from "@/session/store";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,29 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  /*
+   * Мобильный ящик вёл себя не как диалог: Escape его не закрывал, страница
+   * под ним продолжала скроллиться, а фокус уходил на ссылки за подложкой —
+   * с клавиатуры или скринридером можно было «провалиться» сквозь меню.
+   */
+  useEffect(() => {
+    if (!open) return;
+
+    const { body } = document;
+    const previousOverflow = body.style.overflow;
+    body.style.overflow = "hidden";
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   const role = user?.role;
 
@@ -181,7 +205,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
             "fixed inset-y-0 left-0 z-50 w-[280px] border-r border-border/80 bg-card/95 shadow-[var(--shadow-soft)] backdrop-blur transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0",
             open ? "translate-x-0" : "-translate-x-full",
           )}
+          id="admin-nav"
           aria-label="Навигация админ-панели"
+          // На мобильном ящик — модальный: пока он открыт, остальная страница
+          // скрыта от скринридера, иначе фокус уходит за подложку.
+          aria-modal={open || undefined}
+          role={open ? "dialog" : undefined}
         >
           <div className="flex h-16 items-center justify-between gap-3 px-5">
             <Link
@@ -254,13 +283,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-border bg-card/90 px-4 backdrop-blur lg:hidden">
             <button
               type="button"
-              className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-card"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-border bg-card"
               onClick={() => setOpen(true)}
               aria-label="Открыть меню админ-панели"
+              aria-expanded={open}
+              aria-controls="admin-nav"
             >
-              <span className="text-lg" aria-hidden>
-                ☰
-              </span>
+              {/* Был символ «☰» текстом — анти-паттерн «эмодзи вместо иконки»
+                  из design-system/MASTER.md: он берёт начертание из системного
+                  шрифта и на Android рисуется иначе, чем весь остальной набор. */}
+              <Menu className="h-5 w-5" aria-hidden />
             </button>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">

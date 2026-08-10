@@ -8,7 +8,7 @@ import {
   ShoppingCart,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   checkoutCart,
@@ -46,8 +46,29 @@ function CartPage() {
   const [comment, setComment] = useState("");
   const [managerId, setManagerId] = useState("");
   const [showVerifyGate, setShowVerifyGate] = useState(false);
+  const verifyGateRef = useRef<HTMLDivElement>(null);
 
   const authenticated = session.status === "authenticated";
+
+  useEffect(() => {
+    if (!showVerifyGate) return;
+
+    verifyGateRef.current?.focus();
+
+    const { body } = document;
+    const previousOverflow = body.style.overflow;
+    body.style.overflow = "hidden";
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setShowVerifyGate(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [showVerifyGate]);
 
   const cartQuery = useQuery({
     queryKey: queryKeys.cart.detail(),
@@ -90,11 +111,41 @@ function CartPage() {
     void cartQuery.refetch();
   }
 
+  /*
+   * Количество меняется оптимистично: раньше каждое нажатие «+» ждало ответа
+   * сервера и на это время гасило всю страницу через `busy`, поэтому набрать
+   * пять штук значило пять раз ткнуть и подождать. Теперь цифра меняется
+   * сразу, а при ошибке корзина перечитывается — сервер остаётся источником
+   * истины, но не держит палец.
+   */
   const qtyMutation = useMutation({
     mutationFn: ({ lineId, qty }: { lineId: string; qty: number }) =>
       setCartItemQty(lineId, qty),
+    onMutate: ({ lineId, qty }) => {
+      const previous = queryClient.getQueryData<CartOut>(
+        queryKeys.cart.detail(),
+      );
+      if (previous) {
+        // Опции считаются на единицу базовой позиции и едут за ней —
+        // так же, как это делает сервер в set_cart_item_qty.
+        queryClient.setQueryData<CartOut>(queryKeys.cart.detail(), {
+          ...previous,
+          items: previous.items.map((item) =>
+            item.id === lineId || item.parent_line_id === lineId
+              ? { ...item, qty }
+              : item,
+          ),
+        });
+      }
+      return { previous };
+    },
+    onError: (err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.cart.detail(), context.previous);
+      }
+      onMutationError(err, "Не удалось изменить количество");
+    },
     onSuccess: applyCart,
-    onError: (err) => onMutationError(err, "Не удалось изменить количество"),
   });
 
   const removeMutation = useMutation({
@@ -130,10 +181,9 @@ function CartPage() {
       toast.error(isAppError(err) ? err.message : "Не удалось оформить"),
   });
 
-  const busy =
-    qtyMutation.isPending ||
-    removeMutation.isPending ||
-    checkoutMutation.isPending;
+  // Оформление и удаление блокируют страницу, изменение количества — нет:
+  // оно применяется оптимистично и повторного клика не боится.
+  const busy = removeMutation.isPending || checkoutMutation.isPending;
 
   function onPrimaryClick() {
     if (isEmpty || busy) return;
@@ -269,12 +319,14 @@ function CartPage() {
                       {formatMoney(base.line_total, "Цена по запросу")}
                     </p>
                   </div>
+                  {/* 44px — минимальный тач-таргет из MASTER.md; кнопки
+                      были 36px, и на телефоне «+» задевал «−». */}
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      aria-label="Уменьшить"
+                      aria-label={`Уменьшить количество: ${base.name}`}
                       disabled={busy || base.qty <= 1}
-                      className="grid h-9 w-9 place-items-center rounded-xl border border-border disabled:opacity-40"
+                      className="grid h-11 w-11 place-items-center rounded-xl border border-border disabled:opacity-40"
                       onClick={() =>
                         qtyMutation.mutate({
                           lineId: base.id,
@@ -284,14 +336,17 @@ function CartPage() {
                     >
                       <Minus className="h-4 w-4" />
                     </button>
-                    <span className="w-8 text-center text-sm font-semibold">
+                    <span
+                      aria-live="polite"
+                      className="w-8 text-center text-sm font-semibold tabular-nums"
+                    >
                       {base.qty}
                     </span>
                     <button
                       type="button"
-                      aria-label="Увеличить"
+                      aria-label={`Увеличить количество: ${base.name}`}
                       disabled={busy}
-                      className="grid h-9 w-9 place-items-center rounded-xl border border-border disabled:opacity-40"
+                      className="grid h-11 w-11 place-items-center rounded-xl border border-border disabled:opacity-40"
                       onClick={() =>
                         qtyMutation.mutate({
                           lineId: base.id,
@@ -303,9 +358,9 @@ function CartPage() {
                     </button>
                     <button
                       type="button"
-                      aria-label="Удалить"
+                      aria-label={`Убрать из корзины: ${base.name}`}
                       disabled={busy}
-                      className="ml-1 grid h-9 w-9 place-items-center rounded-xl text-destructive disabled:opacity-40"
+                      className="ml-1 grid h-11 w-11 place-items-center rounded-xl text-destructive disabled:opacity-40"
                       onClick={() => removeMutation.mutate(base.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -423,13 +478,25 @@ function CartPage() {
       ) : null}
 
       {showVerifyGate ? (
+        /*
+          Диалог не вёл себя как диалог: Escape его не закрывал, клик по фону
+          тоже, фокус оставался на кнопке под подложкой, а страница за ним
+          продолжала скроллиться.
+        */
         <div
           className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-5"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="verify-gate-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowVerifyGate(false);
+          }}
         >
-          <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-soft)]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="verify-gate-title"
+            ref={verifyGateRef}
+            tabIndex={-1}
+            className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-soft)] outline-none"
+          >
             <h2
               id="verify-gate-title"
               className="font-display text-xl font-bold"
