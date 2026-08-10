@@ -10,6 +10,7 @@ import {
   type ServiceStatus,
 } from "@/features/service/status";
 import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 export type ServiceDeskTab = "new" | "in_progress" | "completed";
 
@@ -73,9 +74,8 @@ export function ServiceDeskQueue({
       in_progress: all.filter((r) =>
         TAB_STATUSES.in_progress.includes(r.status),
       ).length,
-      completed: all.filter((r) =>
-        TAB_STATUSES.completed.includes(r.status),
-      ).length,
+      completed: all.filter((r) => TAB_STATUSES.completed.includes(r.status))
+        .length,
     };
   }, [items]);
 
@@ -176,33 +176,20 @@ export function ServiceDeskQueue({
                         {sr.equipment_type || "Оборудование"}
                         {sr.model ? ` · ${sr.model}` : ""}
                       </span>
-                      <span
-                        className={cn(
-                          "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase",
-                          tone === "success" &&
-                            "bg-emerald-500/15 text-emerald-700",
-                          tone === "primary" && "bg-primary-soft text-primary",
-                          tone === "warning" &&
-                            "bg-amber-500/15 text-amber-700",
-                          tone === "danger" && "bg-red-500/15 text-red-700",
-                          tone === "muted" &&
-                            "bg-muted text-muted-foreground",
-                        )}
-                      >
+                      <StatusPill tone={tone} size="compact">
                         {serviceStatusLabel(sr.status)}
-                      </span>
+                      </StatusPill>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {sr.contact_name?.trim() || "Клиент"}
-                      {sr.contact_phone
-                        ? ` · ${sr.contact_phone}`
-                        : ""}
+                      {sr.contact_phone ? ` · ${sr.contact_phone}` : ""}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {sr.address?.trim() || "Адрес не указан"}
                     </p>
                     <p className="font-mono text-[11px] text-muted-foreground">
-                      {shortRequestId(sr.id)} · {formatServiceDate(sr.created_at)}
+                      {shortRequestId(sr.id)} ·{" "}
+                      {formatServiceDate(sr.created_at)}
                     </p>
                   </div>
                   <span className="text-xs font-semibold text-primary">

@@ -9,7 +9,11 @@ export function ListSkeleton({
   className?: string;
 }) {
   return (
-    <ul className={cn("space-y-3", className)} aria-busy aria-label="Загрузка списка">
+    <ul
+      className={cn("space-y-3", className)}
+      aria-busy
+      aria-label="Загрузка списка"
+    >
       {Array.from({ length: count }, (_, i) => (
         <li key={i}>
           <Skeleton className="h-[88px] rounded-2xl" />
@@ -51,8 +55,13 @@ export function CardGridSkeleton({
 
   if (variant === "catalog") {
     return (
+      // Сетка обязана совпадать с ProductGrid, иначе при появлении данных
+      // макет перестраивается — это видно как рывок и штрафуется в CLS.
       <ul
-        className={cn("grid gap-3 sm:grid-cols-2", className)}
+        className={cn(
+          "grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+          className,
+        )}
         aria-busy
         aria-label="Загрузка каталога"
       >
@@ -111,7 +120,10 @@ export function DetailSkeleton({ className }: { className?: string }) {
 export function BannerSkeleton({ className }: { className?: string }) {
   return (
     <Skeleton
-      className={cn("min-h-[360px] w-full rounded-3xl sm:min-h-[420px]", className)}
+      className={cn(
+        "min-h-[360px] w-full rounded-3xl sm:min-h-[420px]",
+        className,
+      )}
       aria-busy
       aria-label="Загрузка баннера"
     />

@@ -11,7 +11,7 @@ import {
   serviceStatusTone,
   shortRequestId,
 } from "@/features/service/status";
-import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 export const Route = createFileRoute("/service/requests/")({
   component: ServiceRequestsListPage,
@@ -23,10 +23,12 @@ function ServiceRequestsListPage() {
     queryFn: ({ signal }) => listServiceRequests(signal),
   });
 
-  const items = (query.data ?? []).slice().sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  );
+  const items = (query.data ?? [])
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
 
   return (
     <AppShell>
@@ -90,18 +92,9 @@ function ServiceRequestsListPage() {
                         {formatServiceDate(item.created_at)}
                       </p>
                     </div>
-                    <span
-                      className={cn(
-                        "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                        tone === "success" && "bg-emerald-100 text-emerald-800",
-                        tone === "primary" && "bg-primary-soft text-primary",
-                        tone === "danger" && "bg-red-100 text-red-800",
-                        tone === "muted" && "bg-muted text-muted-foreground",
-                        tone === "warning" && "bg-amber-100 text-amber-900",
-                      )}
-                    >
+                    <StatusPill tone={tone}>
                       {serviceStatusLabel(item.status)}
-                    </span>
+                    </StatusPill>
                   </Link>
                 </li>
               );

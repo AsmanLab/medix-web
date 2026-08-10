@@ -19,6 +19,7 @@ import {
   serviceStatusTone,
 } from "@/features/service/status";
 import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 export const Route = createFileRoute("/service/requests/$requestId")({
   component: ServiceRequestDetailPage,
@@ -42,9 +43,13 @@ function ServiceRequestDetailPage() {
   const showComments =
     !!sr &&
     (sr.comments.length > 0 ||
-      ["assigned", "in_progress", "waiting_parts", "completed", "closed"].includes(
-        sr.status,
-      ));
+      [
+        "assigned",
+        "in_progress",
+        "waiting_parts",
+        "completed",
+        "closed",
+      ].includes(sr.status));
 
   return (
     <AppShell>
@@ -80,18 +85,9 @@ function ServiceRequestDetailPage() {
                     Создана {formatServiceDate(sr.created_at)}
                   </p>
                 </div>
-                <span
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold",
-                    tone === "success" && "bg-emerald-100 text-emerald-800",
-                    tone === "primary" && "bg-primary-soft text-primary",
-                    tone === "danger" && "bg-red-100 text-red-800",
-                    tone === "muted" && "bg-muted text-muted-foreground",
-                    tone === "warning" && "bg-amber-100 text-amber-900",
-                  )}
-                >
+                <StatusPill tone={tone}>
                   {serviceStatusLabel(sr.status)}
-                </span>
+                </StatusPill>
               </header>
 
               <section className="rounded-3xl border border-border bg-card p-5">
@@ -105,7 +101,7 @@ function ServiceRequestDetailPage() {
                             "mt-0.5 h-4 w-4 shrink-0",
                             step.state === "active"
                               ? "text-primary"
-                              : "text-emerald-600",
+                              : "text-success",
                           )}
                         />
                       ) : (
@@ -115,7 +111,8 @@ function ServiceRequestDetailPage() {
                         className={cn(
                           "text-sm",
                           step.state === "pending" && "text-muted-foreground",
-                          step.state === "active" && "font-semibold text-primary",
+                          step.state === "active" &&
+                            "font-semibold text-primary",
                           step.state === "done" && "text-foreground",
                         )}
                       >
@@ -135,9 +132,7 @@ function ServiceRequestDetailPage() {
                   <Row
                     label="Желаемая дата"
                     value={
-                      sr.desired_date
-                        ? formatServiceDate(sr.desired_date)
-                        : "—"
+                      sr.desired_date ? formatServiceDate(sr.desired_date) : "—"
                     }
                   />
                   <div>

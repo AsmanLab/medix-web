@@ -69,7 +69,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   const nav = useMemo((): AdminNavItem[] => {
     const common = ["admin", "manager", "service_engineer"] as const;
-    const isRole = (r: unknown): r is "admin" | "manager" | "service_engineer" =>
+    const isRole = (
+      r: unknown,
+    ): r is "admin" | "manager" | "service_engineer" =>
       r === "admin" || r === "manager" || r === "service_engineer";
 
     const allowed = role && isRole(role) ? role : null;
@@ -141,16 +143,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
         key: "banners",
         to: "/admin/banners",
         label: "Баннеры",
-        icon: ({ className }) => <Megaphone className={className} aria-hidden />,
+        icon: ({ className }) => (
+          <Megaphone className={className} aria-hidden />
+        ),
         allowedRoles: ["admin"],
       },
       {
         key: "reports",
         to: "/admin/reports",
         label: "Отчёты",
-        icon: ({ className }) => (
-          <FileUp className={className} aria-hidden />
-        ),
+        icon: ({ className }) => <FileUp className={className} aria-hidden />,
         // Менеджеру нужен свой отчёт за месяц (ТЗ п. 9.1); чужие строки
         // отсекает сервер.
         allowedRoles: ["admin", "manager"],
@@ -159,7 +161,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
         key: "settings",
         to: "/admin/settings",
         label: "Настройки",
-        icon: ({ className }) => <Building2 className={className} aria-hidden />,
+        icon: ({ className }) => (
+          <Building2 className={className} aria-hidden />
+        ),
         allowedRoles: ["admin"],
       },
     ];
@@ -296,7 +300,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
             />
           ) : null}
 
-          <main className="mx-auto max-w-5xl px-5 py-8 lg:px-6">
+          {/* max-w-5xl (1024px) при сайдбаре 260px оставлял на FullHD почти
+              половину экрана пустой, и при этом таблицы внутри скроллились
+              вбок. 1440px хватает всем колонкам заказов и отчётов и не даёт
+              строкам растянуться до нечитаемой длины. */}
+          <main className="mx-auto max-w-[1440px] px-5 py-8 lg:px-8">
             {children}
           </main>
         </div>
@@ -304,4 +312,3 @@ export function AdminShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
-

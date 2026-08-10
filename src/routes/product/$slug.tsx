@@ -10,7 +10,11 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
-import { availabilityLabel } from "@/features/catalog/availability";
+import { StatusPill } from "@/components/ui/status-pill";
+import {
+  availabilityLabel,
+  availabilityTone,
+} from "@/features/catalog/availability";
 import {
   emptySelection,
   missingRequiredGroups,
@@ -132,17 +136,35 @@ function ProductDetailPage() {
           loadingVariant="detail"
         >
           {product ? (
-            <article className="space-y-6">
-              <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)]">
+            /*
+             * Две колонки на десктопе: слева медиа и описание, справа —
+             * липкий блок покупки. Карточка была одноколоночной на любом
+             * экране, поэтому на 1920px под галереей во весь контейнер шли
+             * цена и «В корзину», а до кнопки после чтения описания
+             * приходилось скроллить обратно вверх.
+             *
+             * `order-*` действует только во флексе (мобильная раскладка),
+             * `col-start`/`row` — только в гриде (десктоп). Благодаря этому
+             * блок покупки стоит сразу под галереей на телефоне и в правой
+             * колонке на десктопе, оставаясь одним узлом DOM: дублировать
+             * его ради раскладки значило бы завести две кнопки «В корзину».
+             */
+            <article className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_clamp(320px,26vw,380px)] lg:items-start lg:gap-8">
+              <div className="order-1 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1">
                 <ProductGallery
                   images={product.images ?? []}
                   alt={product.name_ru}
                 />
-                <div className="p-5 sm:p-6">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              </div>
+
+              {/* grid-row: 1/-1 — область сайдбара во всю высоту сетки,
+                  иначе sticky некуда прилипать. */}
+              <aside className="order-2 lg:col-start-2 lg:self-start lg:[grid-row:1/-1] lg:sticky lg:top-24">
+                <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+                  <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
                     {product.sku}
                   </p>
-                  <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">
+                  <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl lg:text-2xl">
                     {product.name_ru}
                   </h1>
                   <p className="mt-2 text-sm text-muted-foreground">
@@ -150,16 +172,24 @@ function ProductDetailPage() {
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
+
                   <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
                     <p className="text-2xl font-bold text-primary">
                       {groups.length > 0
                         ? summary.label
                         : formatPrice(product.price)}
                     </p>
-                    <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">
+                    <StatusPill tone={availabilityTone(product.availability)}>
                       {availabilityLabel(product.availability)}
-                    </span>
+                    </StatusPill>
                   </div>
+
+                  {groups.length > 0 && selected.length > 0 ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      С учётом выбранной комплектации ({selected.length})
+                    </p>
+                  ) : null}
+
                   <div className="mt-5 flex flex-wrap items-center gap-3">
                     <div className="inline-flex items-center rounded-xl border border-border">
                       <button
@@ -167,7 +197,7 @@ function ProductDetailPage() {
                         aria-label="Уменьшить количество"
                         disabled={qty <= 1}
                         onClick={() => setQty((q) => Math.max(1, q - 1))}
-                        className="px-3 py-2 text-muted-foreground disabled:opacity-40"
+                        className="grid h-11 w-11 place-items-center text-muted-foreground disabled:opacity-40"
                       >
                         <Minus className="h-4 w-4" aria-hidden />
                       </button>
@@ -181,13 +211,13 @@ function ProductDetailPage() {
                         type="button"
                         aria-label="Увеличить количество"
                         onClick={() => setQty((q) => q + 1)}
-                        className="px-3 py-2 text-muted-foreground"
+                        className="grid h-11 w-11 place-items-center text-muted-foreground"
                       >
                         <Plus className="h-4 w-4" aria-hidden />
                       </button>
                     </div>
                     <Button
-                      className="w-full sm:w-auto"
+                      className="w-full flex-1 sm:w-auto"
                       disabled={addMutation.isPending}
                       onClick={addToCartClick}
                     >
@@ -195,24 +225,35 @@ function ProductDetailPage() {
                       {addMutation.isPending ? "Добавляем…" : "В корзину"}
                     </Button>
                   </div>
+
+                  {missing.length > 0 ? (
+                    <p className="mt-3 text-xs font-semibold text-destructive">
+                      Сначала выберите:{" "}
+                      {missing.map((g) => g.name_ru).join(", ")}
+                    </p>
+                  ) : null}
                 </div>
-              </div>
+              </aside>
 
               {groups.length > 0 ? (
-                <ProductConfigurator
-                  groups={groups}
-                  basePrice={product.price}
-                  selection={selection}
-                  onSelectionChange={setSelection}
-                />
+                <div className="order-3 lg:col-start-1">
+                  <ProductConfigurator
+                    groups={groups}
+                    basePrice={product.price}
+                    selection={selection}
+                    onSelectionChange={setSelection}
+                  />
+                </div>
               ) : null}
 
               {product.description_ru ? (
-                <ProductDescription text={product.description_ru} />
+                <div className="order-4 lg:col-start-1">
+                  <ProductDescription text={product.description_ru} />
+                </div>
               ) : null}
 
               {product.documents?.length ? (
-                <section className="rounded-3xl border border-border bg-card p-5">
+                <section className="order-5 rounded-3xl border border-border bg-card p-5 lg:col-start-1">
                   <h2 className="font-semibold">Документы</h2>
                   <ul className="mt-2 space-y-2">
                     {product.documents.map((doc) => (

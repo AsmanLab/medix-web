@@ -73,7 +73,7 @@ function CmsPromotionsListPage() {
                   className={cn(
                     "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase",
                     promo.is_active
-                      ? "bg-emerald-500/15 text-emerald-700"
+                      ? "bg-success-soft text-success-strong"
                       : "bg-muted text-muted-foreground",
                   )}
                 >

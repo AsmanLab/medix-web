@@ -70,8 +70,8 @@ function CmsPagesListPage() {
                   className={cn(
                     "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase",
                     page.status === "published"
-                      ? "bg-emerald-500/15 text-emerald-700"
-                      : "bg-amber-500/15 text-amber-700",
+                      ? "bg-success-soft text-success-strong"
+                      : "bg-warning-soft text-warning-strong",
                   )}
                 >
                   {page.status === "published" ? "Published" : "Draft"}

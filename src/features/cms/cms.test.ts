@@ -3,6 +3,7 @@ import { sanitizeCmsHtml } from "./sanitize";
 import {
   promotionPeriodStatus,
   promotionStatusLabel,
+  promotionStatusTone,
 } from "./promotions";
 
 describe("sanitizeCmsHtml", () => {
@@ -48,5 +49,21 @@ describe("promotionPeriodStatus", () => {
       ),
     ).toBe("expired");
     expect(promotionStatusLabel("expired")).toBe("Истекла");
+  });
+});
+
+describe("promotionStatusTone", () => {
+  // Тон нужен StatusPill: до него цвет периода собирался прямо в разметке
+  // и жил отдельно от остальных статусов системы.
+  it("даёт действующей акции успешный тон", () => {
+    expect(promotionStatusTone("active")).toBe("success");
+  });
+
+  it("анонс подсвечивает как основной, а не как успех", () => {
+    expect(promotionStatusTone("upcoming")).toBe("primary");
+  });
+
+  it("завершившуюся гасит", () => {
+    expect(promotionStatusTone("expired")).toBe("muted");
   });
 });

@@ -12,11 +12,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import {
-  useEffect,
-  useState,
-  type FormEvent,
-} from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { isAppError } from "@/api/errors";
 import { fetchCmsPage } from "@/api/cms";
@@ -295,7 +291,7 @@ function ServicePage() {
               "Можно приложить до 5 фото неисправности",
             ].map((item) => (
               <div key={item} className="flex gap-3 text-sm">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                 <span>{item}</span>
               </div>
             ))}
@@ -402,7 +398,10 @@ function ServicePage() {
           </div>
 
           {authenticated && (ordersQuery.data?.length ?? 0) > 0 ? (
-            <FormField label="Связать с заказом (необязательно)" className="mt-4">
+            <FormField
+              label="Связать с заказом (необязательно)"
+              className="mt-4"
+            >
               <select
                 className="field-control"
                 value={orderId}
