@@ -9,13 +9,16 @@ import {
   loginWithPassword,
 } from "@/session/store";
 import { isValidKgPhone, normalizePhone } from "@/lib/phone";
+import { isSafeInternalPath } from "@/lib/redirect";
 import { Button } from "@/components/ui/button";
 
 type LoginSearch = { redirect?: string; phone?: string };
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): LoginSearch => ({
-    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+    // Чужой адрес отбрасываем прямо на разборе — тогда он не доедет ни до
+    // навигации после входа, ни до ссылок «Зарегистрироваться».
+    redirect: isSafeInternalPath(search.redirect) ? search.redirect : undefined,
     phone: typeof search.phone === "string" ? search.phone : undefined,
   }),
   beforeLoad: () => requireGuest(),
@@ -43,7 +46,7 @@ function LoginPage() {
       const session = await loginWithPassword(normalized, password);
       toast.success("Добро пожаловать!");
       const role = session.user!.role;
-      if (redirectTo && role === "client") {
+      if (redirectTo && isSafeInternalPath(redirectTo) && role === "client") {
         await nav({ href: redirectTo });
         return;
       }

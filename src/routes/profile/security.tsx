@@ -145,7 +145,7 @@ function ProfileSecurityPage() {
           <div>
             <p className="text-sm font-medium">Новый пароль</p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Минимум 8 символов. Dev OTP: 123456
+              Минимум 8 символов. Подтверждается кодом из SMS.
             </p>
           </div>
         </div>

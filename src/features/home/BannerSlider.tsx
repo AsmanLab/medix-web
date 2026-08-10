@@ -2,16 +2,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { BannerOut } from "@/api/cms";
+import { isSafeInternalPath } from "@/lib/redirect";
 import { cn } from "@/lib/utils";
 
 type BannerSliderProps = {
   banners: BannerOut[];
   imageById: Record<string, string | null>;
 };
-
-function isInternalPath(url: string): boolean {
-  return url.startsWith("/") && !url.startsWith("//");
-}
 
 export function BannerSlider({ banners, imageById }: BannerSliderProps) {
   const navigate = useNavigate();
@@ -45,11 +42,13 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
   const href = current.link_url?.trim() || "/catalog";
 
   function onCta() {
-    if (isInternalPath(href)) {
+    if (isSafeInternalPath(href)) {
       void navigate({ to: href });
       return;
     }
-    window.location.assign(href);
+    // Внешняя ссылка баннера — её задаёт админ, но открываем в новой вкладке
+    // и без доступа к window.opener.
+    window.open(href, "_blank", "noopener,noreferrer");
   }
 
   return (

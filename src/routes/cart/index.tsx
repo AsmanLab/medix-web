@@ -345,9 +345,14 @@ function CartPage() {
             <label className="block text-sm font-semibold" htmlFor="rfq-comment">
               Комментарий{" "}
               <span className="font-normal text-muted-foreground">
-                (необязательно, для запроса КП)
+                (необязательно, уйдёт с запросом КП)
               </span>
             </label>
+            {/*
+              Поле было disabled, когда оформление ведёт к заказу, — но рядом
+              стоит кнопка «Всё же запросить КП», которая этот комментарий
+              отправляет. Написать его было физически нельзя.
+            */}
             <textarea
               id="rfq-comment"
               value={comment}
@@ -355,8 +360,14 @@ function CartPage() {
               rows={3}
               placeholder="Сроки, комплектация, адрес доставки…"
               className="field-control mt-2 min-h-[96px] resize-y"
-              disabled={willBeOrder}
+              disabled={busy}
             />
+            {willBeOrder ? (
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                К прямому заказу комментарий не прикладывается — он уйдёт,
+                если выбрать «Всё же запросить КП».
+              </p>
+            ) : null}
           </section>
 
           <div className="flex flex-wrap gap-3">
