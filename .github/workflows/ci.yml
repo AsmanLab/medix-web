@@ -28,6 +28,15 @@ jobs:
     defaults:
       run:
         working-directory: .
+    # Секрет разворачивается в переменную на уровне job намеренно: контекст
+    # `secrets` в `if:` шага недоступен, и выражение `!secrets.X` не даёт
+    # ошибку в логе — GitHub не может разобрать workflow и роняет весь файл
+    # за 0 секунд. С 31.07 из-за этого не выполнялись ни typecheck, ни vitest,
+    # ни build, ни e2e, ни Lighthouse: все проверки витрины молчали, а PR
+    # выглядели зелёными, потому что обязательных проверок просто не было.
+    # Контекст `env` в `if:` шага разрешён — через него и проверяем.
+    env:
+      E2E_API_BASE_URL: ${{ secrets.E2E_API_BASE_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,19 +47,19 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Warn when E2E run is a no-op
-        if: ${{ !secrets.E2E_API_BASE_URL }}
+        if: ${{ !env.E2E_API_BASE_URL }}
         run: |
           echo "::warning title=E2E без API::Секрет E2E_API_BASE_URL не задан — \
           сценарии будут пропущены, и зелёный статус этого job ничего не доказывает. \
           Задайте секрет, чтобы прогон стал обязательным."
       - name: Run Playwright E2E
         env:
-          # Задайте секрет E2E_API_BASE_URL, чтобы гонять сценарии против живого
-          # стенда. Без него спеки пропускаются — и job печатает предупреждение
-          # выше, чтобы «зелёный e2e» не читался как пройденный.
-          # Fallback на localhost убран намеренно: с ним переменная всегда была
-          # непустой, и отличить «API задан» от «API не задан» было нельзя.
-          E2E_API_BASE_URL: ${{ secrets.E2E_API_BASE_URL }}
+          # E2E_API_BASE_URL приходит из env самого job (см. комментарий выше).
+          # Задайте секрет, чтобы гонять сценарии против живого стенда. Без него
+          # спеки пропускаются — и job печатает предупреждение выше, чтобы
+          # «зелёный e2e» не читался как пройденный. Fallback на localhost убран
+          # намеренно: с ним переменная всегда была непустой, и отличить
+          # «API задан» от «API не задан» было нельзя.
           # Если адрес задан, недоступный API обязан ронять job, а не скипать его.
           E2E_REQUIRE_API: ${{ secrets.E2E_API_BASE_URL && '1' || '' }}
           E2E_BASE_URL: http://127.0.0.1:8080
