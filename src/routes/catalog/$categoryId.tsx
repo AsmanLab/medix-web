@@ -2,10 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronDown, Filter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { fetchCategories, fetchProductsForCategories } from "@/api/catalog";
+import { fetchCategories } from "@/api/catalog";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { Button } from "@/components/ui/button";
+import { useProductPages } from "@/features/catalog/use-product-pages";
 import {
   buildCategoryTree,
   collectCategoryIds,
@@ -76,20 +78,18 @@ function CategoryPage() {
     return collectCategoryIds(resolved.node);
   }, [resolved, selectedChild]);
 
-  const productsQuery = useQuery({
-    queryKey: queryKeys.catalog.productsByCategories(productCategoryIds, {
-      q: qFromUrl ?? "",
-    }),
-    queryFn: ({ signal }) =>
-      fetchProductsForCategories(
-        productCategoryIds,
-        { q: qFromUrl, limit: 40 },
-        signal,
-      ),
+  /*
+   * Раздел грузился N параллельными запросами (по одному на категорию)
+   * со склейкой на клиенте: листать такую выдачу было нельзя, и товары
+   * обрывались на первой странице каждой категории. Теперь один запрос
+   * с `category_ids` и общим курсором.
+   */
+  const productsQuery = useProductPages({
+    q: qFromUrl,
+    categoryIds: productCategoryIds,
     enabled: productCategoryIds.length > 0,
   });
-
-  const products = (productsQuery.data ?? []).filter((p) => p.is_published);
+  const products = productsQuery.products;
 
   // seo_title/seo_description заполняются в админке для каждой категории —
   // до сих пор они никуда не попадали.
@@ -245,7 +245,23 @@ function CategoryPage() {
                   emptyTitle="Товары не найдены"
                   emptyDescription="Измените поиск или выберите другую подкатегорию."
                 >
-                  <ProductGrid products={products} />
+                  <>
+                    <ProductGrid products={products} />
+                    {productsQuery.hasNextPage ? (
+                      <div className="mt-8 flex justify-center">
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          disabled={productsQuery.isFetchingNextPage}
+                          onClick={() => void productsQuery.fetchNextPage()}
+                        >
+                          {productsQuery.isFetchingNextPage
+                            ? "Загружаем…"
+                            : "Показать ещё"}
+                        </Button>
+                      </div>
+                    ) : null}
+                  </>
                 </StateBlock>
               </div>
             </section>

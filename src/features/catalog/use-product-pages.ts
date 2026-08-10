@@ -9,6 +9,11 @@ import { queryKeys } from "@/api/query-keys";
 type UseProductPagesInput = {
   q?: string;
   categoryId?: string | null;
+  /**
+   * Несколько категорий — раздел витрины показывает категорию вместе
+   * с подкатегориями. Имеет приоритет над `categoryId`.
+   */
+  categoryIds?: string[];
   enabled?: boolean;
 };
 
@@ -27,12 +32,18 @@ type UseProductPagesInput = {
 export function useProductPages({
   q,
   categoryId,
+  categoryIds,
   enabled = true,
 }: UseProductPagesInput) {
+  // Порядок в ключе не должен влиять на кеш: дерево категорий отдаёт их
+  // отсортированными, но полагаться на это не стоит.
+  const ids = categoryIds?.length ? [...categoryIds].sort() : undefined;
+
   const query = useInfiniteQuery({
     queryKey: queryKeys.catalog.products({
       q: q ?? "",
       category_id: categoryId ?? "",
+      category_ids: ids ?? [],
       paged: true,
     }),
     initialPageParam: null as string | null,
@@ -40,7 +51,13 @@ export function useProductPages({
       fetchProducts(
         {
           q,
-          category_id: categoryId ?? null,
+          // `category_id` шлём и вместе с `category_ids` — намеренно.
+          // Новый сервер отдаёт приоритет списку, а старый, который про
+          // `category_ids` не знает, отфильтрует хотя бы по одной категории
+          // вместо того, чтобы вернуть весь каталог. Без этого выкат фронта
+          // раньше бэкенда превратил бы раздел в «показать всё».
+          category_id: ids ? (ids[0] ?? null) : (categoryId ?? null),
+          category_ids: ids,
           cursor: pageParam,
           limit: PRODUCTS_PAGE_SIZE,
         },

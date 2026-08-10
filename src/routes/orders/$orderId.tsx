@@ -21,6 +21,7 @@ import { formatRfqDate } from "@/features/rfq/status";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
+import { orderLabel } from "@/features/orders/order-number";
 
 export const Route = createFileRoute("/orders/$orderId")({
   component: OrderDetailPage,
@@ -103,9 +104,11 @@ function OrderDetailPage() {
                     Заказ · {orderSourceLabel(order.source)}
                   </p>
                   <h1 className="mt-1 font-display text-2xl font-bold">
-                    Заказ
+                    Заказ {orderLabel(order.id)}
                   </h1>
-                  <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
+                  {/* Полный идентификатор оставлен: по нему менеджер находит
+                      сделку, если клиент прислал ссылку или скриншот. */}
+                  <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
                     {order.id}
                   </p>
                 </div>

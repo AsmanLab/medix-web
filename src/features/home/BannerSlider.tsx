@@ -22,13 +22,31 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
     setIndex(0);
   }, [banners]);
 
+  /*
+   * Автопрокрутка отключается при prefers-reduced-motion: MASTER.md требует
+   * уважать эту настройку, а движущийся баннер — ровно то, ради чего её
+   * включают. Слушаем изменение, а не читаем один раз: настройку меняют
+   * на лету, и в тестах эмулируют тоже.
+   */
+  const [reducedMotion, setReducedMotion] = useState(false);
   useEffect(() => {
-    if (paused || count <= 1) return;
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mq) return;
+    const apply = () => setReducedMotion(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    if (paused || reducedMotion || count <= 1) return;
+    // 3 секунды не хватало, чтобы прочитать заголовок с подзаголовком —
+    // баннер уезжал на середине фразы.
     const timer = window.setTimeout(() => {
       setIndex((i) => (i + 1) % count);
-    }, 3000);
+    }, 7000);
     return () => window.clearTimeout(timer);
-  }, [count, index, paused]);
+  }, [count, index, paused, reducedMotion]);
 
   if (!current) return null;
 

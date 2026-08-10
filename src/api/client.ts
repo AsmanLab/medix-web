@@ -10,7 +10,10 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type ApiRequestOptions = {
   method?: HttpMethod;
   path: string;
-  query?: Record<string, string | number | boolean | undefined | null>;
+  query?: Record<
+    string,
+    string | number | boolean | undefined | null | readonly string[]
+  >;
   body?: unknown;
   headers?: HeadersInit;
   signal?: AbortSignal;
@@ -54,16 +57,23 @@ async function singleFlightRefresh(): Promise<string | null> {
   return refreshPromise;
 }
 
-function buildUrl(
-  path: string,
-  query?: ApiRequestOptions["query"],
-): string {
+function buildUrl(path: string, query?: ApiRequestOptions["query"]): string {
   const base = getApiBaseUrl().replace(/\/$/, "");
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = new URL(`${base}${normalizedPath}`);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value === undefined || value === null) continue;
+      // Массив разворачивается в повторяющийся параметр (?k=a&k=b) — так
+      // FastAPI принимает `list[...]` в Query. `set` здесь бы не подошёл:
+      // он оставляет только последнее значение.
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (item === undefined || item === null) continue;
+          url.searchParams.append(key, String(item));
+        }
+        continue;
+      }
       url.searchParams.set(key, String(value));
     }
   }

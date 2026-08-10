@@ -6,6 +6,7 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { CommerceTabs } from "@/components/shared/CommerceTabs";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { orderLabel } from "@/features/orders/order-number";
 import {
   orderSourceLabel,
   orderStatusLabel,
@@ -77,8 +78,8 @@ function OrdersListPage() {
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                         Заказ · {orderSourceLabel(order.source)}
                       </p>
-                      <p className="mt-0.5 truncate font-mono text-sm font-semibold">
-                        {order.id}
+                      <p className="mt-0.5 font-mono text-sm font-semibold">
+                        {orderLabel(order.id)}
                       </p>
                       <p className="mt-2 text-xs text-muted-foreground">
                         {formatRfqDate(order.created_at)} · {order.items_count}{" "}

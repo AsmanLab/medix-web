@@ -16,6 +16,7 @@ import { useSession } from "@/session/store";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
+import { orderLabel } from "@/features/orders/order-number";
 
 const STATUS_FILTERS = [
   "new",
@@ -209,7 +210,7 @@ function ManagerOrdersPage() {
               >
                 <div className="min-w-0">
                   <div className="truncate font-mono text-xs font-semibold">
-                    {order.id.slice(0, 8)}…
+                    {orderLabel(order.id)}
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
                     {orderSourceLabel(order.source)} · клиент{" "}
