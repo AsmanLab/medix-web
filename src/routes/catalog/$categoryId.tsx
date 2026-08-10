@@ -17,6 +17,7 @@ import {
   findCategoryNode,
   type CatalogCategoryNode,
 } from "@/features/catalog/map-category";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 type CategorySearch = {
@@ -352,7 +353,7 @@ function ProductGrid({ products }: { products: ProductListOut[] }) {
                   {availabilityLabel(p.availability)}
                 </span>
                 <span className="font-semibold text-primary">
-                  {p.price ? `${p.price} сом` : "По запросу"}
+                  {formatMoney(p.price, "По запросу")}
                 </span>
               </div>
             </div>

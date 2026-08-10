@@ -21,6 +21,7 @@ import {
 import { isAppError } from "@/api/errors";
 import { fetchManagers } from "@/api/managers";
 import { fetchProfile } from "@/api/profile";
+import { formatMoney } from "@/lib/money";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
@@ -246,13 +247,15 @@ function CartPage() {
                       {options.map((o) => (
                         <li key={o.id}>
                           + {o.name}
-                          {o.unit_price ? ` · ${o.unit_price}` : " · по запросу"}
+                          {o.unit_price
+                            ? ` · ${formatMoney(o.unit_price)}`
+                            : " · по запросу"}
                         </li>
                       ))}
                     </ul>
                   ) : null}
                   <p className="mt-2 text-sm font-semibold text-primary">
-                    {base.line_total ?? "Цена по запросу"}
+                    {formatMoney(base.line_total, "Цена по запросу")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -305,7 +308,7 @@ function CartPage() {
                   : "После подтверждения организации станет доступен прямой заказ. Сейчас можно отправить запрос на КП."}
             </p>
             <p className="mt-3 text-lg font-bold text-primary">
-              {cart?.total ?? "Цена по запросу"}
+              {formatMoney(cart?.total, "Цена по запросу")}
             </p>
           </section>
 

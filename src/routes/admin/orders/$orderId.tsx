@@ -24,6 +24,7 @@ import {
 } from "@/features/orders/status";
 import { formatRfqDate } from "@/features/rfq/status";
 import { requireStaffPanel } from "@/session/guards";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/orders/$orderId")({
@@ -193,13 +194,13 @@ function ManagerOrderDetailPage() {
                       </span>
                     </span>
                     <span className="text-muted-foreground">
-                      {item.qty} × {item.price ?? "цена по запросу"}
+                      {item.qty} × {formatMoney(item.price, "цена по запросу")}
                     </span>
                   </li>
                 ))}
               </ul>
               <p className="mt-4 text-sm font-semibold">
-                Итого: {order.total ?? "—"}
+                Итого: {formatMoney(order.total, "—")}
               </p>
             </section>
 
@@ -274,7 +275,7 @@ function ManagerOrderDetailPage() {
                     {invoice.status === "published"
                       ? "опубликован"
                       : "черновик"}{" "}
-                    · {invoice.total ?? "—"}
+                    · {formatMoney(invoice.total, "—")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {canPublishInvoice ? (

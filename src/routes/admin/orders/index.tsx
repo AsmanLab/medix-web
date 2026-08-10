@@ -13,6 +13,7 @@ import {
 import { formatRfqDate } from "@/features/rfq/status";
 import { requireStaffPanel } from "@/session/guards";
 import { useSession } from "@/session/store";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 const STATUS_FILTERS = [
@@ -214,7 +215,7 @@ function ManagerOrdersPage() {
                     {order.client_id.slice(0, 8)}…
                   </div>
                 </div>
-                <span className="text-sm">{order.total ?? "—"}</span>
+                <span className="text-sm">{formatMoney(order.total, "—")}</span>
                 <span className="text-sm">{order.items_count}</span>
                 <span
                   className={cn(

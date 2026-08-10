@@ -9,6 +9,7 @@ import {
   summarizeConfigPrice,
   type ConfigSelection,
 } from "@/features/catalog/configurator-logic";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 type ProductConfiguratorProps = {
@@ -136,7 +137,7 @@ export function ProductConfigurator({
                   className="space-y-2 border-t border-border px-4 py-3"
                 >
                   {opts.map((opt) => {
-                    const priceLabel = opt.price?.trim() || "По запросу";
+                    const priceLabel = formatMoney(opt.price, "По запросу");
                     if (single) {
                       const checked = selection.singles[group.id] === opt.id;
                       return (
@@ -214,7 +215,7 @@ export function ProductConfigurator({
             {selected.map((o) => (
               <li key={o.id}>
                 + {o.name_ru}
-                {o.price ? ` · ${o.price}` : " · по запросу"}
+                {o.price ? ` · ${formatMoney(o.price)}` : " · по запросу"}
               </li>
             ))}
           </ul>

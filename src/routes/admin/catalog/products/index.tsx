@@ -15,6 +15,7 @@ import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { availabilityLabel } from "@/features/catalog/availability";
 import { requireStaffPanel } from "@/session/guards";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 type ProductsSearch = {
@@ -273,7 +274,7 @@ function AdminProductsPage() {
               </div>
               <span className="font-mono text-xs">{p.sku}</span>
               <span className="text-xs">{availabilityLabel(p.availability)}</span>
-              <span className="text-xs">{p.price ?? "по запросу"}</span>
+              <span className="text-xs">{formatMoney(p.price, "по запросу")}</span>
               <label className="flex items-center gap-2 text-xs">
                 <input
                   type="checkbox"
