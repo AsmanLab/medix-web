@@ -51,7 +51,12 @@ export function useProductPages({
       fetchProducts(
         {
           q,
-          category_id: ids ? null : (categoryId ?? null),
+          // `category_id` шлём и вместе с `category_ids` — намеренно.
+          // Новый сервер отдаёт приоритет списку, а старый, который про
+          // `category_ids` не знает, отфильтрует хотя бы по одной категории
+          // вместо того, чтобы вернуть весь каталог. Без этого выкат фронта
+          // раньше бэкенда превратил бы раздел в «показать всё».
+          category_id: ids ? (ids[0] ?? null) : (categoryId ?? null),
           category_ids: ids,
           cursor: pageParam,
           limit: PRODUCTS_PAGE_SIZE,
