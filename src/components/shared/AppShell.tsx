@@ -14,8 +14,9 @@ import {
   Search,
   ShoppingCart,
   User,
+  Wrench,
 } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { fetchCategories } from "@/api/catalog";
 import { listNotifications } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
@@ -53,6 +54,14 @@ const mobileTabs: Tab[] = [
     label: "Заказы",
     icon: Package,
     match: (p) => p.startsWith("/orders") || p.startsWith("/requests"),
+  },
+  // Сервис — раздел ТЗ наравне с каталогом, но с телефона он был достижим
+  // только через подвал, а подвал прячется под таб-баром.
+  {
+    to: "/service",
+    label: "Сервис",
+    icon: Wrench,
+    match: (p) => p.startsWith("/service"),
   },
   {
     to: "/profile",
@@ -127,27 +136,90 @@ function CatalogMegaMenu({
   const catalogActive =
     path.startsWith("/catalog") || path.startsWith("/product");
 
+  /*
+   * Меню открывалось только через CSS-hover, поэтому на тач-устройствах
+   * не открывалось вовсе: на планшете и в мобильном браузере в ландшафте
+   * (где показывается десктопная шапка) категории были недостижимы.
+   *
+   * Раскрытием управляет состояние. Мышь по-прежнему открывает наведением,
+   * но у шеврона появился отдельный переключатель: сама надпись «Каталог»
+   * остаётся ссылкой и ведёт в каталог, а тап по шеврону раскрывает список.
+   * Так работают оба сценария и ни один не отбирает у другого клик.
+   */
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Меню закрывается при переходе — иначе оно висит поверх новой страницы.
+  useEffect(() => setOpen(false), [path]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onPointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
   return (
-    <div className="group/catalog relative">
-      <Link
-        to="/catalog"
-        search={{ q: undefined, category: undefined }}
-        aria-haspopup="true"
-        className={cn(
-          "inline-flex items-center gap-1.5 py-3",
-          catalogActive
-            ? "text-primary"
-            : "text-foreground/75 hover:text-primary",
-        )}
-      >
-        Каталог <ChevronDown className="h-3.5 w-3.5" aria-hidden />
-      </Link>
+    <div
+      ref={containerRef}
+      className="relative"
+      // Наведение мышью оставляем как было; у пальца pointerType — "touch",
+      // и открытие идёт через шеврон, иначе меню моргало бы на каждый тап.
+      onPointerEnter={(e) => e.pointerType === "mouse" && setOpen(true)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
+      }}
+    >
+      <div className="inline-flex items-center">
+        <Link
+          to="/catalog"
+          search={{ q: undefined, category: undefined }}
+          className={cn(
+            "py-3",
+            catalogActive
+              ? "text-primary"
+              : "text-foreground/75 hover:text-primary",
+          )}
+        >
+          Каталог
+        </Link>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="catalog-mega-menu"
+          aria-label={open ? "Скрыть категории" : "Показать категории"}
+          onClick={() => setOpen((v) => !v)}
+          className="grid h-11 w-8 place-items-center text-foreground/75 hover:text-primary"
+        >
+          <ChevronDown
+            className={cn(
+              "h-3.5 w-3.5 transition-transform",
+              open && "rotate-180",
+            )}
+            aria-hidden
+          />
+        </button>
+      </div>
 
       <div
         id="catalog-mega-menu"
         role="navigation"
         aria-label="Каталог — категории"
-        className="invisible absolute top-full left-1/2 z-50 w-[min(900px,calc(100vw-2rem))] max-w-[900px] -translate-x-1/2 pt-[19px] opacity-0 transition group-hover/catalog:visible group-hover/catalog:opacity-100 group-focus-within/catalog:visible group-focus-within/catalog:opacity-100 xl:left-[-175px] xl:w-[900px] xl:translate-x-0"
+        hidden={!open}
+        className="absolute top-full left-1/2 z-50 w-[min(900px,calc(100vw-2rem))] max-w-[900px] -translate-x-1/2 pt-[19px] xl:left-[-175px] xl:w-[900px] xl:translate-x-0"
       >
         <div className="grid overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_26px_70px_-28px_rgba(15,51,80,.45)] lg:grid-cols-[240px_1fr] xl:grid-cols-[280px_1fr]">
           <div className="border-r border-border bg-background/70 p-3">
@@ -409,22 +481,67 @@ export function AppShell({
             >
               Контакты
             </Link>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1"
-              aria-label="Язык интерфейса"
-            >
-              RU <ChevronDown className="h-3 w-3" />
-            </button>
+            {/* Переключатель языка убран: кнопка ничего не делала, а второй
+                локали в проекте нет (ТЗ — только русский). Мёртвый элемент
+                в шапке читается как недоделка. */}
           </div>
         </div>
       </div>
 
+      {/*
+        Мобильная шапка. Была из логотипа и колокольчика: ни поиска,
+        ни корзины — искать товар с телефона можно было, только дойдя
+        до каталога, а корзина жила исключительно в таб-баре.
+      */}
       <header className="sticky top-0 z-50 border-b border-border/80 bg-card/90 backdrop-blur-xl lg:hidden">
-        <div className="mx-auto flex h-14 max-w-[1320px] items-center justify-between gap-3 px-4">
+        <div className="mx-auto flex h-14 max-w-[1320px] items-center gap-2 px-4">
           <Logo compact />
-          <NotificationsBell unreadCount={unreadCount} />
+          <div className="ml-auto flex items-center gap-1">
+            <NotificationsBell unreadCount={unreadCount} />
+            <Link
+              to="/cart"
+              aria-label={
+                cartCount > 0
+                  ? `Корзина, ${plural(cartCount, "позиция", "позиции", "позиций")}`
+                  : "Корзина"
+              }
+              className="relative grid h-11 w-11 place-items-center rounded-full text-muted-foreground"
+            >
+              <ShoppingCart className="h-[18px] w-[18px]" aria-hidden />
+              {cartCount > 0 ? (
+                <span
+                  className="absolute top-1 right-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-white"
+                  aria-hidden
+                >
+                  {cartCount > 9 ? "9+" : cartCount}
+                </span>
+              ) : null}
+            </Link>
+          </div>
         </div>
+        <form
+          onSubmit={onHeaderSearch}
+          role="search"
+          className="flex items-center gap-2 px-4 pb-3"
+        >
+          <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-background px-4 focus-within:border-primary/60">
+            <Search
+              className="h-4 w-4 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
+            <input
+              value={headerQuery}
+              onChange={(event) => setHeaderQuery(event.target.value)}
+              aria-label="Поиск по каталогу"
+              placeholder="Поиск по каталогу"
+              // type="search" даёт на телефоне крестик очистки и кнопку
+              // «Найти» вместо «Enter» на клавиатуре.
+              type="search"
+              enterKeyHint="search"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+          </div>
+        </form>
       </header>
 
       <header className="sticky top-0 z-50 hidden border-b border-border/80 bg-card/90 backdrop-blur-xl lg:block">
@@ -572,7 +689,7 @@ export function AppShell({
           paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
         }}
       >
-        <ul className="mx-auto grid max-w-[440px] grid-cols-4 px-2 pt-2">
+        <ul className="mx-auto grid max-w-[520px] grid-cols-5 px-2 pt-2">
           {mobileTabs.map((tab) => {
             const Icon = tab.icon;
             const active = tab.match(path);
