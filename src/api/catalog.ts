@@ -77,6 +77,12 @@ export function deleteAdminCategory(categoryId: string) {
 export type FetchProductsParams = {
   q?: string;
   category_id?: string | null;
+  /**
+   * Товары любой из категорий — раздел витрины показывает категорию вместе
+   * с подкатегориями. Раньше это делалось N параллельными запросами
+   * с ручной склейкой, из-за чего раздел не поддерживал пагинацию.
+   */
+  category_ids?: string[] | null;
   limit?: number;
   /**
    * id последнего показанного товара. Пагинация в API — keyset по возрастанию
@@ -98,6 +104,9 @@ export function fetchProducts(
     query: {
       q: params.q?.trim() || undefined,
       category_id: params.category_id || undefined,
+      category_ids: params.category_ids?.length
+        ? params.category_ids
+        : undefined,
       cursor: params.cursor || undefined,
       limit: params.limit ?? PRODUCTS_PAGE_SIZE,
     },
@@ -115,30 +124,9 @@ export function fetchProductBySlug(
   });
 }
 
-/** Fetch products for several categories and dedupe (exact category_id on API). */
-export async function fetchProductsForCategories(
-  categoryIds: string[],
-  params: Omit<FetchProductsParams, "category_id"> = {},
-  signal?: AbortSignal,
-): Promise<ProductListOut[]> {
-  if (categoryIds.length === 0) {
-    return fetchProducts(params, signal);
-  }
-
-  const lists = await Promise.all(
-    categoryIds.map((category_id) =>
-      fetchProducts({ ...params, category_id }, signal),
-    ),
-  );
-
-  const byId = new Map<string, ProductListOut>();
-  for (const list of lists) {
-    for (const product of list) {
-      byId.set(product.id, product);
-    }
-  }
-  return [...byId.values()];
-}
+// fetchProductsForCategories удалена: она делала по запросу на категорию
+// и склеивала ответы на клиенте, из-за чего раздел не мог листать выдачу.
+// Теперь то же самое делает сервер одним запросом с `category_ids`.
 
 export type FetchAdminProductsParams = {
   q?: string;
