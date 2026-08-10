@@ -56,7 +56,10 @@ export function createAdminCategory(body: CreateCategoryBody) {
   });
 }
 
-export function updateAdminCategory(categoryId: string, body: UpdateCategoryBody) {
+export function updateAdminCategory(
+  categoryId: string,
+  body: UpdateCategoryBody,
+) {
   return apiRequest<CategoryOut>({
     method: "PATCH",
     path: `/admin/catalog/categories/${encodeURIComponent(categoryId)}`,
@@ -75,7 +78,16 @@ export type FetchProductsParams = {
   q?: string;
   category_id?: string | null;
   limit?: number;
+  /**
+   * id последнего показанного товара. Пагинация в API — keyset по возрастанию
+   * id: сервер отдаёт то, что строго больше курсора. Смещения (offset) нет
+   * намеренно — при вставке товара оно сдвигает выдачу и даёт дубли.
+   */
+  cursor?: string | null;
 };
+
+/** Сколько товаров запрашивается за раз. Потолок сервера — 100. */
+export const PRODUCTS_PAGE_SIZE = 24;
 
 export function fetchProducts(
   params: FetchProductsParams = {},
@@ -86,7 +98,8 @@ export function fetchProducts(
     query: {
       q: params.q?.trim() || undefined,
       category_id: params.category_id || undefined,
-      limit: params.limit ?? 40,
+      cursor: params.cursor || undefined,
+      limit: params.limit ?? PRODUCTS_PAGE_SIZE,
     },
     signal,
   });
@@ -149,11 +162,14 @@ export function fetchAdminProducts(
           ? undefined
           : params.is_published,
       cursor: params.cursor || undefined,
-      limit: params.limit ?? 40,
+      limit: params.limit ?? ADMIN_PRODUCTS_PAGE_SIZE,
     },
     signal,
   });
 }
+
+/** Страница списка товаров в админке. Потолок сервера — 100. */
+export const ADMIN_PRODUCTS_PAGE_SIZE = 50;
 
 export function fetchAdminProduct(
   productId: string,

@@ -7,12 +7,13 @@ export type CatalogCategoryNode = {
   sort: number;
   imageKey: string;
   isActive: boolean;
+  /** Заполняется в админке; до сих пор в разметку страницы не попадало. */
+  seoTitle: string;
+  seoDescription: string;
   children: CatalogCategoryNode[];
 };
 
-function buildTreeFromList(
-  categories: CategoryOut[],
-): CatalogCategoryNode[] {
+function buildTreeFromList(categories: CategoryOut[]): CatalogCategoryNode[] {
   const byParent = new Map<string | null, CategoryOut[]>();
 
   for (const category of categories) {
@@ -34,6 +35,8 @@ function buildTreeFromList(
       sort: node.sort,
       imageKey: node.image_key || "",
       isActive: node.is_active,
+      seoTitle: node.seo_title || "",
+      seoDescription: node.seo_description || "",
       children: build(node.id),
     }));
   }

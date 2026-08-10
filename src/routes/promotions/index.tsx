@@ -13,12 +13,18 @@ import {
   promotionStatusTone,
 } from "@/features/cms/promotions";
 import { StatusPill } from "@/components/ui/status-pill";
+import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/promotions/")({
   component: PromotionsListPage,
 });
 
 function PromotionsListPage() {
+  usePageMeta({
+    title: "Акции",
+    description: "Специальные предложения Medix International.",
+  });
+
   const listQuery = useQuery({
     queryKey: queryKeys.cms.promotions(),
     queryFn: ({ signal }) => listPromotions(signal),

@@ -26,6 +26,7 @@ import { ProductConfigurator } from "@/features/catalog/ProductConfigurator";
 import { ProductDescription } from "@/features/catalog/ProductDescription";
 import { ProductGallery } from "@/features/catalog/ProductGallery";
 import { formatPrice } from "@/lib/money";
+import { usePageMeta } from "@/lib/page-meta";
 import { useSession } from "@/session/store";
 
 export const Route = createFileRoute("/product/$slug")({
@@ -68,6 +69,17 @@ function ProductDetailPage() {
     () => summarizeConfigPrice(product?.price ?? null, selected),
     [product?.price, selected],
   );
+
+  // В описание берём производителя, страну и артикул, а не description_ru:
+  // он размечен и хранит характеристики списком — в сниппете это мусор.
+  usePageMeta({
+    title: product?.name_ru,
+    description: product
+      ? [product.manufacturer, product.country, `Артикул ${product.sku}`]
+          .filter(Boolean)
+          .join(" · ")
+      : null,
+  });
 
   const addMutation = useMutation({
     mutationFn: () =>

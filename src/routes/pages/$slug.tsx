@@ -6,6 +6,7 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { CmsHtml } from "@/features/cms/CmsHtml";
+import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/pages/$slug")({
   component: CmsSlugPage,
@@ -25,6 +26,13 @@ function CmsSlugPage() {
   const page = query.data;
   const notFound =
     query.isError && isAppError(query.error) && query.error.status === 404;
+
+  // seo_title и seo_description заполняются в админке — до сих пор они
+  // никуда не попадали. Если их не задали, берём заголовок страницы.
+  usePageMeta({
+    title: page?.seo_title || page?.title,
+    description: page?.seo_description,
+  });
 
   return (
     <AppShell>

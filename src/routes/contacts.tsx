@@ -1,23 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Clock3,
-  MapPin,
-  Phone,
-  Building2,
-  ExternalLink,
-} from "lucide-react";
+import { Clock3, MapPin, Phone, Building2, ExternalLink } from "lucide-react";
 import { fetchContacts } from "@/api/cms";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { mapsSearchUrl } from "@/features/cms/promotions";
+import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/contacts")({
   component: ContactsPage,
 });
 
 function ContactsPage() {
+  usePageMeta({
+    title: "Контакты",
+    description: "Офисы, телефоны и часы работы Medix International.",
+  });
+
   const query = useQuery({
     queryKey: queryKeys.cms.contacts(),
     queryFn: ({ signal }) => fetchContacts(signal),
@@ -61,9 +61,7 @@ function ContactsPage() {
             {offices.map((office) => {
               const mapHref =
                 office.map_embed_url?.trim() ||
-                (office.address.trim()
-                  ? mapsSearchUrl(office.address)
-                  : null);
+                (office.address.trim() ? mapsSearchUrl(office.address) : null);
               return (
                 <li
                   key={office.id}

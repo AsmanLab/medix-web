@@ -13,12 +13,15 @@ import {
 } from "@/features/orders/status";
 import { formatRfqDate } from "@/features/rfq/status";
 import { StatusPill } from "@/components/ui/status-pill";
+import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/orders/")({
   component: OrdersListPage,
 });
 
 function OrdersListPage() {
+  usePageMeta({ title: "Мои заказы", description: null });
+
   const query = useQuery({
     queryKey: queryKeys.orders.list(),
     queryFn: ({ signal }) => listOrders(signal),

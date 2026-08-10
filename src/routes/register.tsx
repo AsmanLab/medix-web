@@ -16,6 +16,7 @@ import {
 } from "@/lib/otp-flow-storage";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/register")({
   beforeLoad: () => requireGuest(),
@@ -40,6 +41,8 @@ const FALLBACK_COOLDOWN_SEC = 60;
  * трёхшаговой схемы пропадал.
  */
 function RegisterPage() {
+  usePageMeta({ title: "Регистрация", description: null });
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const nav = useNavigate();
   const queryClient = useQueryClient();
@@ -82,7 +85,9 @@ function RegisterPage() {
   useEffect(() => {
     if (codeExpiresAt === null || step !== 2) return;
     const tick = () =>
-      setSecondsLeft(Math.max(0, Math.round((codeExpiresAt - Date.now()) / 1000)));
+      setSecondsLeft(
+        Math.max(0, Math.round((codeExpiresAt - Date.now()) / 1000)),
+      );
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
@@ -311,7 +316,9 @@ function RegisterPage() {
                   }
                 }}
               >
-                {cooldown > 0 ? `Повтор через ${cooldown} с` : "Отправить снова"}
+                {cooldown > 0
+                  ? `Повтор через ${cooldown} с`
+                  : "Отправить снова"}
               </button>
             </div>
           </form>

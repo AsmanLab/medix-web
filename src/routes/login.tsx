@@ -1,16 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { LockKeyhole, Phone } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, Phone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { isAppError } from "@/api/errors";
 import { requireGuest } from "@/session/guards";
-import {
-  landingPathForRole,
-  loginWithPassword,
-} from "@/session/store";
+import { landingPathForRole, loginWithPassword } from "@/session/store";
 import { isValidKgPhone, normalizePhone } from "@/lib/phone";
 import { isSafeInternalPath } from "@/lib/redirect";
 import { Button } from "@/components/ui/button";
+import { usePageMeta } from "@/lib/page-meta";
 
 type LoginSearch = { redirect?: string; phone?: string };
 
@@ -26,10 +24,13 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  usePageMeta({ title: "Вход", description: null });
+
   const nav = useNavigate();
   const { redirect: redirectTo, phone: phoneFromSearch } = Route.useSearch();
   const [phone, setPhone] = useState(phoneFromSearch ?? "");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -67,14 +68,26 @@ function LoginPage() {
         onSubmit={onSubmit}
         className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-card)]"
       >
-        <h1 className="text-center font-display text-2xl font-bold">Вход в Medix</h1>
+        <h1 className="text-center font-display text-2xl font-bold">
+          Вход в Medix
+        </h1>
         <p className="mt-1 text-center text-sm text-muted-foreground">
           Телефон и пароль
         </p>
+        {/*
+          На обёртках полей стоял `outline-none` у input и ничего у обёртки,
+          поэтому у формы входа не было видимого фокуса вовсе: с клавиатуры
+          нельзя было понять, в каком поле ты находишься. Это прямой
+          анти-паттерн «Invisible focus states» из design-system/MASTER.md —
+          и это страница, на которой вводят пароль.
+
+          `focus-within` переносит кольцо на обёртку, где оно и должно быть:
+          визуально поле — это рамка с иконкой, а не один только input.
+        */}
         <label className="mt-6 block text-sm font-medium">
           Телефон
-          <div className="mt-2 flex items-center gap-2 rounded-xl border border-border px-3">
-            <Phone className="h-4 w-4 text-muted-foreground" />
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-border px-3 transition focus-within:border-primary/60 focus-within:ring-3 focus-within:ring-ring/30">
+            <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               required
               value={phone}
@@ -83,23 +96,35 @@ function LoginPage() {
               inputMode="numeric"
               autoComplete="username"
               name="phone"
-              className="h-12 flex-1 bg-transparent outline-none"
+              className="h-12 min-w-0 flex-1 bg-transparent outline-none"
             />
           </div>
         </label>
         <label className="mt-4 block text-sm font-medium">
           Пароль
-          <div className="mt-2 flex items-center gap-2 rounded-xl border border-border px-3">
-            <LockKeyhole className="h-4 w-4 text-muted-foreground" />
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-border px-3 transition focus-within:border-primary/60 focus-within:ring-3 focus-within:ring-ring/30">
+            <LockKeyhole className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               required
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               name="password"
-              className="h-12 flex-1 bg-transparent outline-none"
+              className="h-12 min-w-0 flex-1 bg-transparent outline-none"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted-foreground hover:text-foreground"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" aria-hidden />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden />
+              )}
+            </button>
           </div>
         </label>
         {formError ? (
