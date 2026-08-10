@@ -2,22 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronDown, Filter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  fetchCategories,
-  fetchProductsForCategories,
-  type ProductListOut,
-} from "@/api/catalog";
+import { fetchCategories, fetchProductsForCategories } from "@/api/catalog";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
-import { availabilityLabel } from "@/features/catalog/availability";
 import {
   buildCategoryTree,
   collectCategoryIds,
   findCategoryNode,
   type CatalogCategoryNode,
 } from "@/features/catalog/map-category";
-import { formatMoney } from "@/lib/money";
+import { ProductGrid } from "@/features/catalog/ProductGrid";
 import { cn } from "@/lib/utils";
 
 type CategorySearch = {
@@ -153,7 +148,11 @@ function CategoryPage() {
           <div className="mt-6 space-y-8">
             <header>
               <nav className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <Link to="/catalog" search={{ q: undefined, category: undefined }} className="hover:text-primary">
+                <Link
+                  to="/catalog"
+                  search={{ q: undefined, category: undefined }}
+                  className="hover:text-primary"
+                >
                   Каталог
                 </Link>
                 <span>/</span>
@@ -161,7 +160,9 @@ function CategoryPage() {
                 {selectedChild ? (
                   <>
                     <span>/</span>
-                    <span className="text-foreground">{selectedChild.name}</span>
+                    <span className="text-foreground">
+                      {selectedChild.name}
+                    </span>
                   </>
                 ) : null}
               </nav>
@@ -314,52 +315,5 @@ function CategoryFilter({
         </div>
       ) : null}
     </section>
-  );
-}
-
-function ProductGrid({ products }: { products: ProductListOut[] }) {
-  return (
-    <ul className="grid gap-3 sm:grid-cols-2">
-      {products.map((p, index) => (
-        <li key={p.id}>
-          <Link
-            to="/product/$slug"
-            params={{ slug: p.slug }}
-            className="block overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5"
-          >
-            <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-              {p.primary_image_url ? (
-                <img
-                  src={p.primary_image_url}
-                  alt=""
-                  width={800}
-                  height={600}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  loading={index < 2 ? "eager" : "lazy"}
-                  decoding="async"
-                />
-              ) : null}
-            </div>
-            <div className="p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {p.sku}
-              </p>
-              <h3 className="mt-1 font-semibold text-foreground">{p.name_ru}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {[p.manufacturer, p.country].filter(Boolean).join(" · ")}
-              </p>
-              <div className="mt-3 flex items-center justify-between gap-2 text-sm">
-                <span className="text-muted-foreground">
-                  {availabilityLabel(p.availability)}
-                </span>
-                <span className="font-semibold text-primary">
-                  {formatMoney(p.price, "По запросу")}
-                </span>
-              </div>
-            </div>
-          </Link>
-        </li>
-      ))}
-    </ul>
   );
 }

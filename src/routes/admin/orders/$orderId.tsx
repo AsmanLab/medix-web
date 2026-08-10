@@ -25,7 +25,7 @@ import {
 import { formatRfqDate } from "@/features/rfq/status";
 import { requireStaffPanel } from "@/session/guards";
 import { formatMoney } from "@/lib/money";
-import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 export const Route = createFileRoute("/admin/orders/$orderId")({
   beforeLoad: () => requireStaffPanel({ roles: ["admin", "manager"] }),
@@ -155,18 +155,9 @@ function ManagerOrderDetailPage() {
                   </p>
                 </div>
               </div>
-              <span
-                className={cn(
-                  "inline-flex rounded-lg px-3 py-1 text-xs font-bold uppercase",
-                  tone === "success" && "bg-emerald-500/15 text-emerald-700",
-                  tone === "primary" && "bg-primary-soft text-primary",
-                  tone === "warning" && "bg-amber-500/15 text-amber-700",
-                  tone === "danger" && "bg-red-500/15 text-red-700",
-                  tone === "muted" && "bg-muted text-muted-foreground",
-                )}
-              >
+              <StatusPill tone={tone} size="compact">
                 {orderStatusLabel(order.status)}
-              </span>
+              </StatusPill>
             </header>
 
             {order.rfq_id ? (

@@ -15,6 +15,7 @@ import { requireStaffPanel } from "@/session/guards";
 import { useSession } from "@/session/store";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 const STATUS_FILTERS = [
   "new",
@@ -217,18 +218,9 @@ function ManagerOrdersPage() {
                 </div>
                 <span className="text-sm">{formatMoney(order.total, "—")}</span>
                 <span className="text-sm">{order.items_count}</span>
-                <span
-                  className={cn(
-                    "inline-flex w-fit rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase",
-                    tone === "success" && "bg-emerald-500/15 text-emerald-700",
-                    tone === "primary" && "bg-primary-soft text-primary",
-                    tone === "warning" && "bg-amber-500/15 text-amber-700",
-                    tone === "danger" && "bg-red-500/15 text-red-700",
-                    tone === "muted" && "bg-muted text-muted-foreground",
-                  )}
-                >
+                <StatusPill tone={tone} size="compact">
                   {orderStatusLabel(order.status)}
-                </span>
+                </StatusPill>
                 <span className="text-xs text-muted-foreground">
                   {formatRfqDate(order.created_at)}
                 </span>

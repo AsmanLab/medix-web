@@ -13,6 +13,7 @@ import {
 import { requireStaffPanel } from "@/session/guards";
 import { useSession } from "@/session/store";
 import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 type QueueTab = "all" | "unassigned" | "mine";
 // converted_to_order и rejected обязаны быть в списке: после accept-quote RFQ
@@ -62,8 +63,11 @@ export const Route = createFileRoute("/admin/commerce/")({
 });
 
 function ManagerRfqQueuePage() {
-  const { tab: tabFromUrl, status: statusFromUrl, q: qFromUrl } =
-    Route.useSearch();
+  const {
+    tab: tabFromUrl,
+    status: statusFromUrl,
+    q: qFromUrl,
+  } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { user } = useSession();
   const [draftQ, setDraftQ] = useState(qFromUrl ?? "");
@@ -93,7 +97,10 @@ function ManagerRfqQueuePage() {
     const needle = (qFromUrl ?? "").trim().toLocaleLowerCase("ru");
     if (needle) {
       rows = rows.filter((r) =>
-        [r.id, r.client_id, r.status].join(" ").toLocaleLowerCase("ru").includes(needle),
+        [r.id, r.client_id, r.status]
+          .join(" ")
+          .toLocaleLowerCase("ru")
+          .includes(needle),
       );
     }
 
@@ -129,7 +136,10 @@ function ManagerRfqQueuePage() {
             type="button"
             onClick={() =>
               void navigate({
-                search: (prev) => ({ ...prev, tab: t.value === "all" ? undefined : t.value }),
+                search: (prev) => ({
+                  ...prev,
+                  tab: t.value === "all" ? undefined : t.value,
+                }),
                 replace: true,
               })
             }
@@ -236,18 +246,9 @@ function ManagerRfqQueuePage() {
                   </div>
                 </div>
                 <span className="text-sm">{rfq.items_count}</span>
-                <span
-                  className={cn(
-                    "inline-flex w-fit rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase",
-                    tone === "success" && "bg-emerald-500/15 text-emerald-700",
-                    tone === "primary" && "bg-primary-soft text-primary",
-                    tone === "warning" && "bg-amber-500/15 text-amber-700",
-                    tone === "danger" && "bg-red-500/15 text-red-700",
-                    tone === "muted" && "bg-muted text-muted-foreground",
-                  )}
-                >
+                <StatusPill tone={tone} size="compact">
                   {rfqStatusLabel(rfq.status)}
-                </span>
+                </StatusPill>
                 <span className="text-xs text-muted-foreground">
                   {formatRfqDate(rfq.created_at)}
                 </span>

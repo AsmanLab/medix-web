@@ -1,18 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, ChevronDown, Filter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  fetchCategories,
-  fetchProducts,
-  type ProductListOut,
-} from "@/api/catalog";
+import { fetchCategories, fetchProducts } from "@/api/catalog";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
-import { availabilityLabel } from "@/features/catalog/availability";
+import { ProductGrid } from "@/features/catalog/ProductGrid";
 import { buildCategoryTree } from "@/features/catalog/map-category";
-import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 type CatalogSearch = {
@@ -263,7 +258,9 @@ function CatalogIndexPage() {
           cardGridVariant="catalog"
           loadingCount={6}
           emptyTitle={
-            qFromUrl || selectedCategory ? "Товары не найдены" : "Каталог пока пуст"
+            qFromUrl || selectedCategory
+              ? "Товары не найдены"
+              : "Каталог пока пуст"
           }
           emptyDescription={
             qFromUrl || selectedCategory
@@ -275,52 +272,5 @@ function CatalogIndexPage() {
         </StateBlock>
       </div>
     </AppShell>
-  );
-}
-
-function ProductGrid({ products }: { products: ProductListOut[] }) {
-  return (
-    <ul className="grid gap-3 sm:grid-cols-2">
-      {products.map((p, index) => (
-        <li key={p.id}>
-          <Link
-            to="/product/$slug"
-            params={{ slug: p.slug }}
-            className="block overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5"
-          >
-            <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-              {p.primary_image_url ? (
-                <img
-                  src={p.primary_image_url}
-                  alt=""
-                  width={800}
-                  height={600}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  loading={index < 2 ? "eager" : "lazy"}
-                  decoding="async"
-                />
-              ) : null}
-            </div>
-            <div className="p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {p.sku}
-              </p>
-              <h3 className="mt-1 font-semibold text-foreground">{p.name_ru}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {[p.manufacturer, p.country].filter(Boolean).join(" · ")}
-              </p>
-              <div className="mt-3 flex items-center justify-between gap-2 text-sm">
-                <span className="text-muted-foreground">
-                  {availabilityLabel(p.availability)}
-                </span>
-                <span className="font-semibold text-primary">
-                  {formatMoney(p.price, "По запросу")}
-                </span>
-              </div>
-            </div>
-          </Link>
-        </li>
-      ))}
-    </ul>
   );
 }

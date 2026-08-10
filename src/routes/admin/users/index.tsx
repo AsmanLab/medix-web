@@ -8,12 +8,10 @@ import {
 } from "@/api/customers";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
-import {
-  clientTypeLabel,
-  verificationLabel,
-} from "@/features/profile/labels";
+import { clientTypeLabel, verificationLabel } from "@/features/profile/labels";
 import { requireStaffPanel } from "@/session/guards";
 import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 type UsersSearch = {
   status?: CustomerStatusFilter;
@@ -46,7 +44,8 @@ export const Route = createFileRoute("/admin/users/")({
 function statusTone(status: string) {
   if (status === "verified") return "success";
   if (status === "rejected") return "danger";
-  if (status === "pending_verification" || status === "pending") return "warning";
+  if (status === "pending_verification" || status === "pending")
+    return "warning";
   return "muted";
 }
 
@@ -116,8 +115,7 @@ function UsersPage() {
         aria-label="Фильтр по статусу"
       >
         {STATUS_TABS.map((tab) => {
-          const active =
-            tab.value === "all" ? !status : status === tab.value;
+          const active = tab.value === "all" ? !status : status === tab.value;
           return (
             <button
               key={tab.value}
@@ -185,7 +183,9 @@ function UsersPage() {
                   className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]"
                 >
                   <div className="min-w-0">
-                    <p className="font-semibold">{customer.full_name || "Без имени"}</p>
+                    <p className="font-semibold">
+                      {customer.full_name || "Без имени"}
+                    </p>
                     <p className="mt-1 truncate text-sm text-muted-foreground">
                       {[
                         customer.organization,
@@ -201,17 +201,9 @@ function UsersPage() {
                       </p>
                     ) : null}
                   </div>
-                  <span
-                    className={cn(
-                      "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                      tone === "success" && "bg-emerald-100 text-emerald-800",
-                      tone === "danger" && "bg-red-100 text-red-800",
-                      tone === "warning" && "bg-amber-100 text-amber-900",
-                      tone === "muted" && "bg-muted text-muted-foreground",
-                    )}
-                  >
+                  <StatusPill tone={tone}>
                     {verificationLabel(customer.verification_status)}
-                  </span>
+                  </StatusPill>
                 </Link>
               </li>
             );

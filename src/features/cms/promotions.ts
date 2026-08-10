@@ -18,6 +18,24 @@ export function promotionPeriodStatus(
   return "active";
 }
 
+/**
+ * Период акции в тон статусной таблетки — по образцу `orderStatusTone`
+ * и соседей. Без этого маппинга цвет периода собирался прямо в разметке
+ * и жил отдельно от остальных статусов системы.
+ */
+export function promotionStatusTone(
+  status: PromotionPeriodStatus,
+): "success" | "primary" | "muted" {
+  switch (status) {
+    case "active":
+      return "success";
+    case "upcoming":
+      return "primary";
+    case "expired":
+      return "muted";
+  }
+}
+
 export function promotionStatusLabel(status: PromotionPeriodStatus): string {
   switch (status) {
     case "active":

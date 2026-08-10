@@ -1,11 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  Download,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle2, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { isAppError } from "@/api/errors";
 import {
@@ -25,6 +20,7 @@ import {
 import { formatRfqDate } from "@/features/rfq/status";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 export const Route = createFileRoute("/orders/$orderId")({
   component: OrderDetailPage,
@@ -113,18 +109,9 @@ function OrderDetailPage() {
                     {order.id}
                   </p>
                 </div>
-                <span
-                  className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                    tone === "success" && "bg-emerald-100 text-emerald-800",
-                    tone === "primary" && "bg-primary-soft text-primary",
-                    tone === "danger" && "bg-red-100 text-red-800",
-                    tone === "muted" && "bg-muted text-muted-foreground",
-                    tone === "warning" && "bg-amber-100 text-amber-900",
-                  )}
-                >
+                <StatusPill tone={tone}>
                   {orderStatusLabel(order.status)}
-                </span>
+                </StatusPill>
               </header>
 
               <section className="rounded-2xl border border-border bg-card p-5">
@@ -147,7 +134,7 @@ function OrderDetailPage() {
                                 "mt-0.5 h-4 w-4 shrink-0",
                                 entry.status === "cancelled"
                                   ? "text-red-600"
-                                  : "text-emerald-600",
+                                  : "text-success",
                               )}
                             />
                           ) : (
