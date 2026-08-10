@@ -224,7 +224,8 @@ function ResetPage() {
               autoFocus
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              placeholder="Код (dev: 123456)"
+              placeholder="Код из SMS"
+              maxLength={8}
               inputMode="numeric"
               autoComplete="one-time-code"
               aria-label="Код из SMS"
