@@ -29,6 +29,7 @@ import { requireStaffPanel } from "@/session/guards";
 import { useSession } from "@/session/store";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 const fieldClass =
   "mt-1.5 flex h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -93,7 +94,9 @@ function ManagerRfqDetailPage() {
         name: item.name,
         qty: item.qty,
         unit_price_amount: item.unit_price
-          ? String(item.unit_price).replace(/[^\d.,-]/g, "").replace(",", ".")
+          ? String(item.unit_price)
+              .replace(/[^\d.,-]/g, "")
+              .replace(",", ".")
           : "",
         option_type: item.option_type,
         parent_line_id: item.parent_line_id,
@@ -101,9 +104,7 @@ function ManagerRfqDetailPage() {
     );
     setConditions(rfq.quote?.conditions ?? "");
     setValidUntil(
-      rfq.quote?.valid_until
-        ? rfq.quote.valid_until.slice(0, 10)
-        : "",
+      rfq.quote?.valid_until ? rfq.quote.valid_until.slice(0, 10) : "",
     );
   }, [rfq]);
 
@@ -197,15 +198,15 @@ function ManagerRfqDetailPage() {
   // но уже только на чтение.
   const canQuote =
     rfq && rfq.status === "in_review" && (isMine || user?.role === "admin");
-  const canConvert = rfq?.status === "accepted" && (isMine || user?.role === "admin");
+  const canConvert =
+    rfq?.status === "accepted" && (isMine || user?.role === "admin");
   const invoice = invoiceQuery.data;
   const canManageInvoice = isMine || user?.role === "admin";
   const canPublishInvoice =
-    !!invoice &&
-    invoice.status === "draft" &&
-    canManageInvoice;
+    !!invoice && invoice.status === "draft" && canManageInvoice;
   const canDownloadInvoice =
-    !!invoice && (!!invoice.pdf_key || !!invoice.pdf_url || invoice.status === "published");
+    !!invoice &&
+    (!!invoice.pdf_key || !!invoice.pdf_url || invoice.status === "published");
 
   async function onDownloadInvoice() {
     if (!invoice) return;
@@ -242,7 +243,9 @@ function ManagerRfqDetailPage() {
       parent_line_id: null as string | null,
     };
     if (!template.product_id) {
-      toast.message("Нет шаблона позиции — добавьте товар в RFQ со стороны клиента");
+      toast.message(
+        "Нет шаблона позиции — добавьте товар в RFQ со стороны клиента",
+      );
       return;
     }
     setLines((prev) => [
@@ -282,23 +285,15 @@ function ManagerRfqDetailPage() {
                   <h1 className="font-display text-2xl font-bold">
                     RFQ {rfq.id.slice(0, 8)}…
                   </h1>
-                  <span
-                    className={cn(
-                      "rounded-lg px-2 py-1 text-[10px] font-bold uppercase",
-                      tone === "success" &&
-                        "bg-emerald-500/15 text-emerald-700",
-                      tone === "primary" && "bg-primary-soft text-primary",
-                      tone === "warning" && "bg-amber-500/15 text-amber-700",
-                      tone === "danger" && "bg-red-500/15 text-red-700",
-                      tone === "muted" && "bg-muted text-muted-foreground",
-                    )}
-                  >
+                  <StatusPill tone={tone} size="compact">
                     {rfqStatusLabel(rfq.status)}
-                  </span>
+                  </StatusPill>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Создан {formatRfqDate(rfq.created_at)}
-                  {rfq.quote?.total ? ` · КП итого ${formatMoney(rfq.quote.total)}` : ""}
+                  {rfq.quote?.total
+                    ? ` · КП итого ${formatMoney(rfq.quote.total)}`
+                    : ""}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -396,14 +391,18 @@ function ManagerRfqDetailPage() {
                     </div>
                     <div className="text-xs">
                       ×{item.qty}
-                      {item.unit_price ? ` · ${formatMoney(item.unit_price)}` : ""}
+                      {item.unit_price
+                        ? ` · ${formatMoney(item.unit_price)}`
+                        : ""}
                     </div>
                   </li>
                 ))}
               </ul>
             </section>
 
-            {canQuote || rfq.status === "quoted" || rfq.status === "accepted" ? (
+            {canQuote ||
+            rfq.status === "quoted" ||
+            rfq.status === "accepted" ? (
               <section className="space-y-4 rounded-3xl border border-border bg-card p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-sm font-bold">Конструктор КП</h2>
@@ -543,8 +542,8 @@ function ManagerRfqDetailPage() {
                       className={cn(
                         "rounded-lg px-2 py-1 text-[10px] font-bold uppercase",
                         invoice.status === "published"
-                          ? "bg-emerald-500/15 text-emerald-700"
-                          : "bg-amber-500/15 text-amber-700",
+                          ? "bg-success-soft text-success-strong"
+                          : "bg-warning-soft text-warning-strong",
                       )}
                     >
                       {invoice.status === "published"
@@ -555,7 +554,9 @@ function ManagerRfqDetailPage() {
                 </div>
 
                 {invoiceQuery.isLoading ? (
-                  <p className="text-sm text-muted-foreground">Загрузка счёта…</p>
+                  <p className="text-sm text-muted-foreground">
+                    Загрузка счёта…
+                  </p>
                 ) : !invoice ? (
                   <p className="text-sm text-muted-foreground">
                     Счёт появится после отправки КП (черновик создаётся
@@ -589,7 +590,9 @@ function ManagerRfqDetailPage() {
                           </div>
                           <div className="text-xs text-right">
                             ×{item.qty}
-                            {item.unit_price ? ` · ${formatMoney(item.unit_price)}` : ""}
+                            {item.unit_price
+                              ? ` · ${formatMoney(item.unit_price)}`
+                              : ""}
                             {item.line_total ? (
                               <div className="font-semibold text-foreground">
                                 {formatMoney(item.line_total)}

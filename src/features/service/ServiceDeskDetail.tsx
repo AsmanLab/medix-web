@@ -20,7 +20,7 @@ import {
   serviceStatusTone,
 } from "@/features/service/status";
 import { useSession } from "@/session/store";
-import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 const fieldClass =
   "mt-1.5 flex h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -49,7 +49,8 @@ export function ServiceDeskDetail({ requestId, allowAssign = false }: Props) {
   const engineersQuery = useQuery({
     queryKey: queryKeys.service.engineers(),
     queryFn: ({ signal }) => listServiceEngineers(signal),
-    enabled: allowAssign && (user?.role === "admin" || user?.role === "manager"),
+    enabled:
+      allowAssign && (user?.role === "admin" || user?.role === "manager"),
   });
 
   async function invalidate() {
@@ -85,12 +86,15 @@ export function ServiceDeskDetail({ requestId, allowAssign = false }: Props) {
       await invalidate();
     },
     onError: (err) => {
-      toast.error(isAppError(err) ? err.message : "Не удалось назначить инженера");
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось назначить инженера",
+      );
     },
   });
 
   const statusMutation = useMutation({
-    mutationFn: (status: string) => updateServiceRequestStatus(requestId, status),
+    mutationFn: (status: string) =>
+      updateServiceRequestStatus(requestId, status),
     onSuccess: async () => {
       toast.success("Статус обновлён");
       await invalidate();
@@ -108,7 +112,9 @@ export function ServiceDeskDetail({ requestId, allowAssign = false }: Props) {
       await invalidate();
     },
     onError: (err) => {
-      toast.error(isAppError(err) ? err.message : "Не удалось добавить комментарий");
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось добавить комментарий",
+      );
     },
   });
 
@@ -133,23 +139,16 @@ export function ServiceDeskDetail({ requestId, allowAssign = false }: Props) {
                 {sr.equipment_type || "Заявка"}
                 {sr.model ? ` · ${sr.model}` : ""}
               </h1>
-              <p className="mt-1 font-mono text-xs text-muted-foreground">{sr.id}</p>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
+                {sr.id}
+              </p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Создана {formatServiceDate(sr.created_at)}
               </p>
             </div>
-            <span
-              className={cn(
-                "rounded-lg px-2 py-1 text-[10px] font-bold uppercase",
-                tone === "success" && "bg-emerald-500/15 text-emerald-700",
-                tone === "primary" && "bg-primary-soft text-primary",
-                tone === "warning" && "bg-amber-500/15 text-amber-700",
-                tone === "danger" && "bg-red-500/15 text-red-700",
-                tone === "muted" && "bg-muted text-muted-foreground",
-              )}
-            >
+            <StatusPill tone={tone} size="compact">
               {serviceStatusLabel(sr.status)}
-            </span>
+            </StatusPill>
           </header>
 
           <section className="grid gap-4 rounded-3xl border border-border bg-card p-5 sm:grid-cols-2">
@@ -339,7 +338,8 @@ function nextActions(
 ): NextAction[] {
   const out: NextAction[] = [];
   const isEngineer = role === "service_engineer";
-  const isMine = !!sr.assigned_engineer_id && sr.assigned_engineer_id === userId;
+  const isMine =
+    !!sr.assigned_engineer_id && sr.assigned_engineer_id === userId;
 
   if (sr.status === "new") {
     out.push({ key: "accept", label: "Принять" });
@@ -353,7 +353,10 @@ function nextActions(
     out.push({ key: "assign_self", label: "Взять себе" });
   }
 
-  if (sr.status === "assigned" && (isMine || role === "admin" || role === "manager")) {
+  if (
+    sr.status === "assigned" &&
+    (isMine || role === "admin" || role === "manager")
+  ) {
     out.push({ key: "start", label: "Начать работу", status: "in_progress" });
   }
 
@@ -380,10 +383,7 @@ function nextActions(
     });
   }
 
-  if (
-    sr.status === "completed" &&
-    (role === "admin" || role === "manager")
-  ) {
+  if (sr.status === "completed" && (role === "admin" || role === "manager")) {
     out.push({ key: "close", label: "Закрыть", status: "closed" });
   }
 

@@ -15,8 +15,7 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { BannerSkeleton } from "@/components/shared/skeletons";
-import { availabilityLabel } from "@/features/catalog/availability";
-import { formatMoney } from "@/lib/money";
+import { ProductCard } from "@/features/catalog/ProductCard";
 import { buildCategoryTree } from "@/features/catalog/map-category";
 import { BannerSlider } from "@/features/home/BannerSlider";
 
@@ -197,47 +196,18 @@ function HomePage() {
             emptyTitle="Товары пока не опубликованы"
             emptyDescription="Позиции появятся после публикации каталога."
           >
+            {/* На узких экранах подборка листается вбок, на широких
+                становится сеткой — но карточка внутри та же, что в каталоге. */}
             <ul
               aria-label="Товары в каталоге"
-              className="mt-5 flex gap-3 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible"
+              className="mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible"
             >
-              {products.map((p) => (
+              {products.map((p, index) => (
                 <li
                   key={p.id}
-                  className="w-[240px] shrink-0 lg:w-auto"
+                  className="w-[260px] shrink-0 snap-start lg:w-auto"
                 >
-                  <Link
-                    to="/product/$slug"
-                    params={{ slug: p.slug }}
-                    className="block h-full overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]"
-                  >
-                    <div className="aspect-[4/3] bg-muted">
-                      {p.primary_image_url ? (
-                        <img
-                          src={p.primary_image_url}
-                          alt=""
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : null}
-                    </div>
-                    <div className="p-4">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                        {p.manufacturer || p.sku}
-                      </p>
-                      <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug">
-                        {p.name_ru}
-                      </h3>
-                      <div className="mt-3 flex items-end justify-between gap-2 text-sm">
-                        <span className="text-xs text-muted-foreground">
-                          {availabilityLabel(p.availability)}
-                        </span>
-                        <span className="font-semibold text-primary">
-                          {formatMoney(p.price, "По запросу")}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
+                  <ProductCard product={p} priority={index < 4} />
                 </li>
               ))}
             </ul>
@@ -266,8 +236,8 @@ function HomePage() {
             Нужен сервис или консультация?
           </h2>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            Поможем с подбором оборудования, запуском и обслуживанием —
-            оставьте сервисную заявку или посмотрите каталог.
+            Поможем с подбором оборудования, запуском и обслуживанием — оставьте
+            сервисную заявку или посмотрите каталог.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link

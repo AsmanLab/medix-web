@@ -12,7 +12,7 @@ import {
   orderStatusTone,
 } from "@/features/orders/status";
 import { formatRfqDate } from "@/features/rfq/status";
-import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 export const Route = createFileRoute("/orders/")({
   component: OrdersListPage,
@@ -82,18 +82,9 @@ function OrdersListPage() {
                         поз.
                       </p>
                     </div>
-                    <span
-                      className={cn(
-                        "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                        tone === "success" && "bg-emerald-100 text-emerald-800",
-                        tone === "primary" && "bg-primary-soft text-primary",
-                        tone === "danger" && "bg-red-100 text-red-800",
-                        tone === "muted" && "bg-muted text-muted-foreground",
-                        tone === "warning" && "bg-amber-100 text-amber-900",
-                      )}
-                    >
+                    <StatusPill tone={tone}>
                       {orderStatusLabel(order.status)}
-                    </span>
+                    </StatusPill>
                   </Link>
                 </li>
               );

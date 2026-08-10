@@ -14,12 +14,9 @@ import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
-import {
-  clientTypeLabel,
-  verificationLabel,
-} from "@/features/profile/labels";
+import { clientTypeLabel, verificationLabel } from "@/features/profile/labels";
 import { requireStaffPanel } from "@/session/guards";
-import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 export const Route = createFileRoute("/admin/users/$customerId")({
   beforeLoad: () => requireStaffPanel({ roles: ["admin", "manager"] }),
@@ -29,7 +26,8 @@ export const Route = createFileRoute("/admin/users/$customerId")({
 function statusTone(status: string) {
   if (status === "verified") return "success";
   if (status === "rejected") return "danger";
-  if (status === "pending_verification" || status === "pending") return "warning";
+  if (status === "pending_verification" || status === "pending")
+    return "warning";
   return "muted";
 }
 
@@ -64,8 +62,7 @@ function CustomerDetailPage() {
 
   const auditQuery = useQuery({
     queryKey: queryKeys.adminCustomers.audit(customerId),
-    queryFn: ({ signal }) =>
-      fetchCustomerVerificationAudit(customerId, signal),
+    queryFn: ({ signal }) => fetchCustomerVerificationAudit(customerId, signal),
   });
 
   const audits = useMemo(
@@ -129,9 +126,7 @@ function CustomerDetailPage() {
     rejectMutation.isPending ||
     clarifyMutation.isPending;
 
-  const tone = customer
-    ? statusTone(customer.verification_status)
-    : "muted";
+  const tone = customer ? statusTone(customer.verification_status) : "muted";
 
   // Домен разрешает verify/reject/request-info только из pending_verification
   // (customers/domain/entities.py). Клиент попадает туда после первого RFQ или
@@ -178,17 +173,9 @@ function CustomerDetailPage() {
                     .join(" · ")}
                 </p>
               </div>
-              <span
-                className={cn(
-                  "rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                  tone === "success" && "bg-emerald-100 text-emerald-800",
-                  tone === "danger" && "bg-red-100 text-red-800",
-                  tone === "warning" && "bg-amber-100 text-amber-900",
-                  tone === "muted" && "bg-muted text-muted-foreground",
-                )}
-              >
+              <StatusPill tone={tone}>
                 {verificationLabel(customer.verification_status)}
-              </span>
+              </StatusPill>
             </header>
 
             <section className="rounded-3xl border border-border bg-card p-5">
@@ -253,7 +240,9 @@ function CustomerDetailPage() {
                   onClick={() => verifyMutation.mutate()}
                 >
                   <CheckCircle2 className="h-4 w-4" aria-hidden />
-                  {verifyMutation.isPending ? "Подтверждаем…" : "Верифицировать"}
+                  {verifyMutation.isPending
+                    ? "Подтверждаем…"
+                    : "Верифицировать"}
                 </Button>
               </div>
 
@@ -276,7 +265,9 @@ function CustomerDetailPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={busy || !canModerate || rejectReason.trim().length < 3}
+                  disabled={
+                    busy || !canModerate || rejectReason.trim().length < 3
+                  }
                   onClick={() => rejectMutation.mutate()}
                 >
                   <XCircle className="h-4 w-4" aria-hidden />
@@ -303,7 +294,9 @@ function CustomerDetailPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={busy || !canModerate || missingInfo.trim().length < 3}
+                  disabled={
+                    busy || !canModerate || missingInfo.trim().length < 3
+                  }
                   onClick={() => clarifyMutation.mutate()}
                 >
                   <HelpCircle className="h-4 w-4" aria-hidden />

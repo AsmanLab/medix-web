@@ -197,7 +197,7 @@ function BannersAdminPage() {
                     className={cn(
                       "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase",
                       banner.is_enabled
-                        ? "bg-emerald-500/15 text-emerald-700"
+                        ? "bg-success-soft text-success-strong"
                         : "bg-muted text-muted-foreground",
                     )}
                   >
@@ -318,9 +318,7 @@ function BannersAdminPage() {
                 />
               ) : (
                 <div className="grid h-32 place-items-center text-sm text-muted-foreground">
-                  {previewQuery.isLoading
-                    ? "Загрузка превью…"
-                    : "Нет превью"}
+                  {previewQuery.isLoading ? "Загрузка превью…" : "Нет превью"}
                 </div>
               )}
             </div>

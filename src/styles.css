@@ -23,6 +23,18 @@
   --color-cta-foreground: var(--cta-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Статусные тона. Раньше «таблетки» статусов собирались вручную в каждом
+     файле палитрой Tailwind, и один статус выглядел по-разному у клиента
+     (bg-emerald-100) и в админке (bg-emerald-500/15). Теперь тон один. */
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-strong: var(--success-strong);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-strong: var(--warning-strong);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-strong: var(--danger-strong);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -72,6 +84,20 @@
 
   --destructive: oklch(0.58 0.2 25);
   --destructive-foreground: oklch(0.99 0.005 210);
+
+  /* Пары «мягкий фон + насыщенный текст» для статусных таблеток.
+     Светлота подобрана так, чтобы контраст текста к фону был выше 4.5:1
+     (AA для мелкого шрифта) — таблетки набраны 11px. */
+  --success: oklch(0.55 0.12 160);
+  --success-soft: oklch(0.94 0.05 163);
+  --success-strong: oklch(0.42 0.1 160);
+
+  --warning: oklch(0.75 0.13 75);
+  --warning-soft: oklch(0.95 0.06 82);
+  --warning-strong: oklch(0.44 0.09 70);
+
+  --danger-soft: oklch(0.95 0.045 25);
+  --danger-strong: oklch(0.45 0.16 25);
 
   --border: oklch(0.91 0.015 210);
   --input: oklch(0.91 0.015 210);
@@ -180,7 +206,8 @@
 
   &:focus-visible {
     border-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ring) 30%, transparent);
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--color-ring) 30%, transparent);
   }
 }
 

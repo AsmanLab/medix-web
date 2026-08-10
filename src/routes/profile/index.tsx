@@ -107,12 +107,12 @@ function ProfilePage() {
                 className={cn(
                   "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
                   isVerified(verification)
-                    ? "bg-emerald-100 text-emerald-800"
+                    ? "bg-success-soft text-success-strong"
                     : verification === "rejected"
-                      ? "bg-red-100 text-red-800"
+                      ? "bg-danger-soft text-danger-strong"
                       : verification === "pending_verification" ||
                           verification === "pending"
-                        ? "bg-amber-100 text-amber-900"
+                        ? "bg-warning-soft text-warning-strong"
                         : "bg-muted text-muted-foreground",
                 )}
               >
@@ -121,19 +121,19 @@ function ProfilePage() {
             </section>
 
             {needsVerificationBanner(verification) ? (
-              <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4 text-amber-950">
+              <div className="rounded-2xl border border-warning/40 bg-warning-soft p-4 text-warning-strong">
                 <div className="flex items-start gap-3">
-                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
                   <div>
                     <p className="font-semibold">Проверка организации</p>
-                    <p className="mt-1 text-xs leading-5 text-amber-900/75">
+                    <p className="mt-1 text-xs leading-5 opacity-80">
                       Пока проверка не завершена, доступны запросы цены (RFQ).
                       Прямой заказ откроется после подтверждения. Обычно это
                       занимает 1–2 рабочих дня.
                     </p>
                     <Link
                       to="/profile/organization"
-                      className="mt-2 inline-flex text-xs font-semibold text-amber-800"
+                      className="mt-2 inline-flex text-xs font-semibold underline underline-offset-2"
                     >
                       Проверить данные организации →
                     </Link>
@@ -150,7 +150,9 @@ function ProfilePage() {
                 <Package className="h-4 w-4" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">История заказов</span>
+                <span className="block text-sm font-medium">
+                  История заказов
+                </span>
                 <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
                   Заказы, статусы и счета
                 </span>
@@ -182,7 +184,9 @@ function ProfilePage() {
                 <Wrench className="h-4 w-4" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">Сервисные заявки</span>
+                <span className="block text-sm font-medium">
+                  Сервисные заявки
+                </span>
                 <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
                   История и статусы · новая заявка
                 </span>

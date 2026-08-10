@@ -31,6 +31,7 @@ import {
 } from "@/features/rfq/status";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 export const Route = createFileRoute("/requests/$rfqId")({
   component: RequestDetailPage,
@@ -156,9 +157,7 @@ function RequestDetailPage() {
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Запрос на котировку
                   </p>
-                  <h1 className="mt-1 font-display text-2xl font-bold">
-                    RFQ
-                  </h1>
+                  <h1 className="mt-1 font-display text-2xl font-bold">RFQ</h1>
                   <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
                     {rfq.id}
                   </p>
@@ -166,18 +165,9 @@ function RequestDetailPage() {
                     от {formatRfqDate(rfq.created_at)}
                   </p>
                 </div>
-                <span
-                  className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                    tone === "success" && "bg-emerald-100 text-emerald-800",
-                    tone === "primary" && "bg-primary-soft text-primary",
-                    tone === "danger" && "bg-red-100 text-red-800",
-                    tone === "muted" && "bg-muted text-muted-foreground",
-                    tone === "warning" && "bg-amber-100 text-amber-900",
-                  )}
-                >
+                <StatusPill tone={tone}>
                   {rfqStatusLabel(rfq.status)}
-                </span>
+                </StatusPill>
               </header>
 
               <section className="rounded-2xl border border-border bg-card p-5">
@@ -186,9 +176,7 @@ function RequestDetailPage() {
               </section>
 
               <section className="rounded-2xl border border-border bg-card p-5">
-                <h2 className="font-semibold">
-                  Позиции · {rfq.items.length}
-                </h2>
+                <h2 className="font-semibold">Позиции · {rfq.items.length}</h2>
                 <ul className="mt-3 divide-y divide-border">
                   {rfq.items.map((item) => (
                     <li
@@ -258,29 +246,29 @@ function RequestDetailPage() {
                         Принятие КП создаёт заказ и подтверждает организацию.
                       </p>
                       <div className="flex flex-wrap gap-3">
-                      <Button
-                        disabled={acting !== null}
-                        onClick={() => void onAccept()}
-                      >
-                        {acting === "accept" ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="h-4 w-4" />
-                        )}
-                        Принять КП
-                      </Button>
-                      <Button
-                        variant="outline"
-                        disabled={acting !== null}
-                        onClick={() => void onReject()}
-                      >
-                        {acting === "reject" ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <XCircle className="h-4 w-4" />
-                        )}
-                        Отклонить
-                      </Button>
+                        <Button
+                          disabled={acting !== null}
+                          onClick={() => void onAccept()}
+                        >
+                          {acting === "accept" ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-4 w-4" />
+                          )}
+                          Принять КП
+                        </Button>
+                        <Button
+                          variant="outline"
+                          disabled={acting !== null}
+                          onClick={() => void onReject()}
+                        >
+                          {acting === "reject" ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <XCircle className="h-4 w-4" />
+                          )}
+                          Отклонить
+                        </Button>
                       </div>
                     </div>
                   ) : null}
@@ -328,7 +316,7 @@ function Timeline({ steps }: { steps: TimelineStep[] }) {
       {steps.map((step) => (
         <li key={step.key} className="flex items-start gap-3">
           {step.state === "done" ? (
-            <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 text-success" />
           ) : step.state === "active" ? (
             <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-primary" />
           ) : (

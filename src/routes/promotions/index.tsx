@@ -10,8 +10,9 @@ import {
   promotionDateRange,
   promotionPeriodStatus,
   promotionStatusLabel,
+  promotionStatusTone,
 } from "@/features/cms/promotions";
-import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
 
 export const Route = createFileRoute("/promotions/")({
   component: PromotionsListPage,
@@ -102,19 +103,9 @@ function PromotionsListPage() {
                         <h2 className="font-semibold leading-snug">
                           {item.title}
                         </h2>
-                        <span
-                          className={cn(
-                            "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                            status === "active" &&
-                              "bg-emerald-100 text-emerald-800",
-                            status === "upcoming" &&
-                              "bg-primary-soft text-primary",
-                            status === "expired" &&
-                              "bg-muted text-muted-foreground",
-                          )}
-                        >
+                        <StatusPill tone={promotionStatusTone(status)}>
                           {promotionStatusLabel(status)}
-                        </span>
+                        </StatusPill>
                       </div>
                       <p className="mt-2 text-xs text-muted-foreground">
                         {promotionDateRange(item.starts_at, item.ends_at)}

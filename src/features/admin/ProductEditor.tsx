@@ -351,8 +351,8 @@ export function ProductEditor({ productId }: ProductEditorProps) {
               className={cn(
                 "rounded-lg px-2 py-1 text-[10px] font-bold uppercase",
                 published
-                  ? "bg-emerald-500/15 text-emerald-700"
-                  : "bg-amber-500/15 text-amber-700",
+                  ? "bg-success-soft text-success-strong"
+                  : "bg-warning-soft text-warning-strong",
               )}
             >
               {published ? "Опубликован" : "Черновик"}
@@ -652,7 +652,8 @@ function OptionsPanel({
   const groups = product?.option_groups ?? [];
 
   const addGroup = useMutation({
-    mutationFn: () => createOptionGroup(productId!, { name_ru: groupName.trim() }),
+    mutationFn: () =>
+      createOptionGroup(productId!, { name_ru: groupName.trim() }),
     onSuccess: (updated) => {
       setGroupName("");
       onChanged(updated);
@@ -698,15 +699,22 @@ function OptionsPanel({
       optionId: string;
       isActive: boolean;
     }) =>
-      updateProductOption(productId!, groupId, optionId, { is_active: isActive }),
+      updateProductOption(productId!, groupId, optionId, {
+        is_active: isActive,
+      }),
     onSuccess: onChanged,
     onError: (err) =>
       toast.error(isAppError(err) ? err.message : "Не удалось изменить опцию"),
   });
 
   const removeOption = useMutation({
-    mutationFn: ({ groupId, optionId }: { groupId: string; optionId: string }) =>
-      deleteProductOption(productId!, groupId, optionId),
+    mutationFn: ({
+      groupId,
+      optionId,
+    }: {
+      groupId: string;
+      optionId: string;
+    }) => deleteProductOption(productId!, groupId, optionId),
     onSuccess: () => {
       onInvalidate();
       toast.success("Опция удалена");
@@ -727,9 +735,9 @@ function OptionsPanel({
     <div className="space-y-5">
       <div className="rounded-2xl bg-muted/40 p-4 text-xs leading-5 text-muted-foreground">
         Группа — это один выбор на карточке товара: «Комплектация», «Гарантия»,
-        «Пусконаладка». Внутри группы <b>вариант</b> выбирается один (radio),
-        а дополнения, аксессуары и услуги — флажками. Опция без цены считается
-        «по запросу» и переводит всю сделку в запрос КП, даже если клиент
+        «Пусконаладка». Внутри группы <b>вариант</b> выбирается один (radio), а
+        дополнения, аксессуары и услуги — флажками. Опция без цены считается «по
+        запросу» и переводит всю сделку в запрос КП, даже если клиент
         верифицирован.
       </div>
 
@@ -771,7 +779,10 @@ function OptionsPanel({
               <input
                 value={renaming[group.id] ?? group.name_ru}
                 onChange={(e) =>
-                  setRenaming((prev) => ({ ...prev, [group.id]: e.target.value }))
+                  setRenaming((prev) => ({
+                    ...prev,
+                    [group.id]: e.target.value,
+                  }))
                 }
                 className={fieldClass}
               />
@@ -857,7 +868,9 @@ function OptionsPanel({
                     className="text-destructive"
                     disabled={removeOption.isPending}
                     onClick={() => {
-                      if (window.confirm(`Удалить опцию «${option.name_ru}»?`)) {
+                      if (
+                        window.confirm(`Удалить опцию «${option.name_ru}»?`)
+                      ) {
                         removeOption.mutate({
                           groupId: group.id,
                           optionId: option.id,
