@@ -6,6 +6,32 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * он подгружается динамически и в jsdom не работает.
  */
 
+/**
+ * SDK Firebase подменён целиком: в jsdom он не работает и роняет
+ * необработанный промис из внутренней проверки поддержки браузера. Проверяем
+ * не его, а наше решение — обращаться ли к нему и что делать с токеном.
+ */
+const mocks = vi.hoisted(() => ({
+  registerDevice: vi.fn(async () => ({ status: "registered" })),
+  removeDevice: vi.fn(async () => undefined),
+  getToken: vi.fn(async () => "fcm-token-from-firebase"),
+}));
+
+vi.mock("@/api/notifications", () => ({
+  registerDevice: mocks.registerDevice,
+  removeDevice: mocks.removeDevice,
+}));
+
+vi.mock("firebase/app", () => ({
+  initializeApp: vi.fn(() => ({})),
+  getApps: vi.fn(() => []),
+}));
+
+vi.mock("firebase/messaging", () => ({
+  getMessaging: vi.fn(() => ({})),
+  getToken: mocks.getToken,
+}));
+
 const ENV = {
   VITE_PUBLIC_API_BASE_URL: "http://localhost:8000/api/v1",
   VITE_FIREBASE_API_KEY: "key",
@@ -50,8 +76,21 @@ async function loadPushSupport() {
   return mod.pushSupport;
 }
 
+async function loadResume() {
+  vi.resetModules();
+  const mod = await import("@/lib/push");
+  return mod.resumePushOnLogin;
+}
+
+/** Регистрация service worker'а — первый шаг подписки, по ней и судим. */
+function swRegister() {
+  return (navigator.serviceWorker as unknown as { register: ReturnType<typeof vi.fn> })
+    .register;
+}
+
 beforeEach(() => {
   window.localStorage.clear();
+  vi.clearAllMocks();
 });
 
 afterEach(() => {
@@ -103,5 +142,56 @@ describe("pushSupport", () => {
     window.localStorage.setItem("medix.push_token.v1", "fcm-token");
 
     expect((await loadPushSupport())()).toBe("enabled");
+  });
+});
+
+describe("resumePushOnLogin", () => {
+  it("восстанавливает подписку, если разрешение уже выдано", async () => {
+    // При выходе подписка снимается на сервере, разрешение браузера остаётся.
+    // Без восстановления человек, включивший уведомления однажды, после
+    // каждого входа находил бы их выключенными.
+    setEnv();
+    setBrowser({ permission: "granted" });
+
+    await (await loadResume())();
+
+    expect(swRegister()).toHaveBeenCalled();
+    expect(mocks.registerDevice).toHaveBeenCalledWith({
+      platform: "fcm",
+      token: "fcm-token-from-firebase",
+    });
+    expect(window.localStorage.getItem("medix.push_token.v1")).toBe(
+      "fcm-token-from-firebase",
+    );
+  });
+
+  it("молчит, если разрешение не выдавали", async () => {
+    // Просить разрешение при входе нельзя: спросить можно один раз, и потратить
+    // эту попытку на момент, когда человек о уведомлениях не думал, — потерять её.
+    setEnv();
+    setBrowser({ permission: "default" });
+
+    await (await loadResume())();
+
+    expect(mocks.registerDevice).not.toHaveBeenCalled();
+  });
+
+  it("молчит, если Firebase не настроен", async () => {
+    setEnv({ VITE_FIREBASE_VAPID_KEY: "" });
+    setBrowser({ permission: "granted" });
+
+    await (await loadResume())();
+
+    expect(mocks.registerDevice).not.toHaveBeenCalled();
+  });
+
+  it("не трогает подписку, когда она уже есть", async () => {
+    setEnv();
+    setBrowser({ permission: "granted" });
+    window.localStorage.setItem("medix.push_token.v1", "fcm-token");
+
+    await (await loadResume())();
+
+    expect(mocks.registerDevice).not.toHaveBeenCalled();
   });
 });

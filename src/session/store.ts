@@ -71,12 +71,33 @@ function applyTokens(accessToken: string, refreshToken: string) {
     clearSessionLocal();
     return;
   }
+  const wasAnonymous = state.status !== "authenticated";
   writeRefreshToken(refreshToken);
   setState({
     status: "authenticated",
     accessToken,
     user: { userId: claims.userId, role: claims.role },
   });
+
+  // Только на переходе в авторизованное состояние: applyTokens вызывается
+  // ещё и при обновлении access-токена каждые 15 минут, а перевыпускать
+  // подписку по таймеру незачем.
+  if (wasAnonymous) void resumePush();
+}
+
+/**
+ * Восстанавливает подписку на push, снятую при прошлом выходе.
+ *
+ * Ошибки проглатываются здесь же: подписка не должна мешать входу, а при
+ * неудаче в профиле остаётся обычная кнопка включения.
+ */
+async function resumePush() {
+  try {
+    const { resumePushOnLogin } = await import("@/lib/push");
+    await resumePushOnLogin();
+  } catch {
+    // push не настроен или браузер не умеет — это штатно
+  }
 }
 
 function clearSessionLocal() {

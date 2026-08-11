@@ -80,27 +80,14 @@ async function registerServiceWorker(): Promise<ServiceWorkerRegistration> {
 }
 
 /**
- * Спрашивает разрешение, получает токен и регистрирует устройство.
+ * Берёт токен у Firebase и привязывает его к текущему пользователю.
  *
- * Возвращает текст для пользователя при отказе — вызывающий показывает его
- * тостом. Бросает только на неожиданных ошибках.
+ * Разрешение к этому моменту уже должно быть выдано: getToken при отсутствии
+ * разрешения бросает исключение, а не спрашивает.
  */
-export async function enablePush(): Promise<
-  { ok: true } | { ok: false; reason: string }
-> {
+async function subscribeCurrentBrowser(): Promise<string | null> {
   const config = getEnv().firebase;
-  if (!config) return { ok: false, reason: "Уведомления не настроены" };
-
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    return {
-      ok: false,
-      reason:
-        permission === "denied"
-          ? "Уведомления запрещены в настройках браузера — разрешите их для этого сайта"
-          : "Разрешение не выдано",
-    };
-  }
+  if (!config) return null;
 
   const registration = await registerServiceWorker();
 
@@ -116,13 +103,66 @@ export async function enablePush(): Promise<
     serviceWorkerRegistration: registration,
   });
 
-  if (!token) {
-    return { ok: false, reason: "Браузер не выдал токен уведомлений" };
-  }
+  if (!token) return null;
 
   await registerDevice({ platform: "fcm", token });
   writeStoredToken(token);
+  return token;
+}
+
+/**
+ * Спрашивает разрешение, получает токен и регистрирует устройство.
+ *
+ * Возвращает текст для пользователя при отказе — вызывающий показывает его
+ * тостом. Бросает только на неожиданных ошибках.
+ */
+export async function enablePush(): Promise<
+  { ok: true } | { ok: false; reason: string }
+> {
+  if (!getEnv().firebase) {
+    return { ok: false, reason: "Уведомления не настроены" };
+  }
+
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    return {
+      ok: false,
+      reason:
+        permission === "denied"
+          ? "Уведомления запрещены в настройках браузера — разрешите их для этого сайта"
+          : "Разрешение не выдано",
+    };
+  }
+
+  const token = await subscribeCurrentBrowser();
+  if (!token) {
+    return { ok: false, reason: "Браузер не выдал токен уведомлений" };
+  }
   return { ok: true };
+}
+
+/**
+ * Возвращает подписку после входа в аккаунт.
+ *
+ * При выходе подписка снимается на сервере — иначе на общем компьютере push
+ * следующего клиента приходили бы предыдущему. Но разрешение браузера при
+ * этом остаётся выданным, и человек, включивший уведомления один раз, ждёт,
+ * что после следующего входа они продолжат приходить, а не что кнопку надо
+ * нажимать заново. Поэтому при входе подписка восстанавливается молча: это
+ * та же привязка токена, только уже к тому, кто вошёл сейчас.
+ *
+ * Ничего не спрашивает и ничего не показывает: если разрешения нет, человек
+ * его просто не давал — кнопка в профиле на месте.
+ */
+export async function resumePushOnLogin(): Promise<void> {
+  if (pushSupport() !== "ready") return;
+  if (Notification.permission !== "granted") return;
+
+  try {
+    await subscribeCurrentBrowser();
+  } catch {
+    // Вход важнее подписки: при неудаче остаётся кнопка в профиле.
+  }
 }
 
 /**
