@@ -1,6 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle2, Download, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Download,
+  Loader2,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { isAppError } from "@/api/errors";
 import {
@@ -22,6 +28,7 @@ import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
 import { orderLabel } from "@/features/orders/order-number";
+import { useRepeatOrder } from "@/features/orders/use-repeat-order";
 
 export const Route = createFileRoute("/orders/$orderId")({
   component: OrderDetailPage,
@@ -52,6 +59,8 @@ function OrderDetailPage() {
     enabled: !!detailQuery.data,
     retry: false,
   });
+
+  const repeat = useRepeatOrder();
 
   const order = detailQuery.data;
   const tone = order ? orderStatusTone(order.status) : "muted";
@@ -177,7 +186,7 @@ function OrderDetailPage() {
                 <ul className="mt-3 divide-y divide-border">
                   {order.items.map((item) => (
                     <li
-                      key={`${item.sku}-${item.name}`}
+                      key={item.id}
                       className="flex items-start justify-between gap-3 py-3"
                     >
                       <div className="min-w-0">
@@ -192,6 +201,23 @@ function OrderDetailPage() {
                     </li>
                   ))}
                 </ul>
+
+                {/* Кладёт позиции в корзину, а не создаёт заказ сразу: между
+                    заказами меняются цены и наличие, и клиент должен увидеть
+                    актуальный состав до отправки. */}
+                <Button
+                  className="mt-4 w-full sm:w-auto"
+                  variant="outline"
+                  disabled={repeat.isPending || order.items.length === 0}
+                  onClick={() => repeat.mutate(order.items)}
+                >
+                  {repeat.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RotateCcw className="h-4 w-4" />
+                  )}
+                  {repeat.isPending ? "Добавляем в корзину…" : "Повторить заказ"}
+                </Button>
               </section>
 
               {canDownloadInvoice ? (

@@ -10,10 +10,17 @@ export type OrderSummary = {
 };
 
 export type OrderLineItem = {
+  /** id строки заказа; по нему опции ссылаются на свой базовый товар. */
+  id: string;
+  /** id товара — в отличие от id строки, живёт в каталоге и годится для корзины. */
+  product_id: string;
   sku: string;
   name: string;
   qty: number;
   price: string | null;
+  /** Заполнен у строк-опций; у базового товара — null. */
+  option_type: string | null;
+  parent_line_id: string | null;
 };
 
 export type OrderStatusHistoryEntry = {
