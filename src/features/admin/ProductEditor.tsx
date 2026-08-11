@@ -1051,7 +1051,14 @@ function ImagesPanel({
               </div>
             )}
             <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-[10px]">
-              <span>{img.is_primary ? "Primary" : `sort ${img.sort}`}</span>
+              {/* Было «Primary» / «sort 2» — английские служебные подписи
+                  в русской админке, которой пользуются сотрудники заказчика.
+                  Тот же дефект, что «Pub»/«Draft» в списке товаров. */}
+              <span
+                className={img.is_primary ? "font-semibold text-primary" : ""}
+              >
+                {img.is_primary ? "Главное" : `Порядок ${img.sort}`}
+              </span>
               <button
                 type="button"
                 className="font-semibold text-destructive"
