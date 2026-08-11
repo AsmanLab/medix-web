@@ -157,10 +157,20 @@ export async function registerWithTicket(input: {
   return getSessionSnapshot();
 }
 
-export async function logoutSession(queryClient?: {
-  clear?: () => void;
-}) {
+export async function logoutSession(queryClient?: { clear?: () => void }) {
   const refreshToken = readRefreshToken();
+
+  // Подписку на push снимаем до выхода, пока токен доступа ещё жив:
+  // токен браузера один на всех, кто им пользуется, а получателя определяет
+  // привязка на сервере — без этого на общем компьютере уведомления
+  // прошлого клиента приходили бы следующему.
+  try {
+    const { unregisterPushOnLogout } = await import("@/lib/push");
+    await unregisterPushOnLogout();
+  } catch {
+    // выход важнее отписки
+  }
+
   try {
     if (refreshToken) await authApi.logout(refreshToken);
   } catch {

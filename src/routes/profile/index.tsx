@@ -26,6 +26,7 @@ import {
   profileInitials,
   verificationLabel,
 } from "@/features/profile/labels";
+import { PushToggle } from "@/features/profile/PushToggle";
 import { logoutSession } from "@/session/store";
 import { cn } from "@/lib/utils";
 
@@ -193,6 +194,8 @@ function ProfilePage() {
               </span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
+
+            <PushToggle />
 
             <section className="overflow-hidden rounded-2xl border border-border bg-card">
               <p className="border-b border-border px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">

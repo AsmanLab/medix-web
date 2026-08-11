@@ -7,9 +7,31 @@ const envSchema = z.object({
     .default("http://localhost:8000/api/v1"),
 });
 
+/**
+ * Конфигурация Firebase для web-push.
+ *
+ * Все значения здесь **публичные** — Google отдаёт их в сниппете веб-приложения
+ * и они всё равно видны в собранном бандле. Доступ к отправке даёт не они,
+ * а service account на бэкенде, который в браузер не попадает.
+ *
+ * Пусто = push на витрине выключен. Это рабочее состояние: пока заказчик
+ * не завёл проект Firebase, кнопка «Включить уведомления» просто не
+ * показывается, и ничего не ломается.
+ */
+export type FirebaseWebConfig = {
+  apiKey: string;
+  projectId: string;
+  appId: string;
+  messagingSenderId: string;
+  /** Открытый ключ Web Push из раздела Cloud Messaging. */
+  vapidKey: string;
+};
+
 export type AppEnv = {
   /** Browser-safe API base including `/api/v1`. */
   publicApiBaseUrl: string;
+  /** null, если Firebase не настроен. */
+  firebase: FirebaseWebConfig | null;
 };
 
 function readViteEnv(): Record<string, string | undefined> {
@@ -40,7 +62,30 @@ export function getEnv(): AppEnv {
 
   return {
     publicApiBaseUrl: parsed.data.VITE_PUBLIC_API_BASE_URL.replace(/\/$/, ""),
+    firebase: readFirebaseConfig(vite),
   };
+}
+
+/**
+ * Собирает конфигурацию Firebase, только если заполнены **все** пять полей.
+ *
+ * Частично заполненный конфиг хуже пустого: SDK инициализируется, запрашивает
+ * у пользователя разрешение на уведомления и падает уже после этого — человек
+ * успевает нажать «Разрешить» и не получить ничего. Поэтому либо всё, либо
+ * push просто выключен.
+ */
+function readFirebaseConfig(
+  vite: Record<string, string | undefined>,
+): FirebaseWebConfig | null {
+  const config = {
+    apiKey: vite.VITE_FIREBASE_API_KEY?.trim() ?? "",
+    projectId: vite.VITE_FIREBASE_PROJECT_ID?.trim() ?? "",
+    appId: vite.VITE_FIREBASE_APP_ID?.trim() ?? "",
+    messagingSenderId: vite.VITE_FIREBASE_MESSAGING_SENDER_ID?.trim() ?? "",
+    vapidKey: vite.VITE_FIREBASE_VAPID_KEY?.trim() ?? "",
+  };
+
+  return Object.values(config).every(Boolean) ? config : null;
 }
 
 export function getApiBaseUrl(): string {
