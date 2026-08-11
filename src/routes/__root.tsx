@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { AppProviders } from "@/app/providers";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { PushForegroundBridge } from "@/features/notifications/PushForegroundBridge";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -15,6 +16,8 @@ function RootComponent() {
     <ErrorBoundary>
       <AppProviders>
         <Outlet />
+        {/* Уведомления при открытой вкладке: браузер их не показывает сам. */}
+        <PushForegroundBridge />
         <Toaster richColors position="top-center" closeButton />
       </AppProviders>
     </ErrorBoundary>

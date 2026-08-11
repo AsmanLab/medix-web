@@ -11,7 +11,7 @@ import {
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
-import { parseDeepLink } from "@/features/notifications/deep-link";
+import { openDeepLink } from "@/features/notifications/open-deep-link";
 import { PushToggle } from "@/features/profile/PushToggle";
 import { requireStaffPanel } from "@/session/guards";
 import { cn } from "@/lib/utils";
@@ -21,52 +21,6 @@ export const Route = createFileRoute("/admin/notifications/")({
     requireStaffPanel({ roles: ["admin", "manager", "service_engineer"] }),
   component: AdminNotificationsPage,
 });
-
-/**
- * Ведёт в карточку внутри админки.
- *
- * Тот же запрос у клиента и у менеджера открывается в разных местах, поэтому
- * служебные ссылки приходят с префиксом `admin/` и разбираются отдельно от
- * клиентских — см. parseDeepLink.
- */
-async function openDeepLink(
-  navigate: ReturnType<typeof useNavigate>,
-  path: string | null,
-) {
-  const target = parseDeepLink(path);
-  if (!target) return;
-
-  switch (target.kind) {
-    case "admin-rfq":
-      await navigate({
-        to: "/admin/commerce/$rfqId",
-        params: { rfqId: target.id },
-      });
-      return;
-    case "admin-service":
-      await navigate({
-        to: "/admin/service-desk/$requestId",
-        params: { requestId: target.id },
-      });
-      return;
-    case "admin-customer":
-      await navigate({
-        to: "/admin/users/$customerId",
-        params: { customerId: target.id },
-      });
-      return;
-    case "order":
-      await navigate({
-        to: "/admin/orders/$orderId",
-        params: { orderId: target.id },
-      });
-      return;
-    default:
-      // Клиентские адреса сотруднику открывать некуда: своих заказов
-      // и запросов у него нет. Уведомление просто отмечается прочитанным.
-      return;
-  }
-}
 
 function AdminNotificationsPage() {
   const navigate = useNavigate();

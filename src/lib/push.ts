@@ -165,6 +165,44 @@ export async function resumePushOnLogin(): Promise<void> {
   }
 }
 
+export type ForegroundPush = {
+  title: string;
+  body: string;
+  deepLink: string | null;
+};
+
+/**
+ * Уведомления, пришедшие при открытой вкладке.
+ *
+ * Пока страница на переднем плане, FCM **не** отдаёт сообщение service
+ * worker'у и системного уведомления не показывает: сообщение приходит в саму
+ * страницу, и если она его не обрабатывает — не происходит ничего. Из-за
+ * этого «уведомления приходят, только когда браузер свёрнут» выглядело как
+ * поломка, хотя это документированное поведение.
+ *
+ * Возвращает функцию отписки. Ничего не делает, если push не настроен или
+ * не включён: SDK Firebase тогда не грузится вовсе.
+ */
+export async function onForegroundPush(
+  handler: (message: ForegroundPush) => void,
+): Promise<() => void> {
+  const config = getEnv().firebase;
+  if (!config || pushSupport() !== "enabled") return () => {};
+
+  const [{ initializeApp, getApps }, { getMessaging, onMessage }] =
+    await Promise.all([import("firebase/app"), import("firebase/messaging")]);
+
+  const app = getApps()[0] ?? initializeApp(config);
+
+  return onMessage(getMessaging(app), (payload) => {
+    const title = payload.notification?.title ?? "Новое уведомление";
+    const body = payload.notification?.body ?? "";
+    const deepLink =
+      (payload.data?.deep_link as string | undefined)?.trim() || null;
+    handler({ title, body, deepLink });
+  });
+}
+
 /**
  * Отписывает браузер.
  *
