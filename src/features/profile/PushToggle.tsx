@@ -1,7 +1,10 @@
 import { BellOff, BellRing } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { isAppError } from "@/api/errors";
+import { sendTestPush } from "@/api/notifications";
 import { Button } from "@/components/ui/button";
+import { describePushSelfTest } from "@/features/profile/push-self-test";
 import {
   disablePush,
   enablePush,
@@ -56,6 +59,23 @@ export function PushToggle() {
     }
   }
 
+  // «Включено», но ничего не приходит — состояние, в котором пользователю
+  // нечего проверить самому: отправка происходит на сервере и молчит при
+  // любой причине. Кнопка спрашивает у сервера, что именно не так.
+  async function onTest() {
+    setBusy(true);
+    try {
+      const verdict = describePushSelfTest(await sendTestPush());
+      toast[verdict.tone](verdict.text);
+    } catch (err) {
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось проверить уведомления",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const enabled = state === "enabled";
   const blocked = state === "denied";
 
@@ -80,15 +100,26 @@ export function PushToggle() {
           </p>
 
           {!blocked ? (
-            <Button
-              variant={enabled ? "outline" : "primary"}
-              size="sm"
-              className="mt-3"
-              disabled={busy}
-              onClick={() => void (enabled ? onDisable() : onEnable())}
-            >
-              {busy ? "Секунду…" : enabled ? "Выключить" : "Включить"}
-            </Button>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                variant={enabled ? "outline" : "primary"}
+                size="sm"
+                disabled={busy}
+                onClick={() => void (enabled ? onDisable() : onEnable())}
+              >
+                {busy ? "Секунду…" : enabled ? "Выключить" : "Включить"}
+              </Button>
+              {enabled ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => void onTest()}
+                >
+                  Проверить
+                </Button>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>
