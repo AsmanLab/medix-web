@@ -1,5 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
+  Bell,
   Boxes,
   Building2,
   FileUp,
@@ -16,12 +18,15 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { listNotifications } from "@/api/notifications";
+import { queryKeys } from "@/api/query-keys";
 import { getAppQueryClient } from "@/app/providers";
 import { logoutSession, useSession } from "@/session/store";
 import { cn } from "@/lib/utils";
 
 type AdminNavKey =
   | "dashboard"
+  | "notifications"
   | "users"
   | "staff"
   | "catalog"
@@ -39,6 +44,8 @@ type AdminNavItem = {
   label: string;
   icon: (props: { className?: string }) => ReactNode;
   allowedRoles: Array<"admin" | "manager" | "service_engineer">;
+  /** Счётчик справа от названия: непрочитанные уведомления. */
+  badge?: number;
 };
 
 function Logo() {
@@ -81,6 +88,17 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   const role = user?.role;
 
+  // Счётчик в меню — единственный способ узнать о новой работе, не открывая
+  // список. Интервал тот же, что на витрине: минута.
+  const notificationsQuery = useQuery({
+    queryKey: queryKeys.notifications.list(),
+    queryFn: ({ signal }) => listNotifications(signal),
+    enabled: !!role,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+  const unread = notificationsQuery.data?.unread_count ?? 0;
+
   async function onLogout() {
     setLoggingOut(true);
     try {
@@ -109,6 +127,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <LayoutDashboard className={className} aria-hidden />
         ),
         allowedRoles: [...common],
+      },
+      {
+        key: "notifications",
+        to: "/admin/notifications",
+        label: "Уведомления",
+        icon: ({ className }) => <Bell className={className} aria-hidden />,
+        allowedRoles: [...common],
+        badge: unread,
       },
       {
         key: "users",
@@ -194,7 +220,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
     if (!allowed) return [];
     return items.filter((i) => i.allowedRoles.includes(allowed));
-  }, [role]);
+  }, [role, unread]);
 
   return (
     <div className="min-h-screen bg-transparent text-foreground">
@@ -259,6 +285,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
                         ),
                       })}
                       <span className="truncate">{item.label}</span>
+                      {item.badge ? (
+                        <span
+                          className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white"
+                          aria-label={`непрочитанных ${item.badge}`}
+                        >
+                          {item.badge > 99 ? "99+" : item.badge}
+                        </span>
+                      ) : null}
                     </Link>
                   </li>
                 );
