@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseDeepLink } from "@/features/notifications/deep-link";
 
@@ -24,6 +25,15 @@ describe("parseDeepLink", () => {
     });
   });
 
+  it("различает заказ клиента и заказ в админке", () => {
+    // Один и тот же заказ клиент открывает в кабинете, менеджер — в панели.
+    expect(parseDeepLink("order/7")).toEqual({ kind: "order", id: "7" });
+    expect(parseDeepLink("admin/orders/7")).toEqual({
+      kind: "admin-order",
+      id: "7",
+    });
+  });
+
   it("не путает служебный запрос с клиентским", () => {
     // Один и тот же запрос менеджер открывает как сделку, клиент — как свой.
     // Если бы `rfq/` проверялся раньше, менеджера уводило бы в кабинет клиента.
@@ -41,5 +51,28 @@ describe("parseDeepLink", () => {
     expect(parseDeepLink("")).toBeNull();
     expect(parseDeepLink(null)).toBeNull();
     expect(parseDeepLink("что-то новое")).toBeNull();
+  });
+});
+
+describe("таблица адресов в service worker'е", () => {
+  it("знает те же префиксы, что и разбор на странице", () => {
+    // SW отдаётся без сборки и импортировать разбор не может, поэтому таблица
+    // продублирована. Разъедутся — клик по уведомлению уведёт в 404, и узнаем
+    // мы об этом от клиента, а не от тестов.
+    const sw = readFileSync("public/firebase-messaging-sw.js", "utf8");
+    const prefixes = [
+      "admin/rfq/",
+      "admin/orders/",
+      "admin/service/",
+      "admin/customers/",
+      "order/",
+      "rfq/",
+      "service/",
+    ];
+
+    for (const prefix of prefixes) {
+      expect(parseDeepLink(`${prefix}1`), prefix).not.toBeNull();
+      expect(sw, prefix).toContain(`"${prefix}"`);
+    }
   });
 });

@@ -29,6 +29,12 @@ export async function openDeepLink(
         params: { requestId: target.id },
       });
       return;
+    case "admin-order":
+      await navigate({
+        to: "/admin/orders/$orderId",
+        params: { orderId: target.id },
+      });
+      return;
     case "admin-rfq":
       await navigate({
         to: "/admin/commerce/$rfqId",

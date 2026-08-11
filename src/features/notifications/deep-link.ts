@@ -13,14 +13,22 @@ export type DeepLinkTarget =
   | { kind: "rfq"; id: string }
   | { kind: "service"; id: string }
   | { kind: "admin-rfq"; id: string }
+  | { kind: "admin-order"; id: string }
   | { kind: "admin-service"; id: string }
   | { kind: "admin-customer"; id: string }
   | { kind: "profile" }
   | null;
 
+/*
+ * Второй экземпляр этой таблицы живёт в public/firebase-messaging-sw.js:
+ * service worker отдаётся без сборки и импортировать отсюда ничего не может,
+ * а по клику на уведомление адрес нужен ему же. Синхронность проверяется
+ * тестом deep-link.test.ts.
+ */
 const PREFIXES = [
   // Служебные идут первыми: `admin/rfq/…` не должен совпасть с `rfq/…`.
   ["admin/rfq/", "admin-rfq"],
+  ["admin/orders/", "admin-order"],
   ["admin/service/", "admin-service"],
   ["admin/customers/", "admin-customer"],
   ["order/", "order"],
