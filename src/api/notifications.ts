@@ -35,3 +35,26 @@ export function markAllNotificationsRead() {
     path: "/notifications/read-all",
   });
 }
+
+/**
+ * Регистрирует устройство для push. Идемпотентна: повторный вызов с тем же
+ * токеном не создаёт дубликат и не ошибается (Medix#79) — а для браузера
+ * это норма, токен стабилен и присылается при каждом входе.
+ */
+export function registerDevice(input: {
+  platform: "fcm" | "apns";
+  token: string;
+}) {
+  return apiRequest<{ status: string }>({
+    method: "POST",
+    path: "/devices",
+    body: input,
+  });
+}
+
+export function removeDevice(token: string) {
+  return apiRequest<void>({
+    method: "DELETE",
+    path: `/devices/${encodeURIComponent(token)}`,
+  });
+}

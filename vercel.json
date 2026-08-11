@@ -10,7 +10,10 @@
         },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
         {
           "key": "Permissions-Policy",
           "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
@@ -45,6 +48,20 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "//": "Идёт последним намеренно: Vercel применяет все совпавшие правила, и при одинаковом ключе побеждает последнее. Выше по /(.*).js этот файл получил бы immutable-кэш на год, и обновления service worker'а перестали бы доходить до браузеров. Здесь же снимается общий строгий CSP: SDK Firebase грузится с gstatic, а собрать его внутрь нельзя — файл лежит в public/ и через сборку не проходит. Послабление действует только на этот путь, страницы сайта остаются со script-src 'self'.",
+      "source": "/firebase-messaging-sw.js",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'none'; script-src 'self' https://www.gstatic.com; connect-src 'self' https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     }
