@@ -66,13 +66,45 @@ if (
   });
 }
 
+/*
+ * deep_link с сервера — не URL, а короткий адрес вида «rfq/<id>».
+ * Маршрут витрины называется иначе, поэтому его нужно собрать.
+ *
+ * Копия таблицы из src/features/notifications/deep-link.ts: сюда её не
+ * импортировать — файл отдаётся как есть, без сборки. При добавлении нового
+ * адреса менять надо оба места, иначе клик по уведомлению уведёт в 404.
+ */
+const ROUTES = [
+  ["admin/rfq/", "/admin/commerce/"],
+  ["admin/orders/", "/admin/orders/"],
+  ["admin/service/", "/admin/service-desk/"],
+  ["admin/customers/", "/admin/users/"],
+  ["order/", "/orders/"],
+  ["rfq/", "/requests/"],
+  ["service/", "/service/requests/"],
+];
+
+function routeForDeepLink(raw) {
+  const cleaned = String(raw || "").replace(/^\/+/, "");
+  if (!cleaned) return "/";
+  if (cleaned === "profile") return "/profile";
+
+  for (const [prefix, route] of ROUTES) {
+    if (!cleaned.startsWith(prefix)) continue;
+    const id = cleaned.slice(prefix.length);
+    // Пустой хвост — ссылка битая: ведём в центр уведомлений, а не в 404.
+    return id ? route + encodeURIComponent(id) : "/notifications";
+  }
+  return "/";
+}
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  // deep_link с сервера — относительный путь вида «rfq/<id>» или «order/<id>».
-  const raw = event.notification.data?.deepLink || "";
-  const path = raw ? `/${String(raw).replace(/^\/+/, "")}` : "/";
-  const target = new URL(path, self.location.origin).href;
+  const target = new URL(
+    routeForDeepLink(event.notification.data?.deepLink),
+    self.location.origin,
+  ).href;
 
   event.waitUntil(
     clients
