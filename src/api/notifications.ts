@@ -52,6 +52,22 @@ export function registerDevice(input: {
   });
 }
 
+export type PushSelfTest = {
+  /** Нашёл ли сервер ключ Firebase. Относится к процессу API, не к worker'у. */
+  firebase_configured: boolean;
+  devices: number;
+  sent: number;
+  errors: string[];
+};
+
+/** Отправляет проверочный push самому себе и рассказывает, что произошло. */
+export function sendTestPush() {
+  return apiRequest<PushSelfTest>({
+    method: "POST",
+    path: "/notifications/test-push",
+  });
+}
+
 export function removeDevice(token: string) {
   return apiRequest<void>({
     method: "DELETE",
