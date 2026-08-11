@@ -50,6 +50,7 @@ import { Route as AdminCmsIndexRouteImport } from './routes/admin/cms/index'
 import { Route as AdminCmsContactsRouteImport } from './routes/admin/cms/contacts'
 import { Route as AdminCommerceIndexRouteImport } from './routes/admin/commerce/index'
 import { Route as AdminCommerceRfqIdRouteImport } from './routes/admin/commerce/$rfqId'
+import { Route as AdminNotificationsIndexRouteImport } from './routes/admin/notifications/index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrdersOrderIdRouteImport } from './routes/admin/orders/$orderId'
 import { Route as AdminReportsIndexRouteImport } from './routes/admin/reports/index'
@@ -279,6 +280,11 @@ const AdminCommerceRfqIdRoute = AdminCommerceRfqIdRouteImport.update({
   path: '/commerce/$rfqId',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminNotificationsIndexRoute = AdminNotificationsIndexRouteImport.update({
+  id: '/notifications/',
+  path: '/notifications/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
@@ -449,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/admin/catalog/': typeof AdminCatalogIndexRoute
   '/admin/cms/': typeof AdminCmsIndexRoute
   '/admin/commerce/': typeof AdminCommerceIndexRoute
+  '/admin/notifications/': typeof AdminNotificationsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/admin/service-desk/': typeof AdminServiceDeskIndexRoute
@@ -509,6 +516,7 @@ export interface FileRoutesByTo {
   '/admin/catalog': typeof AdminCatalogIndexRoute
   '/admin/cms': typeof AdminCmsIndexRoute
   '/admin/commerce': typeof AdminCommerceIndexRoute
+  '/admin/notifications': typeof AdminNotificationsIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/reports': typeof AdminReportsIndexRoute
   '/admin/service-desk': typeof AdminServiceDeskIndexRoute
@@ -576,6 +584,7 @@ export interface FileRoutesById {
   '/admin/catalog/': typeof AdminCatalogIndexRoute
   '/admin/cms/': typeof AdminCmsIndexRoute
   '/admin/commerce/': typeof AdminCommerceIndexRoute
+  '/admin/notifications/': typeof AdminNotificationsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/admin/service-desk/': typeof AdminServiceDeskIndexRoute
@@ -644,6 +653,7 @@ export interface FileRouteTypes {
     | '/admin/catalog/'
     | '/admin/cms/'
     | '/admin/commerce/'
+    | '/admin/notifications/'
     | '/admin/orders/'
     | '/admin/reports/'
     | '/admin/service-desk/'
@@ -704,6 +714,7 @@ export interface FileRouteTypes {
     | '/admin/catalog'
     | '/admin/cms'
     | '/admin/commerce'
+    | '/admin/notifications'
     | '/admin/orders'
     | '/admin/reports'
     | '/admin/service-desk'
@@ -770,6 +781,7 @@ export interface FileRouteTypes {
     | '/admin/catalog/'
     | '/admin/cms/'
     | '/admin/commerce/'
+    | '/admin/notifications/'
     | '/admin/orders/'
     | '/admin/reports/'
     | '/admin/service-desk/'
@@ -1107,6 +1119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCommerceRfqIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/notifications/': {
+      id: '/admin/notifications/'
+      path: '/notifications'
+      fullPath: '/admin/notifications/'
+      preLoaderRoute: typeof AdminNotificationsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/orders/': {
       id: '/admin/orders/'
       path: '/orders'
@@ -1282,6 +1301,7 @@ interface AdminRouteRouteChildren {
   AdminCatalogIndexRoute: typeof AdminCatalogIndexRoute
   AdminCmsIndexRoute: typeof AdminCmsIndexRoute
   AdminCommerceIndexRoute: typeof AdminCommerceIndexRoute
+  AdminNotificationsIndexRoute: typeof AdminNotificationsIndexRoute
   AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
   AdminReportsIndexRoute: typeof AdminReportsIndexRoute
   AdminServiceDeskIndexRoute: typeof AdminServiceDeskIndexRoute
@@ -1313,6 +1333,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminCatalogIndexRoute: AdminCatalogIndexRoute,
   AdminCmsIndexRoute: AdminCmsIndexRoute,
   AdminCommerceIndexRoute: AdminCommerceIndexRoute,
+  AdminNotificationsIndexRoute: AdminNotificationsIndexRoute,
   AdminOrdersIndexRoute: AdminOrdersIndexRoute,
   AdminReportsIndexRoute: AdminReportsIndexRoute,
   AdminServiceDeskIndexRoute: AdminServiceDeskIndexRoute,

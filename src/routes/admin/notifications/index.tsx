@@ -9,52 +9,66 @@ import {
   markNotificationRead,
 } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
-import { parseDeepLink } from "@/features/notifications/deep-link";
-import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
-import { requireAuth } from "@/session/guards";
+import { parseDeepLink } from "@/features/notifications/deep-link";
+import { PushToggle } from "@/features/profile/PushToggle";
+import { requireStaffPanel } from "@/session/guards";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/notifications/")({
-  beforeLoad: () => requireAuth({ roles: ["client"] }),
-  component: NotificationsPage,
+export const Route = createFileRoute("/admin/notifications/")({
+  beforeLoad: () =>
+    requireStaffPanel({ roles: ["admin", "manager", "service_engineer"] }),
+  component: AdminNotificationsPage,
 });
 
+/**
+ * Ведёт в карточку внутри админки.
+ *
+ * Тот же запрос у клиента и у менеджера открывается в разных местах, поэтому
+ * служебные ссылки приходят с префиксом `admin/` и разбираются отдельно от
+ * клиентских — см. parseDeepLink.
+ */
 async function openDeepLink(
   navigate: ReturnType<typeof useNavigate>,
   path: string | null,
 ) {
-  // Разбор общий с админкой: там те же уведомления открываются в панели.
   const target = parseDeepLink(path);
   if (!target) return;
 
   switch (target.kind) {
-    case "order":
+    case "admin-rfq":
       await navigate({
-        to: "/orders/$orderId",
-        params: { orderId: target.id },
+        to: "/admin/commerce/$rfqId",
+        params: { rfqId: target.id },
       });
       return;
-    case "rfq":
-      await navigate({ to: "/requests/$rfqId", params: { rfqId: target.id } });
-      return;
-    case "service":
+    case "admin-service":
       await navigate({
-        to: "/service/requests/$requestId",
+        to: "/admin/service-desk/$requestId",
         params: { requestId: target.id },
       });
       return;
-    case "profile":
-      await navigate({ to: "/profile" });
+    case "admin-customer":
+      await navigate({
+        to: "/admin/users/$customerId",
+        params: { customerId: target.id },
+      });
+      return;
+    case "order":
+      await navigate({
+        to: "/admin/orders/$orderId",
+        params: { orderId: target.id },
+      });
       return;
     default:
-      // Служебные адреса клиенту не приходят.
+      // Клиентские адреса сотруднику открывать некуда: своих заказов
+      // и запросов у него нет. Уведомление просто отмечается прочитанным.
       return;
   }
 }
 
-function NotificationsPage() {
+function AdminNotificationsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -64,11 +78,8 @@ function NotificationsPage() {
     refetchInterval: 60_000,
   });
 
-  const invalidate = async () => {
-    await queryClient.invalidateQueries({
-      queryKey: queryKeys.notifications.all,
-    });
-  };
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
 
   const readOne = useMutation({
     mutationFn: (id: string) => markNotificationRead(id),
@@ -81,23 +92,22 @@ function NotificationsPage() {
       toast.success("Все прочитаны");
       await invalidate();
     },
-    onError: (err: unknown) => {
-      toast.error(isAppError(err) ? err.message : "Не удалось обновить");
-    },
+    onError: (err: unknown) =>
+      toast.error(isAppError(err) ? err.message : "Не удалось обновить"),
   });
 
   const items = listQuery.data?.notifications ?? [];
   const unread = listQuery.data?.unread_count ?? 0;
 
   return (
-    <AppShell>
+    <div>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold">Уведомления</h1>
+          <h1 className="font-display text-2xl font-bold">Уведомления</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {unread > 0
               ? `Непрочитанных: ${unread}`
-              : "Здесь статусы заказов, счетов и сервиса"}
+              : "Новые запросы, согласия по КП, заявки на верификацию и сервис"}
           </p>
         </div>
         {unread > 0 ? (
@@ -112,7 +122,13 @@ function NotificationsPage() {
         ) : null}
       </header>
 
-      <div className="mt-8">
+      {/* Уведомления в браузере приходят, даже когда вкладка закрыта, —
+          для работы по очереди это важнее, чем клиенту. */}
+      <div className="mt-6">
+        <PushToggle />
+      </div>
+
+      <div className="mt-6">
         <StateBlock
           isLoading={listQuery.isLoading}
           isError={listQuery.isError}
@@ -121,9 +137,9 @@ function NotificationsPage() {
           isEmpty={listQuery.isSuccess && items.length === 0}
           emptyIcon={Bell}
           emptyTitle="Пока нет уведомлений"
-          emptyDescription="Когда менеджер отправит КП, опубликует счёт или обновит сервис — сообщение появится здесь."
+          emptyDescription="Здесь появятся новые запросы КП, согласия клиентов, заявки на верификацию и сервисные заявки."
         >
-          <ul className="divide-y divide-border rounded-3xl border border-border bg-card">
+          <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
             {items.map((n) => (
               <li key={n.id}>
                 <button
@@ -153,6 +169,6 @@ function NotificationsPage() {
           </ul>
         </StateBlock>
       </div>
-    </AppShell>
+    </div>
   );
 }
