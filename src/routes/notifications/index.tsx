@@ -9,7 +9,7 @@ import {
   markNotificationRead,
 } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
-import { parseDeepLink } from "@/features/notifications/deep-link";
+import { openDeepLink } from "@/features/notifications/open-deep-link";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
@@ -21,38 +21,6 @@ export const Route = createFileRoute("/notifications/")({
   component: NotificationsPage,
 });
 
-async function openDeepLink(
-  navigate: ReturnType<typeof useNavigate>,
-  path: string | null,
-) {
-  // Разбор общий с админкой: там те же уведомления открываются в панели.
-  const target = parseDeepLink(path);
-  if (!target) return;
-
-  switch (target.kind) {
-    case "order":
-      await navigate({
-        to: "/orders/$orderId",
-        params: { orderId: target.id },
-      });
-      return;
-    case "rfq":
-      await navigate({ to: "/requests/$rfqId", params: { rfqId: target.id } });
-      return;
-    case "service":
-      await navigate({
-        to: "/service/requests/$requestId",
-        params: { requestId: target.id },
-      });
-      return;
-    case "profile":
-      await navigate({ to: "/profile" });
-      return;
-    default:
-      // Служебные адреса клиенту не приходят.
-      return;
-  }
-}
 
 function NotificationsPage() {
   const navigate = useNavigate();

@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   registerDevice: vi.fn(async () => ({ status: "registered" })),
   removeDevice: vi.fn(async () => undefined),
   getToken: vi.fn(async () => "fcm-token-from-firebase"),
+  onMessage: vi.fn((_messaging, _handler) => () => {}),
 }));
 
 vi.mock("@/api/notifications", () => ({
@@ -30,6 +31,7 @@ vi.mock("firebase/app", () => ({
 vi.mock("firebase/messaging", () => ({
   getMessaging: vi.fn(() => ({})),
   getToken: mocks.getToken,
+  onMessage: mocks.onMessage,
 }));
 
 const ENV = {
@@ -193,5 +195,68 @@ describe("resumePushOnLogin", () => {
     await (await loadResume())();
 
     expect(mocks.registerDevice).not.toHaveBeenCalled();
+  });
+});
+
+describe("onForegroundPush", () => {
+  async function loadListener() {
+    vi.resetModules();
+    const mod = await import("@/lib/push");
+    return mod.onForegroundPush;
+  }
+
+  it("показывает то, что браузер при открытой вкладке не показывает сам", async () => {
+    // Пока страница на переднем плане, FCM отдаёт сообщение ей, а не service
+    // worker'у, и системного уведомления не рисует. Без этой подписки push
+    // «приходили только со свёрнутым браузером».
+    setEnv();
+    setBrowser({ permission: "granted" });
+    window.localStorage.setItem("medix.push_token.v1", "fcm-token");
+    const seen: unknown[] = [];
+
+    await (await loadListener())((message) => seen.push(message));
+
+    expect(mocks.onMessage).toHaveBeenCalled();
+    const handler = mocks.onMessage.mock.calls[0][1] as (p: unknown) => void;
+    handler({
+      notification: { title: "Новый запрос КП", body: "Возьмите в работу" },
+      data: { deep_link: "admin/rfq/42" },
+    });
+
+    expect(seen).toEqual([
+      {
+        title: "Новый запрос КП",
+        body: "Возьмите в работу",
+        deepLink: "admin/rfq/42",
+      },
+    ]);
+  });
+
+  it("не подписывается, пока уведомления не включены", async () => {
+    // SDK Firebase не должен грузиться ради того, кто ничего не включал.
+    setEnv();
+    setBrowser({ permission: "default" });
+
+    const stop = await (await loadListener())(() => {});
+
+    expect(mocks.onMessage).not.toHaveBeenCalled();
+    expect(typeof stop).toBe("function");
+  });
+
+  it("переживает уведомление без текста и ссылки", async () => {
+    setEnv();
+    setBrowser({ permission: "granted" });
+    window.localStorage.setItem("medix.push_token.v1", "fcm-token");
+    const seen: Array<{ title: string; deepLink: string | null }> = [];
+
+    await (await loadListener())((message) => seen.push(message));
+    const handler = mocks.onMessage.mock.calls[0][1] as (p: unknown) => void;
+    handler({ data: { deep_link: "  " } });
+
+    expect(seen[0]).toEqual({
+      title: "Новое уведомление",
+      body: "",
+      deepLink: null,
+    });
   });
 });
