@@ -98,7 +98,7 @@ function ReportsAdminPage() {
           <select
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className={fieldClass}
+            className="field-control mt-1.5"
           >
             {MONTHS.map((name, index) => (
               <option key={name} value={index + 1}>

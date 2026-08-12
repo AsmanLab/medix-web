@@ -209,6 +209,35 @@
     box-shadow: 0 0 0 3px
       color-mix(in oklab, var(--color-ring) 30%, transparent);
   }
+
+  /*
+   * Своя стрелка у списков.
+   *
+   * Без сброса `appearance` стрелку рисует операционная система — в узкой
+   * полосе у правого края, своим шрифтом и своей формой. Остальной
+   * интерфейс использует lucide ChevronDown 16×16, поэтому списки
+   * выбивались из общего вида: «иконка выбора слишком узкая».
+   *
+   * В проекте 14 `<select>` в 12 файлах, и ни один не переопределял
+   * нативную стрелку — поэтому правка здесь, а не по месту.
+   *
+   * Цвет зашит хексом: SVG в data-URI — отдельный документ, `currentColor`
+   * в нём разрешается в чёрный, а не в цвет хоста. #435961 — это
+   * `--muted-foreground` (oklch(0.45 0.03 220)) в sRGB. Тёмной темы
+   * в проекте нет; если появится, вынести стрелку в переменную на `:root`.
+   */
+  &:is(select) {
+    appearance: none;
+    /* Место под иконку: 0.875rem отступ + 1rem иконка + 0.625rem зазор. */
+    padding-inline-end: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23435961' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+    /* Логическое свойство padding-inline-end само не разворачивает фон. */
+    &:dir(rtl) {
+      background-position: left 0.875rem center;
+    }
+  }
 }
 
 @utility section-gap {

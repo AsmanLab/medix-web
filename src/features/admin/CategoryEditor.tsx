@@ -203,7 +203,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
             <select
               value={parentId}
               onChange={(e) => setParentId(e.target.value)}
-              className={fieldClass}
+              className="field-control mt-1.5"
             >
               <option value="">Корневая категория</option>
               {parentOptions.map((c: CategoryOut) => (
