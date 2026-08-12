@@ -1,17 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Boxes, ChevronDown, Filter, Search } from "lucide-react";
+import { Boxes, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { fetchCategories } from "@/api/catalog";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
+import { CategoryFilter } from "@/features/catalog/CategoryFilter";
 import { ProductGrid } from "@/features/catalog/ProductGrid";
 import { buildCategoryTree } from "@/features/catalog/map-category";
 import { useProductPages } from "@/features/catalog/use-product-pages";
 import { plural } from "@/lib/plural";
-import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/page-meta";
 
 type CatalogSearch = {
@@ -37,7 +37,6 @@ function CatalogIndexPage() {
   const { q: qFromUrl, category: categoryFromUrl } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [draftQ, setDraftQ] = useState(qFromUrl ?? "");
-  const [filterOpen, setFilterOpen] = useState(Boolean(categoryFromUrl));
 
   const categoriesQuery = useQuery({
     queryKey: queryKeys.catalog.categories(),
@@ -129,111 +128,21 @@ function CatalogIndexPage() {
       </form>
 
       <div className="mt-4">
-        <button
-          type="button"
-          onClick={() => setFilterOpen((open) => !open)}
-          className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold"
-          aria-expanded={filterOpen}
+        <StateBlock
+          isLoading={categoriesQuery.isLoading}
+          isError={categoriesQuery.isError}
+          error={categoriesQuery.error}
+          isEmpty={categoriesQuery.isSuccess && tree.length === 0}
+          onRetry={() => void categoriesQuery.refetch()}
+          emptyTitle="Категории пока пусты"
         >
-          <Filter className="h-4 w-4 text-primary" aria-hidden />
-          {selectedCategory
-            ? `Категория: ${selectedCategory.name}`
-            : "Фильтр по категориям"}
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 text-muted-foreground transition-transform",
-              filterOpen && "rotate-180",
-            )}
-            aria-hidden
+          <CategoryFilter
+            nodes={tree}
+            selectedId={selectedCategory?.id ?? null}
+            onSelect={(node) => selectCategory(node ?? undefined)}
+            kind="category"
           />
-        </button>
-
-        {filterOpen ? (
-          <div className="mt-3 space-y-3 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                Категории
-              </p>
-              {selectedCategory ? (
-                <button
-                  type="button"
-                  onClick={() => selectCategory(undefined)}
-                  className="text-xs font-semibold text-primary"
-                >
-                  Сбросить
-                </button>
-              ) : null}
-            </div>
-
-            <StateBlock
-              isLoading={categoriesQuery.isLoading}
-              isError={categoriesQuery.isError}
-              error={categoriesQuery.error}
-              isEmpty={categoriesQuery.isSuccess && tree.length === 0}
-              onRetry={() => void categoriesQuery.refetch()}
-              emptyTitle="Категории пока пусты"
-            >
-              <ul className="space-y-3">
-                {tree.map((section) => {
-                  const sectionActive =
-                    selectedCategory?.id === section.id ||
-                    selectedCategory?.slug === section.slug;
-                  return (
-                    <li key={section.id}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          selectCategory({
-                            id: section.id,
-                            slug: section.slug || section.id,
-                          })
-                        }
-                        className={cn(
-                          "w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition",
-                          sectionActive
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary/70 hover:bg-primary-soft",
-                        )}
-                      >
-                        {section.name}
-                      </button>
-                      {section.children.length > 0 ? (
-                        <ul className="mt-2 flex flex-wrap gap-2 pl-1">
-                          {section.children.map((child) => {
-                            const active =
-                              selectedCategory?.id === child.id ||
-                              selectedCategory?.slug === child.slug;
-                            return (
-                              <li key={child.id}>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    selectCategory({
-                                      id: child.id,
-                                      slug: child.slug || child.id,
-                                    })
-                                  }
-                                  className={cn(
-                                    "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-                                    active
-                                      ? "bg-primary text-primary-foreground"
-                                      : "bg-background border border-border hover:border-primary/40",
-                                  )}
-                                >
-                                  {child.name}
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            </StateBlock>
-          </div>
-        ) : null}
+        </StateBlock>
       </div>
 
       <div className="mt-8 min-h-[40rem]">
