@@ -86,7 +86,10 @@ function CatalogIndexPage() {
         ...prev,
         category: next ? next.slug || next.id : undefined,
       }),
-      replace: true,
+      // Здесь, в отличие от поиска, история нужна: выбор категории — это
+      // переход, и «Назад» должен снимать фильтр, а не выбрасывать из
+      // каталога целиком. С `replace: true` кнопка «Назад» уводила
+      // на предыдущую страницу, минуя все сделанные выборы.
     });
   }
 
@@ -99,7 +102,8 @@ function CatalogIndexPage() {
         Медицинское оборудование и материалы
       </h1>
       <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
-        Список товаров. Категории — в фильтре ниже.
+        Медицинское оборудование и расходные материалы. Выберите категорию или
+        найдите товар по названию и артикулу.
       </p>
 
       <form onSubmit={onSearchSubmit} className="mt-6 flex gap-2" role="search">
@@ -127,7 +131,14 @@ function CatalogIndexPage() {
         </button>
       </form>
 
-      <div className="mt-4">
+      {/*
+       * Две колонки на ПК: категории слева постоянной колонкой, товары
+       * справа. Фильтр был раскрывающейся панелью над сеткой — она ела
+       * высоту, хотя справа пустовала половина ширины, и требовала
+       * открыть-закрыть при каждом выборе. На телефоне колонка
+       * превращается в кнопку со шторкой, см. CategoryFilter.
+       */}
+      <div className="mt-4 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8">
         <StateBlock
           isLoading={categoriesQuery.isLoading}
           isError={categoriesQuery.isError}
@@ -143,63 +154,71 @@ function CatalogIndexPage() {
             kind="category"
           />
         </StateBlock>
-      </div>
 
-      <div className="mt-8 min-h-[40rem]">
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="font-display text-xl font-bold">Товары</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {selectedCategory?.name ?? "Все опубликованные товары"}
-            </p>
-          </div>
-          {products.length > 0 ? (
-            <p className="text-xs text-muted-foreground">
-              {productsQuery.hasNextPage
-                ? `Показано ${products.length}`
-                : plural(products.length, "товар", "товара", "товаров")}
-            </p>
-          ) : null}
-        </div>
-
-        <StateBlock
-          isLoading={productsQuery.isLoading}
-          isError={productsQuery.isError}
-          error={productsQuery.error}
-          isEmpty={productsQuery.isSuccess && products.length === 0}
-          onRetry={() => void productsQuery.refetch()}
-          loadingVariant="card-grid"
-          cardGridVariant="catalog"
-          loadingCount={6}
-          emptyTitle={
-            qFromUrl || selectedCategory
-              ? "Товары не найдены"
-              : "Каталог пока пуст"
-          }
-          emptyDescription={
-            qFromUrl || selectedCategory
-              ? "Измените поиск или сбросьте фильтр категорий."
-              : "Товары появятся после публикации."
-          }
-        >
-          <>
-            <ProductGrid products={products} />
-            {productsQuery.hasNextPage ? (
-              <div className="mt-8 flex justify-center">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  disabled={productsQuery.isFetchingNextPage}
-                  onClick={() => void productsQuery.fetchNextPage()}
-                >
-                  {productsQuery.isFetchingNextPage
-                    ? "Загружаем…"
-                    : "Показать ещё"}
-                </Button>
-              </div>
+        <div className="mt-8 min-h-[40rem] lg:mt-0">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-xl font-bold">Товары</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {selectedCategory?.name ?? "Все опубликованные товары"}
+              </p>
+            </div>
+            {products.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {productsQuery.hasNextPage
+                  ? `Показано ${products.length}`
+                  : plural(products.length, "товар", "товара", "товаров")}
+              </p>
             ) : null}
-          </>
-        </StateBlock>
+          </div>
+
+          <StateBlock
+            isLoading={productsQuery.isLoading}
+            isError={productsQuery.isError}
+            error={productsQuery.error}
+            isEmpty={productsQuery.isSuccess && products.length === 0}
+            onRetry={() => void productsQuery.refetch()}
+            loadingVariant="card-grid"
+            cardGridVariant="catalog"
+            loadingCount={6}
+            emptyTitle={
+              qFromUrl || selectedCategory
+                ? "Товары не найдены"
+                : "Каталог пока пуст"
+            }
+            emptyDescription={
+              qFromUrl || selectedCategory
+                ? "Измените поиск или сбросьте фильтр категорий."
+                : "Товары появятся после публикации."
+            }
+          >
+            <>
+              {/*
+               * Колонка товаров уже полной ширины на 240px сайдбара, поэтому
+               * четвёртая колонка добавляется на xl, а не на lg: иначе на
+               * 1024px карточка ужимается до ~160px при расчётных 232–310.
+               */}
+              <ProductGrid
+                products={products}
+                className="lg:grid-cols-3 xl:grid-cols-4"
+              />
+              {productsQuery.hasNextPage ? (
+                <div className="mt-8 flex justify-center">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    disabled={productsQuery.isFetchingNextPage}
+                    onClick={() => void productsQuery.fetchNextPage()}
+                  >
+                    {productsQuery.isFetchingNextPage
+                      ? "Загружаем…"
+                      : "Показать ещё"}
+                  </Button>
+                </div>
+              ) : null}
+            </>
+          </StateBlock>
+        </div>
       </div>
     </AppShell>
   );

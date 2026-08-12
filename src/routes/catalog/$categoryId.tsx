@@ -18,6 +18,7 @@ import {
 import { ProductGrid } from "@/features/catalog/ProductGrid";
 import { usePageMeta } from "@/lib/page-meta";
 import { plural } from "@/lib/plural";
+import { cn } from "@/lib/utils";
 
 type CategorySearch = {
   subcategory?: string;
@@ -99,6 +100,9 @@ function CategoryPage() {
     description: metaSource?.seoDescription,
   });
 
+  // История здесь нужна: выбор подкатегории — переход, и «Назад» должен
+  // снимать фильтр, а не выбрасывать из раздела. С `replace: true` кнопка
+  // «Назад» уводила на предыдущую страницу, минуя все сделанные выборы.
   function selectSubcategory(next?: CatalogCategoryNode) {
     if (!section) return;
     if (!next) {
@@ -106,7 +110,6 @@ function CategoryPage() {
         to: "/catalog/$categoryId",
         params: { categoryId: section.slug || section.id },
         search: (prev) => ({ ...prev, subcategory: undefined }),
-        replace: true,
       });
       return;
     }
@@ -117,7 +120,6 @@ function CategoryPage() {
         ...prev,
         subcategory: next.slug || next.id,
       }),
-      replace: true,
     });
   }
 
@@ -186,86 +188,112 @@ function CategoryPage() {
               </p>
             </header>
 
-            {section.children.length > 0 ? (
-              <CategoryFilter
-                nodes={section.children}
-                selectedId={selectedChild?.id ?? null}
-                onSelect={(node) => selectSubcategory(node ?? undefined)}
-                kind="subcategory"
-              />
-            ) : null}
+            {/*
+             * Та же раскладка, что в каталоге: подкатегории постоянной
+             * колонкой слева на ПК, кнопкой со шторкой на телефоне.
+             */}
+            <div
+              className={cn(
+                section.children.length > 0 &&
+                  "lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8",
+              )}
+            >
+              {section.children.length > 0 ? (
+                <CategoryFilter
+                  nodes={section.children}
+                  selectedId={selectedChild?.id ?? null}
+                  onSelect={(node) => selectSubcategory(node ?? undefined)}
+                  kind="subcategory"
+                />
+              ) : null}
 
-            <section>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <h2 className="font-display text-xl font-bold">Товары</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {selectedChild?.name ?? "Все товары раздела"}
-                  </p>
-                </div>
-                <form
-                  onSubmit={onSearchSubmit}
-                  role="search"
-                  className="flex w-full gap-2 sm:max-w-md"
-                >
-                  <label htmlFor="category-product-search" className="sr-only">
-                    Поиск в разделе
-                  </label>
-                  <div className="relative min-w-0 flex-1">
-                    <Search
-                      className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                      aria-hidden
-                    />
-                    <input
-                      id="category-product-search"
-                      value={draftQ}
-                      onChange={(e) => setDraftQ(e.target.value)}
-                      placeholder="Поиск в разделе"
-                      className="field-control pl-10"
-                    />
+              {/* Отступ нужен только когда сверху стоит кнопка фильтра:
+                  без подкатегорий интервал уже даёт space-y-8 выше. */}
+              <section
+                className={cn(section.children.length > 0 && "mt-8 lg:mt-0")}
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="font-display text-xl font-bold">Товары</h2>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {selectedChild?.name ?? "Все товары раздела"}
+                    </p>
                   </div>
-                  <button
-                    type="submit"
-                    className="h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
+                  <form
+                    onSubmit={onSearchSubmit}
+                    role="search"
+                    className="flex w-full gap-2 sm:max-w-md"
                   >
-                    Найти
-                  </button>
-                </form>
-              </div>
+                    <label
+                      htmlFor="category-product-search"
+                      className="sr-only"
+                    >
+                      Поиск в разделе
+                    </label>
+                    <div className="relative min-w-0 flex-1">
+                      <Search
+                        className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                        aria-hidden
+                      />
+                      <input
+                        id="category-product-search"
+                        value={draftQ}
+                        onChange={(e) => setDraftQ(e.target.value)}
+                        placeholder="Поиск в разделе"
+                        className="field-control pl-10"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
+                    >
+                      Найти
+                    </button>
+                  </form>
+                </div>
 
-              <div className="mt-5">
-                <StateBlock
-                  isLoading={productsQuery.isLoading}
-                  isError={productsQuery.isError}
-                  error={productsQuery.error}
-                  isEmpty={productsQuery.isSuccess && products.length === 0}
-                  onRetry={() => void productsQuery.refetch()}
-                  loadingVariant="card-grid"
-                  cardGridVariant="catalog"
-                  loadingCount={6}
-                  emptyTitle="Товары не найдены"
-                  emptyDescription="Измените поиск или выберите другую подкатегорию."
-                >
-                  <>
-                    <ProductGrid products={products} />
-                    {productsQuery.hasNextPage ? (
-                      <div className="mt-8 flex justify-center">
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          disabled={productsQuery.isFetchingNextPage}
-                          onClick={() => void productsQuery.fetchNextPage()}
-                        >
-                          {productsQuery.isFetchingNextPage
-                            ? "Загружаем…"
-                            : "Показать ещё"}
-                        </Button>
-                      </div>
-                    ) : null}
-                  </>
-                </StateBlock>
-              </div>
-            </section>
+                <div className="mt-5">
+                  <StateBlock
+                    isLoading={productsQuery.isLoading}
+                    isError={productsQuery.isError}
+                    error={productsQuery.error}
+                    isEmpty={productsQuery.isSuccess && products.length === 0}
+                    onRetry={() => void productsQuery.refetch()}
+                    loadingVariant="card-grid"
+                    cardGridVariant="catalog"
+                    loadingCount={6}
+                    emptyTitle="Товары не найдены"
+                    emptyDescription="Измените поиск или выберите другую подкатегорию."
+                  >
+                    <>
+                      {/* Четвёртая колонка с xl: на lg сайдбар ужимает
+                        карточку ниже расчётных 232px. */}
+                      <ProductGrid
+                        products={products}
+                        className={cn(
+                          section.children.length > 0 &&
+                            "lg:grid-cols-3 xl:grid-cols-4",
+                        )}
+                      />
+                      {productsQuery.hasNextPage ? (
+                        <div className="mt-8 flex justify-center">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            disabled={productsQuery.isFetchingNextPage}
+                            onClick={() => void productsQuery.fetchNextPage()}
+                          >
+                            {productsQuery.isFetchingNextPage
+                              ? "Загружаем…"
+                              : "Показать ещё"}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </>
+                  </StateBlock>
+                </div>
+              </section>
+            </div>
           </div>
         ) : null}
       </StateBlock>

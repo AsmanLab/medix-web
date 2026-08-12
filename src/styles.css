@@ -240,6 +240,45 @@
   }
 }
 
+/*
+ * Появление шторки снизу.
+ *
+ * Длительность 220ms — внутри рекомендованных 150–300ms для
+ * микро-взаимодействий. Движение снизу вверх передаёт иерархию:
+ * «пришло из-под текущего экрана». Мгновенное появление такой связи
+ * не даёт и читается как подмена содержимого.
+ *
+ * Отдельного правила под prefers-reduced-motion не нужно: блок выше
+ * гасит все animation-duration глобально.
+ */
+@keyframes sheet-rise {
+  from {
+    transform: translateY(0.75rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes overlay-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility sheet-rise {
+  animation: sheet-rise 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@utility overlay-fade {
+  animation: overlay-fade 180ms ease-out;
+}
+
 @utility section-gap {
   margin-top: var(--spacing-section);
 }
