@@ -171,7 +171,7 @@ function ProfileSecurityPage() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 className="field-control mt-1.5"
-                placeholder="123456"
+                placeholder="Код из SMS"
                 inputMode="numeric"
                 autoComplete="one-time-code"
               />
