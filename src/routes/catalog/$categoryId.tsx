@@ -100,6 +100,9 @@ function CategoryPage() {
     description: metaSource?.seoDescription,
   });
 
+  // История здесь нужна: выбор подкатегории — переход, и «Назад» должен
+  // снимать фильтр, а не выбрасывать из раздела. С `replace: true` кнопка
+  // «Назад» уводила на предыдущую страницу, минуя все сделанные выборы.
   function selectSubcategory(next?: CatalogCategoryNode) {
     if (!section) return;
     if (!next) {
@@ -107,7 +110,6 @@ function CategoryPage() {
         to: "/catalog/$categoryId",
         params: { categoryId: section.slug || section.id },
         search: (prev) => ({ ...prev, subcategory: undefined }),
-        replace: true,
       });
       return;
     }
@@ -118,7 +120,6 @@ function CategoryPage() {
         ...prev,
         subcategory: next.slug || next.id,
       }),
-      replace: true,
     });
   }
 

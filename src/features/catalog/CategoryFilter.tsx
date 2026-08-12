@@ -129,7 +129,7 @@ export function CategoryFilter({
           onClick={() => setSheetOpen(true)}
           aria-haspopup="dialog"
           aria-expanded={sheetOpen}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold"
+          className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold active:bg-secondary"
         >
           <SlidersHorizontal className="h-4 w-4 text-primary" aria-hidden />
           {selectedName ?? words.trigger}
@@ -155,7 +155,7 @@ export function CategoryFilter({
            * и без этого шторка уезжала бы под неё.
            */}
           <div
-            className="fixed inset-0 z-[55] bg-black/40 lg:hidden"
+            className="overlay-fade fixed inset-0 z-[55] bg-black/40 lg:hidden"
             onClick={closeSheet}
             aria-hidden
           />
@@ -164,7 +164,7 @@ export function CategoryFilter({
             role="dialog"
             aria-modal="true"
             aria-label={words.heading}
-            className="fixed inset-x-0 bottom-0 z-[60] max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-border bg-card lg:hidden"
+            className="sheet-rise fixed inset-x-0 bottom-0 z-[60] max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-border bg-card lg:hidden"
             style={{
               boxShadow: "var(--shadow-nav)",
               paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
@@ -177,7 +177,7 @@ export function CategoryFilter({
                 type="button"
                 onClick={closeSheet}
                 aria-label="Закрыть"
-                className="grid size-11 place-items-center rounded-xl text-muted-foreground"
+                className="grid size-11 touch-manipulation place-items-center rounded-xl text-muted-foreground active:bg-secondary"
               >
                 <X className="h-5 w-5" aria-hidden />
               </button>
@@ -259,12 +259,18 @@ function Row({
       className={cn(
         "flex min-h-11 w-full items-center rounded-lg py-2 text-left text-sm transition",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        // touch-action: manipulation убирает 300ms задержку тапа, которую
+        // браузер держит на случай двойного нажатия для зума.
+        "touch-manipulation",
         // Отступ у вложенного уровня — вместе с более лёгким шрифтом это
         // и есть признак уровня.
         nested ? "ps-7 pe-3 font-normal" : "px-3 font-semibold",
         active
           ? "bg-primary-soft text-primary"
-          : "text-foreground hover:bg-secondary/70",
+          : // active: нужен отдельно от hover: на тач-экране hover не
+            // срабатывает вовсе, и до перерисовки списка нажатие оставалось
+            // без отклика.
+            "text-foreground hover:bg-secondary/70 active:bg-secondary",
       )}
     >
       <span className="line-clamp-2">{label}</span>
