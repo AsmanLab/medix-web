@@ -142,7 +142,7 @@ function StaffAdminPage() {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as StaffRole)}
-              className={fieldClass}
+              className="field-control mt-1.5"
             >
               <option value="manager">Менеджер</option>
               <option value="service_engineer">Инженер</option>

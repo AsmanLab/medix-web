@@ -185,7 +185,7 @@ export function CmsPageEditor({ slug }: Props) {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className={fieldClass}
+              className="field-control mt-1.5"
             >
               <option value="draft">Черновик</option>
               <option value="published">Опубликовано</option>

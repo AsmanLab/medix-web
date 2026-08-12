@@ -238,7 +238,7 @@ function AdminProductsPage() {
               replace: true,
             })
           }
-          className="h-11 rounded-xl border border-border bg-background px-3 text-sm"
+          className="field-control sm:w-auto"
         >
           <option value="">Все категории</option>
           {categories.map((c) => (

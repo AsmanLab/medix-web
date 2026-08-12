@@ -523,7 +523,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                 <select
                   value={availability}
                   onChange={(e) => setAvailability(e.target.value)}
-                  className={fieldClass}
+                  className="field-control mt-1.5"
                 >
                   <option value="in_stock">В наличии</option>
                   <option value="on_order">Под заказ</option>
@@ -950,7 +950,7 @@ function NewOptionForm({
         <select
           value={optionType}
           onChange={(e) => setOptionType(e.target.value as OptionType)}
-          className={fieldClass}
+          className="field-control mt-1.5"
         >
           {Object.entries(OPTION_TYPE_LABEL).map(([value, label]) => (
             <option key={value} value={value}>

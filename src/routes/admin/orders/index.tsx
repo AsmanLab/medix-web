@@ -169,7 +169,7 @@ function ManagerOrdersPage() {
               replace: true,
             })
           }
-          className="h-11 rounded-xl border border-border bg-background px-3 text-sm"
+          className="field-control sm:w-auto"
         >
           <option value="all">Все статусы</option>
           {STATUS_FILTERS.map((value) => (

@@ -22,8 +22,6 @@ import {
 import { useSession } from "@/session/store";
 import { StatusPill } from "@/components/ui/status-pill";
 
-const fieldClass =
-  "mt-1.5 flex h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 type Props = {
   requestId: string;
@@ -245,7 +243,7 @@ export function ServiceDeskDetail({ requestId, allowAssign = false }: Props) {
                   <select
                     value={engineerId}
                     onChange={(e) => setEngineerId(e.target.value)}
-                    className={fieldClass}
+                    className="field-control mt-1.5"
                   >
                     <option value="">Выберите…</option>
                     {(engineersQuery.data ?? []).map((eng) => (
