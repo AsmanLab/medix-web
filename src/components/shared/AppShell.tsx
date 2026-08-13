@@ -706,7 +706,7 @@ export function AppShell({
                   aria-label={
                     badge ? `${label}, ${cartCount} в корзине` : label
                   }
-                  className="flex flex-col items-center gap-1 rounded-xl py-1.5"
+                  className="flex flex-col items-center gap-1 rounded-xl py-1.5 transition-colors active:bg-secondary"
                 >
                   <span
                     className={cn(
