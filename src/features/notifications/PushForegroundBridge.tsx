@@ -23,8 +23,21 @@ async function showSystemNotification(message: ForegroundPush) {
     if (!registration) return;
     await registration.showNotification(message.title, {
       body: message.body,
-      icon: "/favicon.svg",
-      tag: "medix-notification",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      /*
+       * tag обязан совпадать с тем, что ставит service worker
+       * (firebase-messaging-sw.js), иначе на одно сообщение видно два
+       * уведомления. Так и было на iPhone у заказчика: свёрнутое
+       * приложение остаётся живым клиентом, сообщение доходит и сюда,
+       * и в service worker, а теги были разные — «medix-notification»
+       * здесь против deep_link там. При одинаковом теге второй показ
+       * заменяет первый, и неважно, кто из двоих успел раньше.
+       *
+       * Убрать показ отсюда совсем нельзя: в части браузеров сообщение
+       * при скрытой вкладке приходит только сюда, и уведомление бы пропало.
+       */
+      tag: message.deepLink || "medix",
       // Ключ deepLink — его же читает обработчик клика в service worker'е.
       data: { deepLink: message.deepLink },
     });
