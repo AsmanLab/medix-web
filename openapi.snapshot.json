@@ -707,6 +707,25 @@
         "title": "ClarificationRequest",
         "type": "object"
       },
+      "CmsPageListItemOut": {
+        "description": "Короткая карточка страницы: тела здесь нет, список нужен для навигации.",
+        "properties": {
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title"
+        ],
+        "title": "CmsPageListItemOut",
+        "type": "object"
+      },
       "CmsPageOut": {
         "properties": {
           "body_html": {
@@ -12658,6 +12677,32 @@
           }
         },
         "summary": "Контакты офисов",
+        "tags": [
+          "cms"
+        ]
+      }
+    },
+    "/api/v1/cms/pages": {
+      "get": {
+        "description": "Список опубликованных страниц — витрине, чтобы не звать несуществующие.\n\nСсылка «Политика» в подвале была зашита и вела в 404, пока страницу\nне завели в админке (medix-web#103). Теперь витрина показывает ссылку,\nтолько если страница действительно есть.",
+        "operationId": "list_pages_api_v1_cms_pages_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CmsPageListItemOut"
+                  },
+                  "title": "Response List Pages Api V1 Cms Pages Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Опубликованные CMS-страницы",
         "tags": [
           "cms"
         ]

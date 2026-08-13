@@ -29,6 +29,7 @@ export const queryKeys = {
     bannerImages: (keys: string[]) =>
       [...queryKeys.cms.all, "banner-images", [...keys].sort()] as const,
     page: (slug: string) => [...queryKeys.cms.all, "page", slug] as const,
+    pages: () => [...queryKeys.cms.all, "pages"] as const,
     promotions: () => [...queryKeys.cms.all, "promotions"] as const,
     promotion: (slug: string) =>
       [...queryKeys.cms.all, "promotion", slug] as const,

@@ -21,6 +21,7 @@ import { fetchCategories } from "@/api/catalog";
 import { listNotifications } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
 import { fetchCart } from "@/api/cart";
+import { listCmsPages } from "@/api/cms";
 import {
   buildCategoryTree,
   type CatalogCategoryNode,
@@ -422,6 +423,24 @@ export function AppShell({
   });
   const cartCount = cartQuery.data?.items_count ?? 0;
 
+  /*
+   * Список CMS-страниц. Нужен подвалу: ссылка «Политика» была зашита
+   * и вела в 404, пока страницу не завели в админке (medix-web#103).
+   * Теперь ссылка появляется, только когда страница действительно есть.
+   *
+   * Ошибку глотаем молча: подвал без одной ссылки лучше, чем сломанная
+   * страница, если CMS почему-то не ответила.
+   */
+  const cmsPagesQuery = useQuery({
+    queryKey: queryKeys.cms.pages(),
+    queryFn: ({ signal }) => listCmsPages(signal),
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  const privacyPage = (cmsPagesQuery.data ?? []).find(
+    (page) => page.slug === "privacy",
+  );
+
   const categoryTree = useMemo(
     () => buildCategoryTree(categoriesQuery.data ?? []),
     [categoriesQuery.data],
@@ -722,13 +741,15 @@ export function AppShell({
             >
               Сервис
             </Link>
-            <Link
-              to="/pages/$slug"
-              params={{ slug: "privacy" }}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
-            >
-              Политика
-            </Link>
+            {privacyPage ? (
+              <Link
+                to="/pages/$slug"
+                params={{ slug: privacyPage.slug }}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
+              >
+                {privacyPage.title}
+              </Link>
+            ) : null}
           </nav>
         </div>
       </footer>
