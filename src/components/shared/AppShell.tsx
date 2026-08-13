@@ -438,6 +438,38 @@ export function AppShell({
   const profileTo = authenticated ? "/profile" : "/login";
   const profileLabel = authenticated ? "Кабинет" : "Войти";
 
+  /*
+   * Высота мобильной навигации публикуется в --bottom-nav-h.
+   *
+   * Липким панелям страниц (например «Итого + Оформить» в корзине) нужно
+   * знать, на сколько подняться, чтобы не залезть под таб-бар. Зашивать
+   * число нельзя: высота складывается из подписи, иконки и safe-area,
+   * и на устройстве с домашней полосой она другая.
+   *
+   * На десктопе элемент скрыт через lg:hidden, высота нулевая, и панели
+   * прижимаются к самому низу — то есть отдельного условия не нужно.
+   */
+  const bottomNavRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const nav = bottomNavRef.current;
+    if (!nav) return;
+
+    const publish = () =>
+      document.documentElement.style.setProperty(
+        "--bottom-nav-h",
+        `${nav.getBoundingClientRect().height}px`,
+      );
+
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(nav);
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--bottom-nav-h");
+    };
+  }, []);
+
   function onHeaderSearch(event: React.FormEvent) {
     event.preventDefault();
     void navigate({
@@ -682,6 +714,7 @@ export function AppShell({
       </footer>
 
       <nav
+        ref={bottomNavRef}
         aria-label="Мобильная навигация"
         className="fixed inset-x-0 bottom-0 z-50 w-full border-t border-border bg-card/95 backdrop-blur lg:hidden"
         style={{
