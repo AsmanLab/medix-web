@@ -1,0 +1,14 @@
+# Контекст сборки: всё, что не нужно Vite, только замедляет docker build.
+node_modules
+dist
+.git
+.github
+.vercel
+coverage
+playwright-report
+test-results
+e2e
+*.log
+.env
+.env.*
+!.env.example
