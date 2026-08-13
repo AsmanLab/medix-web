@@ -84,7 +84,9 @@ function Logo({
   return (
     <Link
       to="/"
-      className="inline-flex shrink-0 items-center gap-3"
+      // min-h-11: в компактном виде значок 36px, и ссылка была ниже нормы
+      // тач-таргета. Высота шапки 56px, поэтому 44 помещаются без правок.
+      className="inline-flex min-h-11 shrink-0 items-center gap-3"
       aria-label="Medix — на главную"
     >
       <span
@@ -654,26 +656,44 @@ export function AppShell({
       <footer className="border-t border-border bg-card pb-20 lg:pb-0">
         <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm lg:px-6">
           <Logo compact />
+          {/*
+           * Ссылки подвала набраны 14px и занимали 20px по высоте — вдвое
+           * меньше минимальных 44px, а пальцем попадать в них надо через
+           * весь список. min-h-11 поднимает зону нажатия до нормы; строчный
+           * зазор убран, потому что теперь высоту держат сами ссылки.
+           */}
           <nav
             aria-label="Ссылки в подвале"
-            className="flex flex-wrap gap-x-4 gap-y-2 text-muted-foreground"
+            className="flex flex-wrap gap-x-4 text-muted-foreground"
           >
-            <Link to="/about" className="hover:text-foreground">
+            <Link
+              to="/about"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
+            >
               О компании
             </Link>
-            <Link to="/promotions" className="hover:text-foreground">
+            <Link
+              to="/promotions"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
+            >
               Акции
             </Link>
-            <Link to="/contacts" className="hover:text-foreground">
+            <Link
+              to="/contacts"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
+            >
               Контакты
             </Link>
-            <Link to="/service" className="hover:text-foreground">
+            <Link
+              to="/service"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
+            >
               Сервис
             </Link>
             <Link
               to="/pages/$slug"
               params={{ slug: "privacy" }}
-              className="hover:text-foreground"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
             >
               Политика
             </Link>

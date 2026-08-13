@@ -138,7 +138,7 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
             type="button"
             aria-label="Предыдущий слайд"
             onClick={() => go(index - 1)}
-            className="absolute top-1/2 left-3 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
+            className="absolute top-1/2 left-3 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -146,11 +146,19 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
             type="button"
             aria-label="Следующий слайд"
             onClick={() => go(index + 1)}
-            className="absolute top-1/2 right-3 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
+            className="absolute top-1/2 right-3 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
-          <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+          {/*
+           * Точка рисуется вложенным span, а нажимается кнопка вокруг неё:
+           * сама точка 10px, попасть в неё пальцем нельзя. Кнопка 44px
+           * по высоте и 32 по ширине — на всю ширину их разносить нельзя,
+           * пять точек заняли бы 220px и разъехались по краям баннера.
+           * Отступ снизу уменьшен на выросшую высоту, чтобы точки остались
+           * на прежнем месте.
+           */}
+          <div className="absolute bottom-0 left-1/2 z-20 flex -translate-x-1/2">
             {banners.map((b, i) => (
               <button
                 key={b.id}
@@ -158,11 +166,15 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
                 aria-label={`Слайд ${i + 1}`}
                 aria-current={i === index}
                 onClick={() => go(i)}
-                className={cn(
-                  "h-2.5 w-2.5 rounded-full transition",
-                  i === index ? "bg-white" : "bg-white/40 hover:bg-white/70",
-                )}
-              />
+                className="grid h-11 w-8 place-items-center"
+              >
+                <span
+                  className={cn(
+                    "h-2.5 w-2.5 rounded-full transition",
+                    i === index ? "bg-white" : "bg-white/40 hover:bg-white/70",
+                  )}
+                />
+              </button>
             ))}
           </div>
         </>
