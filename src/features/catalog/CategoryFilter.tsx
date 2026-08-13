@@ -1,5 +1,11 @@
 import { SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import type { CatalogCategoryNode } from "@/features/catalog/map-category";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +42,21 @@ import { cn } from "@/lib/utils";
  *
  * Высота строки — `min-h-11`, то есть 44px: минимум по WCAG 2.5.5 и Apple HIG.
  * Дочерние пилюли прежней версии были 24px.
+ *
+ * ### Почему разделы схлопнуты
+ *
+ * Плоское дерево показывало все подкатегории сразу: восемь разделов по пять
+ * штук — это сорок строк, и до нижних разделов приходилось листать, причём
+ * в шторке на телефоне особенно долго. Теперь раздел раскрывается по нажатию,
+ * а на экране видно оглавление целиком.
+ *
+ * Заголовок раздела **раскрывает** его, а не выбирает: два разных действия
+ * на одном элементе — частый источник «нажал не туда». Выбор самого раздела
+ * лежит первой строкой внутри («Все товары раздела»). Разделы без
+ * подкатегорий остаются обычной строкой выбора — раскрывать там нечего.
+ *
+ * Раздел с выбранной подкатегорией раскрыт при первой отрисовке: иначе после
+ * перезагрузки страницы фильтр выглядит сброшенным, хотя он применён.
  */
 
 type CategoryFilterProps = {
@@ -201,40 +222,102 @@ function CategoryTree({
   resetLabel: string;
   onChoose: (node: CatalogCategoryNode | null) => void;
 }) {
+  const branches = nodes.filter((node) => node.children.length > 0);
+  const leaves = nodes.filter((node) => node.children.length === 0);
+
+  // Раскрытым держим раздел с текущим выбором. Значение управляемое,
+  // а не начальное: выбор меняется и снаружи — из адресной строки, когда
+  // человек пришёл по ссылке или нажал «Назад».
+  const [openId, setOpenId] = useState<string>(
+    () => branchIdFor(branches, selectedId) ?? "",
+  );
+
+  useEffect(() => {
+    const next = branchIdFor(branches, selectedId);
+    if (next) setOpenId(next);
+  }, [branches, selectedId]);
+
   return (
-    <ul>
-      <li>
-        <Row
-          label={resetLabel}
-          active={!selectedId}
-          onClick={() => onChoose(null)}
-        />
-      </li>
-      {nodes.map((node) => (
-        <li key={node.id} className="mt-0.5">
-          <Row
-            label={node.name}
-            active={selectedId === node.id}
-            onClick={() => onChoose(node)}
-          />
-          {node.children.length > 0 ? (
-            <ul>
-              {node.children.map((child) => (
-                <li key={child.id} className="mt-0.5">
+    <div>
+      <Row
+        label={resetLabel}
+        active={!selectedId}
+        onClick={() => onChoose(null)}
+      />
+
+      <Accordion
+        type="single"
+        collapsible
+        value={openId}
+        onValueChange={setOpenId}
+      >
+        {branches.map((node) => {
+          const activeInside =
+            selectedId === node.id ||
+            node.children.some((child) => child.id === selectedId);
+
+          return (
+            <AccordionItem key={node.id} value={node.id}>
+              <AccordionTrigger
+                className={cn(activeInside && "text-primary")}
+                // Раздел с выбором внутри помечен не только цветом: без
+                // этого для скринридера все заголовки одинаковы.
+                aria-current={activeInside ? "true" : undefined}
+              >
+                <span className="line-clamp-2">{node.name}</span>
+              </AccordionTrigger>
+              <AccordionContent>
+                {/* Не «Все: {название}» — заголовок раздела стоит прямо
+                    над этой строкой, и повтор читался как вторая категория
+                    с тем же именем. */}
+                <Row
+                  label="Все товары раздела"
+                  active={selectedId === node.id}
+                  onClick={() => onChoose(node)}
+                  nested
+                />
+                {node.children.map((child) => (
                   <Row
+                    key={child.id}
                     label={child.name}
                     active={selectedId === child.id}
                     onClick={() => onChoose(child)}
                     nested
                   />
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </li>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+
+      {/* Разделы без подкатегорий: раскрывать нечего, поэтому обычная
+          строка выбора — и она идёт после аккордеона, чтобы не разрывать
+          список раскрывающихся заголовков. */}
+      {leaves.map((node) => (
+        <Row
+          key={node.id}
+          label={node.name}
+          active={selectedId === node.id}
+          onClick={() => onChoose(node)}
+        />
       ))}
-    </ul>
+    </div>
   );
+}
+
+/** Раздел, внутри которого лежит выбранный узел (или сам выбранный раздел). */
+function branchIdFor(
+  branches: CatalogCategoryNode[],
+  selectedId: string | null,
+): string | null {
+  if (!selectedId) return null;
+  const found = branches.find(
+    (node) =>
+      node.id === selectedId ||
+      node.children.some((child) => child.id === selectedId),
+  );
+  return found?.id ?? null;
 }
 
 function Row({

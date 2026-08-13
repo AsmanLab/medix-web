@@ -319,6 +319,42 @@
   }
 }
 
+/*
+ * Раскрытие аккордеона категорий.
+ *
+ * Высота берётся из переменной, которую Radix измеряет сам: анимировать
+ * `height: auto` браузер не умеет, а фиксированное значение не подошло бы —
+ * в разделах разное число подкатегорий.
+ *
+ * Отдельного правила под prefers-reduced-motion не нужно: блок выше гасит
+ * все animation-duration разом.
+ */
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@utility animate-accordion-down {
+  animation: accordion-down 200ms ease-out;
+}
+
+@utility animate-accordion-up {
+  animation: accordion-up 200ms ease-out;
+}
+
 @utility sheet-rise {
   animation: sheet-rise 220ms cubic-bezier(0.2, 0, 0, 1);
 }
