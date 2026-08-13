@@ -1006,6 +1006,10 @@
           },
           "status": {
             "default": "draft",
+            "enum": [
+              "draft",
+              "published"
+            ],
             "title": "Status",
             "type": "string"
           },
@@ -3346,6 +3350,38 @@
         "title": "PublishQuoteRequest",
         "type": "object"
       },
+      "PushSelfTestResponse": {
+        "description": "Отчёт о попытке отправить push самому себе.",
+        "properties": {
+          "devices": {
+            "title": "Devices",
+            "type": "integer"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "firebase_configured": {
+            "title": "Firebase Configured",
+            "type": "boolean"
+          },
+          "sent": {
+            "title": "Sent",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "firebase_configured",
+          "devices",
+          "sent",
+          "errors"
+        ],
+        "title": "PushSelfTestResponse",
+        "type": "object"
+      },
       "QuoteOut": {
         "properties": {
           "conditions": {
@@ -4250,6 +4286,10 @@
           "status": {
             "anyOf": [
               {
+                "enum": [
+                  "draft",
+                  "published"
+                ],
                 "type": "string"
               },
               {
@@ -5568,6 +5608,7 @@
             "schema": {
               "default": 40,
               "maximum": 100,
+              "minimum": 1,
               "title": "Limit",
               "type": "integer"
             }
@@ -6721,6 +6762,147 @@
           }
         ],
         "summary": "Удалить изображение товара",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/admin/catalog/products/{product_id}/images/{image_id}/primary": {
+      "post": {
+        "operationId": "admin_set_primary_image_api_v1_admin_catalog_products__product_id__images__image_id__primary_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Product Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "image_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Image Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Сделать изображение главным",
         "tags": [
           "catalog"
         ]
@@ -12228,6 +12410,28 @@
             }
           },
           {
+            "description": "Товары любой из категорий. Нужен разделу витрины, который показывает раздел вместе с подкатегориями одним листаемым списком. Имеет приоритет над category_id.",
+            "in": "query",
+            "name": "category_ids",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Товары любой из категорий. Нужен разделу витрины, который показывает раздел вместе с подкатегориями одним листаемым списком. Имеет приоритет над category_id.",
+              "title": "Category Ids"
+            }
+          },
+          {
             "in": "query",
             "name": "cursor",
             "required": false,
@@ -12251,6 +12455,7 @@
             "schema": {
               "default": 20,
               "maximum": 100,
+              "minimum": 1,
               "title": "Limit",
               "type": "integer"
             }
@@ -12550,7 +12755,7 @@
     },
     "/api/v1/cms/promotions": {
       "get": {
-        "description": "Возвращает активные акции для витрины.",
+        "description": "Возвращает действующие и будущие акции для витрины.",
         "operationId": "list_promotions_api_v1_cms_promotions_get",
         "responses": {
           "200": {
@@ -12615,7 +12820,7 @@
     },
     "/api/v1/cms/promotions/{slug}": {
       "get": {
-        "description": "Возвращает детали акции с привязанными товарами.",
+        "description": "Возвращает детали акции с привязанными товарами.\n\nВидимость та же, что у списка: снятая с публикации или уже завершившаяся\nакция по прямой ссылке больше не открывается.",
         "operationId": "get_promotion_api_v1_cms_promotions__slug__get",
         "parameters": [
           {
@@ -13906,7 +14111,7 @@
     },
     "/api/v1/manager/invoices/{invoice_id}": {
       "get": {
-        "description": "Возвращает детали счёта для менеджера.",
+        "description": "Возвращает детали счёта для менеджера, ведущего эту сделку.",
         "operationId": "get_invoice_api_v1_manager_invoices__invoice_id__get",
         "parameters": [
           {
@@ -14169,7 +14374,7 @@
     },
     "/api/v1/manager/invoices/{invoice_id}/publish": {
       "post": {
-        "description": "Публикует счёт и делает его доступным клиенту.",
+        "description": "Публикует счёт своей сделки и делает его доступным клиенту.",
         "operationId": "manager_publish_invoice_api_v1_manager_invoices__invoice_id__publish_post",
         "parameters": [
           {
@@ -16372,7 +16577,7 @@
     },
     "/api/v1/media/{key}/download": {
       "get": {
-        "description": "Публичные медиа каталога/CMS — без авторизации.\nservice-requests/ и invoices/ — только для авторизованных ролей.",
+        "description": "Публичные медиа каталога/CMS — без авторизации.\nservice-requests/ и invoices/ — сотрудникам по роли, клиенту только своё.",
         "operationId": "request_download_api_v1_media__key__download_get",
         "parameters": [
           {
@@ -16610,6 +16815,108 @@
           }
         ],
         "summary": "Отметить все прочитанными",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/test-push": {
+      "post": {
+        "description": "Диагностика push: отправляет уведомление на устройства текущего пользователя\nи возвращает, что именно произошло.\n\nОбычная отправка ошибки проглатывает — уведомление не повод ронять\nобработку события. Из-за этого «push не приходят» выглядит одинаково при\nотсутствующем ключе, незарегистрированном устройстве и отказе FCM.\nЗдесь причина возвращается вызывающему.\n\nОтвечает за **этот процесс** — API. Настоящие уведомления шлёт worker,\nи переменные окружения у него свои: `firebase_configured: true` здесь\nне доказывает, что ключ есть и у него.",
+        "operationId": "send_test_push_api_v1_notifications_test_push_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushSelfTestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Отправить тестовый push самому себе",
         "tags": [
           "notifications"
         ]
@@ -19693,7 +20000,7 @@
     },
     "/api/v1/service/{request_id}/accept": {
       "post": {
-        "description": "Инженер принимает заявку в работу.",
+        "description": "Инженер принимает заявку в работу. Чужую назначенную заявку взять нельзя.",
         "operationId": "accept_service_request_api_v1_service__request_id__accept_post",
         "parameters": [
           {
@@ -19953,7 +20260,7 @@
     },
     "/api/v1/service/{request_id}/comments": {
       "post": {
-        "description": "Добавляет комментарий инженера к заявке.",
+        "description": "Добавляет комментарий к заявке.\n\nИнженер комментирует только свои заявки, менеджер и админ — любые.",
         "operationId": "add_engineer_comment_api_v1_service__request_id__comments_post",
         "parameters": [
           {

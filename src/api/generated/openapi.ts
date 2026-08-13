@@ -162,6 +162,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/catalog/products/{product_id}/images/{image_id}/primary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Сделать изображение главным */
+        post: operations["admin_set_primary_image_api_v1_admin_catalog_products__product_id__images__image_id__primary_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/catalog/products/{product_id}/option-groups": {
         parameters: {
             query?: never;
@@ -895,7 +912,7 @@ export interface paths {
         };
         /**
          * Список акций
-         * @description Возвращает активные акции для витрины.
+         * @description Возвращает действующие и будущие акции для витрины.
          */
         get: operations["list_promotions_api_v1_cms_promotions_get"];
         put?: never;
@@ -916,6 +933,9 @@ export interface paths {
         /**
          * Акция по slug
          * @description Возвращает детали акции с привязанными товарами.
+         *
+         *     Видимость та же, что у списка: снятая с публикации или уже завершившаяся
+         *     акция по прямой ссылке больше не открывается.
          */
         get: operations["get_promotion_api_v1_cms_promotions__slug__get"];
         put?: never;
@@ -1119,7 +1139,7 @@ export interface paths {
         };
         /**
          * Получить счёт
-         * @description Возвращает детали счёта для менеджера.
+         * @description Возвращает детали счёта для менеджера, ведущего эту сделку.
          */
         get: operations["get_invoice_api_v1_manager_invoices__invoice_id__get"];
         put?: never;
@@ -1158,7 +1178,7 @@ export interface paths {
         put?: never;
         /**
          * Опубликовать счёт
-         * @description Публикует счёт и делает его доступным клиенту.
+         * @description Публикует счёт своей сделки и делает его доступным клиенту.
          */
         post: operations["manager_publish_invoice_api_v1_manager_invoices__invoice_id__publish_post"];
         delete?: never;
@@ -1504,7 +1524,7 @@ export interface paths {
         /**
          * Presigned URL для скачивания файла
          * @description Публичные медиа каталога/CMS — без авторизации.
-         *     service-requests/ и invoices/ — только для авторизованных ролей.
+         *     service-requests/ и invoices/ — сотрудникам по роли, клиенту только своё.
          */
         get: operations["request_download_api_v1_media__key__download_get"];
         put?: never;
@@ -1549,6 +1569,36 @@ export interface paths {
          * @description Помечает все непрочитанные уведомления пользователя как прочитанные.
          */
         post: operations["mark_all_read_api_v1_notifications_read_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/test-push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Отправить тестовый push самому себе
+         * @description Диагностика push: отправляет уведомление на устройства текущего пользователя
+         *     и возвращает, что именно произошло.
+         *
+         *     Обычная отправка ошибки проглатывает — уведомление не повод ронять
+         *     обработку события. Из-за этого «push не приходят» выглядит одинаково при
+         *     отсутствующем ключе, незарегистрированном устройстве и отказе FCM.
+         *     Здесь причина возвращается вызывающему.
+         *
+         *     Отвечает за **этот процесс** — API. Настоящие уведомления шлёт worker,
+         *     и переменные окружения у него свои: `firebase_configured: true` здесь
+         *     не доказывает, что ключ есть и у него.
+         */
+        post: operations["send_test_push_api_v1_notifications_test_push_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1993,7 +2043,7 @@ export interface paths {
         put?: never;
         /**
          * Принять заявку
-         * @description Инженер принимает заявку в работу.
+         * @description Инженер принимает заявку в работу. Чужую назначенную заявку взять нельзя.
          */
         post: operations["accept_service_request_api_v1_service__request_id__accept_post"];
         delete?: never;
@@ -2033,7 +2083,9 @@ export interface paths {
         put?: never;
         /**
          * Добавить комментарий
-         * @description Добавляет комментарий инженера к заявке.
+         * @description Добавляет комментарий к заявке.
+         *
+         *     Инженер комментирует только свои заявки, менеджер и админ — любые.
          */
         post: operations["add_engineer_comment_api_v1_service__request_id__comments_post"];
         delete?: never;
@@ -2534,8 +2586,9 @@ export interface components {
             /**
              * Status
              * @default draft
+             * @enum {string}
              */
-            status: string;
+            status: "draft" | "published";
             /** Title */
             title: string;
         };
@@ -3461,6 +3514,20 @@ export interface components {
             /** Valid Until */
             valid_until?: string | null;
         };
+        /**
+         * PushSelfTestResponse
+         * @description Отчёт о попытке отправить push самому себе.
+         */
+        PushSelfTestResponse: {
+            /** Devices */
+            devices: number;
+            /** Errors */
+            errors: string[];
+            /** Firebase Configured */
+            firebase_configured: boolean;
+            /** Sent */
+            sent: number;
+        };
         /** QuoteOut */
         QuoteOut: {
             /** Conditions */
@@ -3803,7 +3870,7 @@ export interface components {
             /** Seo Title */
             seo_title?: string | null;
             /** Status */
-            status?: string | null;
+            status?: ("draft" | "published") | null;
             /** Title */
             title?: string | null;
         };
@@ -4908,6 +4975,77 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    admin_set_primary_image_api_v1_admin_catalog_products__product_id__images__image_id__primary_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: string;
+                image_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetailOut"];
+                };
             };
             /** @description Требуется аутентификация */
             401: {
@@ -7930,6 +8068,8 @@ export interface operations {
                 /** @description Поиск по названию, артикулу, производителю */
                 q?: string;
                 category_id?: string | null;
+                /** @description Товары любой из категорий. Нужен разделу витрины, который показывает раздел вместе с подкатегориями одним листаемым списком. Имеет приоритет над category_id. */
+                category_ids?: string[] | null;
                 cursor?: string | null;
                 limit?: number;
             };
@@ -10170,6 +10310,63 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    send_test_push_api_v1_notifications_test_push_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSelfTestResponse"];
+                };
             };
             /** @description Требуется аутентификация */
             401: {

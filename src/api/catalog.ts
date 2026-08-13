@@ -250,6 +250,14 @@ export function detachAdminProductImage(productId: string, imageId: string) {
   });
 }
 
+/** Сменить обложку товара. Ответ — карточка целиком, со свежими флагами. */
+export function setAdminProductPrimaryImage(productId: string, imageId: string) {
+  return apiRequest<ProductDetailOut>({
+    method: "POST",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}/images/${encodeURIComponent(imageId)}/primary`,
+  });
+}
+
 export function attachAdminProductDocument(
   productId: string,
   body: { name: string; s3_key: string },

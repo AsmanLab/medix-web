@@ -21,6 +21,7 @@ import {
   fetchAdminCategories,
   fetchAdminProduct,
   publishAdminProduct,
+  setAdminProductPrimaryImage,
   unpublishAdminProduct,
   updateAdminProduct,
   type ProductDetailOut,
@@ -262,6 +263,30 @@ export function ProductEditor({ productId }: ProductEditorProps) {
     },
     onError: (err) => {
       toast.error(isAppError(err) ? err.message : "Не удалось удалить фото");
+    },
+  });
+
+  /*
+   * Смена обложки. До появления ручки в API у изображения было одно
+   * действие — «Удалить», и чтобы поменять главное фото, картинку удаляли
+   * и загружали заново: при загрузке is_primary ставится первой.
+   */
+  const primaryImageMutation = useMutation({
+    mutationFn: (imageId: string) =>
+      setAdminProductPrimaryImage(productId!, imageId),
+    onSuccess: async () => {
+      await invalidateAll();
+      if (productId) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.catalog.adminProduct(productId),
+        });
+      }
+      toast.success("Главное изображение изменено");
+    },
+    onError: (err) => {
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось сменить главное фото",
+      );
     },
   });
 
@@ -582,6 +607,8 @@ export function ProductEditor({ productId }: ProductEditorProps) {
               uploading={imageMutation.isPending}
               onUpload={(files) => imageMutation.mutate(files)}
               onDelete={(id) => deleteImageMutation.mutate(id)}
+              onMakePrimary={(id) => primaryImageMutation.mutate(id)}
+              primaryPending={primaryImageMutation.isPending}
             />
           ) : null}
 
@@ -1000,6 +1027,8 @@ function ImagesPanel({
   uploading,
   onUpload,
   onDelete,
+  onMakePrimary,
+  primaryPending,
 }: {
   product: ProductDetailOut | null;
   imageUrls: Record<string, string>;
@@ -1007,6 +1036,8 @@ function ImagesPanel({
   uploading: boolean;
   onUpload: (files: File[]) => void;
   onDelete: (id: string) => void;
+  onMakePrimary: (id: string) => void;
+  primaryPending: boolean;
 }) {
   const images = product?.images ?? [];
   return (
@@ -1059,13 +1090,27 @@ function ImagesPanel({
               >
                 {img.is_primary ? "Главное" : `Порядок ${img.sort}`}
               </span>
-              <button
-                type="button"
-                className="font-semibold text-destructive"
-                onClick={() => onDelete(img.id)}
-              >
-                Удалить
-              </button>
+              <span className="flex items-center gap-2">
+                {/* У главного изображения кнопки нет: нажимать её незачем,
+                    а её присутствие заставляло бы сверять подпись слева. */}
+                {!locked && !img.is_primary ? (
+                  <button
+                    type="button"
+                    className="font-semibold text-primary disabled:opacity-60"
+                    disabled={primaryPending}
+                    onClick={() => onMakePrimary(img.id)}
+                  >
+                    Сделать главным
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="font-semibold text-destructive"
+                  onClick={() => onDelete(img.id)}
+                >
+                  Удалить
+                </button>
+              </span>
             </div>
           </div>
         ))}
