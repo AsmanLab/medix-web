@@ -23,6 +23,7 @@ import { fetchManagers } from "@/api/managers";
 import { fetchProfile } from "@/api/profile";
 import { formatMoney } from "@/lib/money";
 import { plural } from "@/lib/plural";
+import { cn } from "@/lib/utils";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
@@ -187,6 +188,39 @@ function CartPage() {
   // Оформление и удаление блокируют страницу, изменение количества — нет:
   // оно применяется оптимистично и повторного клика не боится.
   const busy = removeMutation.isPending || checkoutMutation.isPending;
+
+  /*
+   * Липкая полоса «Итого + Оформить» на телефоне.
+   *
+   * Карточка итога лежит под списком позиций: на десктопе она липкая
+   * в своей колонке, а на телефоне уезжает вниз, и при нескольких позициях
+   * с комплектациями до кнопки нужно долистать всю корзину. Полоса
+   * повторяет сумму и главное действие, пока карточка не видна, —
+   * и уходит, как только человек до неё долистал, чтобы одно и то же
+   * действие не показывалось дважды.
+   */
+  const summaryRef = useRef<HTMLElement>(null);
+  const [summaryVisible, setSummaryVisible] = useState(false);
+
+  useEffect(() => {
+    const node = summaryRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setSummaryVisible(entry.isIntersecting),
+      // Полоса перекрывает низ экрана, поэтому карточка считается видимой
+      // только когда вышла из-под неё.
+      { rootMargin: "0px 0px -96px 0px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [isEmpty]);
+
+  const primaryLabel = checkoutMutation.isPending
+    ? "Отправка…"
+    : willBeOrder
+      ? "Оформить заказ"
+      : "Отправить запрос на КП";
 
   function onPrimaryClick() {
     if (isEmpty || busy) return;
@@ -439,7 +473,10 @@ function CartPage() {
           </div>
 
           <aside className="mt-8 lg:col-start-2 lg:mt-0 lg:sticky lg:top-24">
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+            <section
+              ref={summaryRef}
+              className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]"
+            >
               <h2 className="font-semibold">Итого</h2>
               <p className="mt-3 text-2xl font-bold text-primary">
                 {formatMoney(cart?.total, "Цена по запросу")}
@@ -458,11 +495,7 @@ function CartPage() {
                   disabled={busy || hasUnavailable}
                   onClick={onPrimaryClick}
                 >
-                  {checkoutMutation.isPending
-                    ? "Отправка…"
-                    : willBeOrder
-                      ? "Оформить заказ"
-                      : "Отправить запрос на КП"}
+                  {primaryLabel}
                 </Button>
                 {willBeOrder ? (
                   <Button
@@ -477,6 +510,47 @@ function CartPage() {
               </div>
             </section>
           </aside>
+        </div>
+      ) : null}
+
+      {/* Запас под липкой полосой. Держится постоянно, а не только пока
+          полоса видна: иначе её появление и исчезновение дёргало бы
+          высоту страницы под пальцем. */}
+      {!isEmpty ? <div aria-hidden className="h-20 lg:hidden" /> : null}
+
+      {!isEmpty && !summaryVisible ? (
+        <div
+          // z-40 — под мобильной навигацией (z-50): полоса встаёт над ней,
+          // а не поверх. Смещение снизу берётся из --bottom-nav-h, которую
+          // публикует AppShell, поэтому safe-area на iPhone учтена там же.
+          className="fixed inset-x-0 z-40 border-t border-border bg-card/95 px-5 py-3 shadow-[var(--shadow-nav)] backdrop-blur lg:hidden"
+          style={{ bottom: "var(--bottom-nav-h, 0px)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="min-w-0">
+              {/* Кнопка при недоступных позициях выключена, и без этой
+                  строки полоса выглядела бы сломанной: причина написана
+                  наверху списка, куда ещё нужно долистать. */}
+              <p
+                className={cn(
+                  "text-[11px] font-semibold tracking-wide uppercase",
+                  hasUnavailable ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                {hasUnavailable ? "Уберите недоступные" : "Итого"}
+              </p>
+              <p className="truncate font-bold text-primary">
+                {formatMoney(cart?.total, "Цена по запросу")}
+              </p>
+            </div>
+            <Button
+              className="ms-auto h-12 flex-1 sm:flex-none sm:px-8"
+              disabled={busy || hasUnavailable}
+              onClick={onPrimaryClick}
+            >
+              {primaryLabel}
+            </Button>
+          </div>
         </div>
       ) : null}
 
