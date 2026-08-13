@@ -27,7 +27,7 @@ export function StaffShell({
   }
 
   return (
-    <div className="min-h-screen bg-surface text-foreground">
+    <div className="min-h-dvh bg-surface text-foreground">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-5">
           <Link to={homeTo} className="inline-flex items-center gap-2">

@@ -447,7 +447,7 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-screen bg-surface text-foreground">
+    <div className="min-h-dvh bg-surface text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-lg"
@@ -644,7 +644,7 @@ export function AppShell({
         id="main-content"
         tabIndex={-1}
         className={cn(
-          "mx-auto min-h-[70vh] w-full max-w-full px-5 py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:px-6 lg:pb-8",
+          "mx-auto min-h-[70dvh] w-full max-w-full px-5 py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:px-6 lg:pb-8",
           CONTENT_WIDTH[width ?? (accountPage ? "account" : "storefront")],
         )}
       >

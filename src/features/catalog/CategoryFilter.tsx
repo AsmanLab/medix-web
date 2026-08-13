@@ -164,7 +164,7 @@ export function CategoryFilter({
             role="dialog"
             aria-modal="true"
             aria-label={words.heading}
-            className="sheet-rise fixed inset-x-0 bottom-0 z-[60] max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-border bg-card lg:hidden"
+            className="sheet-rise fixed inset-x-0 bottom-0 z-[60] max-h-[85dvh] overflow-y-auto rounded-t-2xl border-t border-border bg-card lg:hidden"
             style={{
               boxShadow: "var(--shadow-nav)",
               paddingBottom: "max(1rem, env(safe-area-inset-bottom))",

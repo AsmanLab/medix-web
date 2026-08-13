@@ -26,7 +26,7 @@ function RootComponent() {
 
 function NotFound() {
   return (
-    <div className="grid min-h-screen place-items-center bg-background px-5 py-10">
+    <div className="grid min-h-dvh place-items-center bg-background px-5 py-10">
       <div className="w-full max-w-md">
         <p className="text-center font-display text-6xl font-bold text-muted-foreground/40">
           404

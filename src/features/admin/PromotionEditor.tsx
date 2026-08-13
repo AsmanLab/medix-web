@@ -249,16 +249,20 @@ export function PromotionEditor({ promotionId }: Props) {
                 onChange={(e) => void onUpload(e.target.files?.[0] ?? null)}
               />
             </label>
+            {/* Высота одна у картинки и у подписи под ней: с `max-h` она
+                зависела от пропорций файла, и блок прыгал дважды — на
+                появлении подписи «Загрузка превью…» и на её замене
+                картинкой, сдвигая поля формы под собой. */}
             {imageKey.trim() ? (
-              <div className="sm:col-span-2 overflow-hidden rounded-2xl border border-border bg-muted">
+              <div className="sm:col-span-2 h-56 overflow-hidden rounded-2xl border border-border bg-muted">
                 {previewQuery.data ? (
                   <img
                     src={previewQuery.data}
                     alt=""
-                    className="max-h-56 w-full object-cover"
+                    className="h-56 w-full object-cover"
                   />
                 ) : (
-                  <div className="grid h-40 place-items-center text-sm text-muted-foreground">
+                  <div className="grid h-56 place-items-center text-sm text-muted-foreground">
                     {previewQuery.isLoading
                       ? "Загрузка превью…"
                       : "Не удалось загрузить превью"}

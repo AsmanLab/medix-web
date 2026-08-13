@@ -140,7 +140,6 @@ function ManagerRfqQueuePage() {
                   ...prev,
                   tab: t.value === "all" ? undefined : t.value,
                 }),
-                replace: true,
               })
             }
             className={cn(
@@ -191,7 +190,6 @@ function ManagerRfqQueuePage() {
                     ? undefined
                     : (e.target.value as StatusFilter),
               }),
-              replace: true,
             })
           }
           className="field-control sm:w-auto"

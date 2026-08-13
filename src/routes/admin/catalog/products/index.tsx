@@ -213,7 +213,6 @@ function AdminProductsPage() {
                     ...prev,
                     status: tab.value === "all" ? undefined : tab.value,
                   }),
-                  replace: true,
                 })
               }
               className={cn(
@@ -235,7 +234,6 @@ function AdminProductsPage() {
                 ...prev,
                 category_id: e.target.value || undefined,
               }),
-              replace: true,
             })
           }
           className="field-control sm:w-auto"

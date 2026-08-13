@@ -183,7 +183,7 @@ function ResetPage() {
         : "Номер подтверждён. Придумайте новый пароль.";
 
   return (
-    <main className="grid min-h-screen place-items-center bg-surface px-5">
+    <main className="grid min-h-dvh place-items-center bg-surface px-5">
       <section
         className="w-full max-w-md rounded-3xl border border-border bg-card p-6"
       >

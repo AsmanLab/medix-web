@@ -308,16 +308,19 @@ function BannersAdminPage() {
             />
           </label>
 
+          {/* Высота одна у картинки и у подписи под ней — см. тот же приём
+              в PromotionEditor: с `max-h` блок прыгал, когда превью
+              подгружалось и подпись сменялась картинкой. */}
           {form.image_key.trim() ? (
-            <div className="overflow-hidden rounded-2xl border border-border bg-muted">
+            <div className="h-48 overflow-hidden rounded-2xl border border-border bg-muted">
               {previewQuery.data ? (
                 <img
                   src={previewQuery.data}
                   alt=""
-                  className="max-h-48 w-full object-cover"
+                  className="h-48 w-full object-cover"
                 />
               ) : (
-                <div className="grid h-32 place-items-center text-sm text-muted-foreground">
+                <div className="grid h-48 place-items-center text-sm text-muted-foreground">
                   {previewQuery.isLoading ? "Загрузка превью…" : "Нет превью"}
                 </div>
               )}
