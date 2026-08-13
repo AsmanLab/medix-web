@@ -86,6 +86,14 @@ function LoginPage() {
         */}
         <label className="mt-6 block text-sm font-medium">
           Телефон
+          {/*
+            text-base на мобильном: поля входа единственные на витрине идут
+            не через field-control, у них своя рамка с иконкой внутри.
+            Правка web#104 подняла до 16px все 46 полей на утилите, а эти два
+            остались на 14px — они наследуют text-sm от подписи, — и Safari
+            на iOS продолжал зумить страницу при фокусе именно на входе,
+            самой частой форме. От sm возвращаются прежние 14px.
+          */}
           <div className="mt-2 flex items-center gap-2 rounded-xl border border-border px-3 transition focus-within:border-primary/60 focus-within:ring-3 focus-within:ring-ring/30">
             <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
@@ -96,7 +104,7 @@ function LoginPage() {
               inputMode="numeric"
               autoComplete="username"
               name="phone"
-              className="h-12 min-w-0 flex-1 bg-transparent outline-none"
+              className="h-12 min-w-0 flex-1 bg-transparent text-base outline-none sm:text-sm"
             />
           </div>
         </label>
@@ -111,7 +119,7 @@ function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               name="password"
-              className="h-12 min-w-0 flex-1 bg-transparent outline-none"
+              className="h-12 min-w-0 flex-1 bg-transparent text-base outline-none sm:text-sm"
             />
             <button
               type="button"
