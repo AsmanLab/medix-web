@@ -13,6 +13,7 @@ import { fetchProfile } from "@/api/profile";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
+import { PasswordInput } from "@/components/ui/password-input";
 import { readLastPhone, writeLastPhone } from "@/features/profile/labels";
 import { isValidKgPhone, normalizePhone } from "@/lib/phone";
 
@@ -178,21 +179,19 @@ function ProfileSecurityPage() {
             </label>
             <label className="block">
               <span className="text-sm font-semibold">Новый пароль</span>
-              <input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="field-control mt-1.5"
+                wrapperClassName="mt-1.5"
                 autoComplete="new-password"
               />
             </label>
             <label className="block">
               <span className="text-sm font-semibold">Подтвердите пароль</span>
-              <input
-                type="password"
+              <PasswordInput
                 value={password2}
                 onChange={(e) => setPassword2(e.target.value)}
-                className="field-control mt-1.5"
+                wrapperClassName="mt-1.5"
                 autoComplete="new-password"
               />
             </label>

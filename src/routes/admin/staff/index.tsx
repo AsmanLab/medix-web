@@ -13,6 +13,7 @@ import {
 } from "@/api/staff";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
+import { PasswordInput } from "@/components/ui/password-input";
 import { requireStaffPanel } from "@/session/guards";
 import { cn } from "@/lib/utils";
 
@@ -128,8 +129,7 @@ function StaffAdminPage() {
           </label>
           <label className="text-xs font-semibold">
             Пароль
-            <input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
