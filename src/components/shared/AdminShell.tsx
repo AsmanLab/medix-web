@@ -223,7 +223,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [role, unread]);
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground">
+    <div className="min-h-dvh bg-transparent text-foreground">
       <div className="lg:grid lg:grid-cols-[260px_1fr]">
         {/* Sidebar */}
         <aside

@@ -72,13 +72,15 @@ function UsersPage() {
     });
   }, [listQuery.data, qFromUrl]);
 
+  // Смена фильтра попадает в историю: «Назад» отменяет её, а не уводит
+  // со страницы. У поиска ниже replace оставлен намеренно — это submit
+  // по кнопке, и плодить запись на каждый запрос незачем.
   function setStatus(next: CustomerStatusFilter | "all") {
     void navigate({
       search: (prev) => ({
         ...prev,
         status: next === "all" ? undefined : next,
       }),
-      replace: true,
     });
   }
 

@@ -48,7 +48,7 @@ function ErrorFallback({
   onReset: () => void;
 }) {
   return (
-    <div className="grid min-h-screen place-items-center bg-background px-5">
+    <div className="grid min-h-dvh place-items-center bg-background px-5">
       <div className="max-w-md text-center">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
           Ошибка
