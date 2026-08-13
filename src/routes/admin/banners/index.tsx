@@ -23,9 +23,6 @@ export const Route = createFileRoute("/admin/banners/")({
   component: BannersAdminPage,
 });
 
-const fieldClass =
-  "mt-1.5 flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 type FormState = {
   image_key: string;
   title: string;
@@ -221,7 +218,7 @@ function BannersAdminPage() {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, title: e.target.value }))
               }
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -232,7 +229,7 @@ function BannersAdminPage() {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, subtitle: e.target.value }))
               }
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -244,7 +241,7 @@ function BannersAdminPage() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, cta_text: e.target.value }))
                 }
-                className={fieldClass}
+                className="field-control mt-1.5"
               />
             </label>
             <label className="block text-xs font-semibold">
@@ -258,7 +255,7 @@ function BannersAdminPage() {
                     sort: Number(e.target.value) || 0,
                   }))
                 }
-                className={fieldClass}
+                className="field-control mt-1.5"
               />
             </label>
           </div>
@@ -270,7 +267,7 @@ function BannersAdminPage() {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, link_url: e.target.value }))
               }
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -281,7 +278,7 @@ function BannersAdminPage() {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, deep_link: e.target.value }))
               }
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -292,7 +289,7 @@ function BannersAdminPage() {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, image_key: e.target.value }))
               }
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 

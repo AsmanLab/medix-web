@@ -31,9 +31,6 @@ import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
 
-const fieldClass =
-  "mt-1.5 flex h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 export const Route = createFileRoute("/admin/commerce/$rfqId")({
   beforeLoad: () => requireStaffPanel({ roles: ["admin", "manager"] }),
   component: ManagerRfqDetailPage,
@@ -432,7 +429,7 @@ function ManagerRfqDetailPage() {
                           onChange={(e) =>
                             updateLine(line.key, { name: e.target.value })
                           }
-                          className={fieldClass}
+                          className="field-control mt-1.5"
                         />
                       </label>
                       <label className="text-[10px] font-semibold uppercase text-muted-foreground">
@@ -443,7 +440,7 @@ function ManagerRfqDetailPage() {
                           onChange={(e) =>
                             updateLine(line.key, { sku: e.target.value })
                           }
-                          className={fieldClass}
+                          className="field-control mt-1.5"
                         />
                       </label>
                       <label className="text-[10px] font-semibold uppercase text-muted-foreground">
@@ -458,7 +455,7 @@ function ManagerRfqDetailPage() {
                               qty: Number(e.target.value) || 1,
                             })
                           }
-                          className={fieldClass}
+                          className="field-control mt-1.5"
                         />
                       </label>
                       <label className="text-[10px] font-semibold uppercase text-muted-foreground">
@@ -472,7 +469,7 @@ function ManagerRfqDetailPage() {
                               unit_price_amount: e.target.value,
                             })
                           }
-                          className={fieldClass}
+                          className="field-control mt-1.5"
                         />
                       </label>
                       {canQuote ? (
@@ -503,7 +500,7 @@ function ManagerRfqDetailPage() {
                       value={validUntil}
                       disabled={!canQuote}
                       onChange={(e) => setValidUntil(e.target.value)}
-                      className={fieldClass}
+                      className="field-control mt-1.5"
                     />
                   </label>
                   <label className="text-xs font-semibold sm:col-span-2">

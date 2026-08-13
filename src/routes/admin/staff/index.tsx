@@ -22,9 +22,6 @@ export const Route = createFileRoute("/admin/staff/")({
   component: StaffAdminPage,
 });
 
-const fieldClass =
-  "mt-1.5 flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 const ROLE_LABEL: Record<StaffRole, string> = {
   manager: "Менеджер",
   service_engineer: "Инженер",
@@ -108,7 +105,7 @@ function StaffAdminPage() {
               placeholder="996700999010"
               pattern="996\d{9}"
               required
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
             <span className="mt-1 block text-[11px] font-normal text-muted-foreground">
               Формат 996XXXXXXXXX
@@ -121,7 +118,7 @@ function StaffAdminPage() {
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Асель Жумабекова"
               maxLength={200}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
             <span className="mt-1 block text-[11px] font-normal text-muted-foreground">
               Под этим именем менеджер виден клиенту при оформлении
@@ -134,7 +131,7 @@ function StaffAdminPage() {
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
               required
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
           <label className="text-xs font-semibold sm:col-span-2">

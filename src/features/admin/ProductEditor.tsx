@@ -45,11 +45,6 @@ import { slugifyCategoryName } from "@/features/catalog/slugify";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
-const fieldClass =
-  "mt-1.5 flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const textareaClass =
-  "mt-1.5 min-h-[100px] w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 type Tab = "main" | "price" | "images" | "documents" | "options";
 
 type ProductEditorProps = {
@@ -423,7 +418,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                   required
                   value={nameRu}
                   onChange={(e) => onNameChange(e.target.value)}
-                  className={fieldClass}
+                  className="field-control mt-1.5"
                 />
               </label>
               <label className="block text-xs font-semibold">
@@ -431,7 +426,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                 <input
                   value={nameEn}
                   onChange={(e) => setNameEn(e.target.value)}
-                  className={fieldClass}
+                  className="field-control mt-1.5"
                 />
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -444,7 +439,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                       setSlugTouched(true);
                       setSlug(e.target.value);
                     }}
-                    className={cn(fieldClass, "font-mono text-xs")}
+                    className={cn("field-control mt-1.5", "font-mono text-xs")}
                   />
                 </label>
                 <label className="block text-xs font-semibold">
@@ -453,7 +448,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                     required
                     value={sku}
                     onChange={(e) => setSku(e.target.value)}
-                    className={cn(fieldClass, "font-mono text-xs")}
+                    className={cn("field-control mt-1.5", "font-mono text-xs")}
                   />
                 </label>
               </div>
@@ -463,7 +458,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                   <input
                     value={manufacturer}
                     onChange={(e) => setManufacturer(e.target.value)}
-                    className={fieldClass}
+                    className="field-control mt-1.5"
                   />
                 </label>
                 <label className="block text-xs font-semibold">
@@ -471,7 +466,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                   <input
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className={fieldClass}
+                    className="field-control mt-1.5"
                   />
                 </label>
               </div>
@@ -510,7 +505,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                 <textarea
                   value={descriptionRu}
                   onChange={(e) => setDescriptionRu(e.target.value)}
-                  className={textareaClass}
+                  className="field-control mt-1.5 min-h-[100px] py-2"
                 />
               </label>
             </div>
@@ -547,7 +542,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                     step="0.01"
                     value={priceAmount}
                     onChange={(e) => setPriceAmount(e.target.value)}
-                    className={fieldClass}
+                    className="field-control mt-1.5"
                   />
                 </label>
               ) : null}
@@ -748,7 +743,7 @@ function OptionsPanel({
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
             placeholder="Гарантия"
-            className={fieldClass}
+            className="field-control mt-1.5"
           />
         </label>
         <Button
@@ -784,7 +779,7 @@ function OptionsPanel({
                     [group.id]: e.target.value,
                   }))
                 }
-                className={fieldClass}
+                className="field-control mt-1.5"
               />
             </label>
             {renaming[group.id] !== undefined &&
@@ -942,7 +937,7 @@ function NewOptionForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="+1 год гарантии"
-          className={fieldClass}
+          className="field-control mt-1.5"
         />
       </label>
       <label className="text-[11px] font-semibold">
@@ -966,7 +961,7 @@ function NewOptionForm({
           onChange={(e) => setPrice(e.target.value)}
           placeholder="по запросу"
           inputMode="decimal"
-          className={fieldClass}
+          className="field-control mt-1.5"
         />
       </label>
       <div className="flex items-end gap-2">

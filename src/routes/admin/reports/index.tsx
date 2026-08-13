@@ -32,9 +32,6 @@ const MONTHS = [
   "Декабрь",
 ];
 
-const fieldClass =
-  "mt-1.5 flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 /** Отчёт за месяц по менеджерам: ТЗ п. 9.1, 11.3, 14.5. */
 function ReportsAdminPage() {
   const now = new Date();
@@ -115,7 +112,7 @@ function ReportsAdminPage() {
             min={2024}
             max={now.getFullYear() + 1}
             onChange={(e) => setYear(Number(e.target.value))}
-            className={fieldClass}
+            className="field-control mt-1.5"
           />
         </label>
         <Button
