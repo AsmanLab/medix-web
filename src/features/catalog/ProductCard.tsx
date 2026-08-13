@@ -42,6 +42,9 @@ export function ProductCard({
       className={cn(
         "group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card",
         "shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:border-primary/40",
+        // На тач-экране `hover:` не срабатывает, и карточка молчала до самого
+        // перехода на страницу товара. Нажатие прижимает её вместо подъёма.
+        "active:translate-y-0 active:border-primary/50 active:bg-secondary/40",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         className,
       )}

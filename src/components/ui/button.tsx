@@ -20,19 +20,24 @@ const buttonVariants = cva(
     "inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold",
     "transition disabled:pointer-events-none disabled:opacity-60",
     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+    // Отклик на нажатие. На тач-экране `hover:` не срабатывает вовсе, поэтому
+    // до этой строки нажатие на кнопку не давало никакого сигнала, пока
+    // не перерисуется содержимое. Сдвиг общий для всех вариантов, а заливка
+    // своя у каждого — ниже.
+    "active:translate-y-px",
   ].join(" "),
   {
     variants: {
       variant: {
         primary:
-          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+          "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 shadow-sm",
         outline:
-          "border border-border bg-card text-foreground hover:bg-secondary",
+          "border border-border bg-card text-foreground hover:bg-secondary active:bg-secondary",
         subtle:
-          "bg-primary-soft text-primary hover:bg-primary hover:text-primary-foreground",
-        ghost: "text-foreground hover:bg-secondary",
+          "bg-primary-soft text-primary hover:bg-primary hover:text-primary-foreground active:bg-primary active:text-primary-foreground",
+        ghost: "text-foreground hover:bg-secondary active:bg-secondary",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80 shadow-sm",
       },
       size: {
         default: "h-11 px-5",
