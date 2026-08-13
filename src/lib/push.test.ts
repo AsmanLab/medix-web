@@ -49,6 +49,32 @@ function setEnv(overrides: Record<string, string> = {}) {
   }
 }
 
+const IPHONE_UA =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+
+const DEFAULT_UA = navigator.userAgent;
+
+/** userAgent в jsdom только для чтения — подменяем свойством на navigator. */
+function setUserAgent(ua: string) {
+  Object.defineProperty(navigator, "userAgent", {
+    value: ua,
+    configurable: true,
+  });
+}
+
+/**
+ * Возврат окружения между тестами.
+ *
+ * `vi.unstubAllGlobals` про defineProperty на navigator не знает, а без
+ * возврата тест «десктоп без PushManager» проходил бы по случайности:
+ * от предыдущего теста оставались iPhone-овский userAgent и standalone,
+ * и результат совпадал с ожидаемым по другой причине.
+ */
+function restoreDevice() {
+  setUserAgent(DEFAULT_UA);
+  Reflect.deleteProperty(navigator, "standalone");
+}
+
 function setBrowser({
   permission = "default",
   serviceWorker = true,
@@ -98,6 +124,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
+  restoreDevice();
 });
 
 describe("pushSupport", () => {
@@ -144,6 +171,39 @@ describe("pushSupport", () => {
     window.localStorage.setItem("medix.push_token.v1", "fcm-token");
 
     expect((await loadPushSupport())()).toBe("enabled");
+  });
+
+  it("iPhone во вкладке — предлагаем установить, а не молчим", async () => {
+    // Apple отдаёт Web Push только веб-приложениям с домашнего экрана,
+    // поэтому во вкладке PushManager нет ни в Safari, ни в Chrome — на iOS
+    // это один и тот же WebKit. Раньше блок в профиле просто исчезал,
+    // и это выглядело как поломка.
+    setEnv();
+    setBrowser({ pushManager: false });
+    setUserAgent(IPHONE_UA);
+
+    expect((await loadPushSupport())()).toBe("needs-install");
+  });
+
+  it("тот же iPhone с домашнего экрана — обычный путь", async () => {
+    setEnv();
+    setBrowser({ permission: "granted" });
+    setUserAgent(IPHONE_UA);
+    Object.defineProperty(navigator, "standalone", {
+      value: true,
+      configurable: true,
+    });
+
+    expect((await loadPushSupport())()).toBe("ready");
+  });
+
+  it("десктоп без PushManager — не про установку", async () => {
+    // Подсказка про домашний экран уместна только на iOS: на десктопе
+    // устанавливать нечего, и блок по-прежнему скрывается целиком.
+    setEnv();
+    setBrowser({ pushManager: false });
+
+    expect((await loadPushSupport())()).toBe("unsupported");
   });
 });
 
