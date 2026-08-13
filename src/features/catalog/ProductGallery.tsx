@@ -83,7 +83,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
               type="button"
               aria-label="Предыдущее фото"
               onClick={() => step(-1)}
-              className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow-sm backdrop-blur transition hover:bg-background"
+              className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow-sm backdrop-blur transition hover:bg-background"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden />
             </button>
@@ -91,7 +91,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
               type="button"
               aria-label="Следующее фото"
               onClick={() => step(1)}
-              className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow-sm backdrop-blur transition hover:bg-background"
+              className="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow-sm backdrop-blur transition hover:bg-background"
             >
               <ChevronRight className="h-5 w-5" aria-hidden />
             </button>

@@ -141,7 +141,7 @@ function CategoryPage() {
       <Link
         to="/catalog"
         search={{ q: undefined, category: undefined }}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary"
       >
         <ArrowLeft className="h-4 w-4" />К каталогу
       </Link>

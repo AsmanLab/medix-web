@@ -126,7 +126,7 @@ function HomePage() {
             <Link
               to="/catalog"
               search={{ q: undefined }}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-primary"
+              className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary"
             >
               Все категории <ArrowRight className="h-4 w-4" />
             </Link>
@@ -178,7 +178,7 @@ function HomePage() {
             <Link
               to="/catalog"
               search={{ q: undefined }}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-primary"
+              className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary"
             >
               В каталог <ArrowRight className="h-4 w-4" />
             </Link>
