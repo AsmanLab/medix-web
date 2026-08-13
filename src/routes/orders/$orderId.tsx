@@ -19,6 +19,7 @@ import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import {
+  invoiceStatusLabel,
   orderSourceLabel,
   orderStatusLabel,
   orderStatusTone,
@@ -224,7 +225,7 @@ function OrderDetailPage() {
                 <section className="rounded-2xl border border-border bg-card p-5">
                   <h2 className="font-semibold">Документы</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Счёт · {invoice?.status}
+                    Счёт · {invoiceStatusLabel(invoice?.status ?? "")}
                   </p>
                   <Button
                     className="mt-4"

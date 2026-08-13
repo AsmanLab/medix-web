@@ -883,6 +883,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cms/pages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Опубликованные CMS-страницы
+         * @description Список опубликованных страниц — витрине, чтобы не звать несуществующие.
+         *
+         *     Ссылка «Политика» в подвале была зашита и вела в 404, пока страницу
+         *     не завели в админке (medix-web#103). Теперь витрина показывает ссылку,
+         *     только если страница действительно есть.
+         */
+        get: operations["list_pages_api_v1_cms_pages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cms/pages/{slug}": {
         parameters: {
             query?: never;
@@ -2428,6 +2452,16 @@ export interface components {
         ClarificationRequest: {
             /** Missing Info */
             missing_info: string;
+        };
+        /**
+         * CmsPageListItemOut
+         * @description Короткая карточка страницы: тела здесь нет, список нужен для навигации.
+         */
+        CmsPageListItemOut: {
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
         };
         /** CmsPageOut */
         CmsPageOut: {
@@ -8189,6 +8223,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactOfficeOut"][];
+                };
+            };
+        };
+    };
+    list_pages_api_v1_cms_pages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsPageListItemOut"][];
                 };
             };
         };

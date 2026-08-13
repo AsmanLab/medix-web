@@ -57,6 +57,17 @@ export function fetchBanners(signal?: AbortSignal): Promise<BannerOut[]> {
   });
 }
 
+export type CmsPageListItem = { slug: string; title: string };
+
+/** Опубликованные CMS-страницы. Витрина спрашивает, чтобы не звать 404. */
+export function listCmsPages(signal?: AbortSignal) {
+  return apiRequest<CmsPageListItem[]>({
+    path: "/cms/pages",
+    signal,
+    retryOnUnauthorized: false,
+  });
+}
+
 export function fetchCmsPage(slug: string, signal?: AbortSignal) {
   return apiRequest<CmsPageOut>({
     path: `/cms/pages/${encodeURIComponent(slug)}`,

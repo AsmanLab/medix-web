@@ -45,6 +45,24 @@ export function orderStatusTone(
 }
 
 /** Значения приходят из Order.source: "direct" | "from_rfq". */
+/**
+ * Подпись статуса счёта.
+ *
+ * До этого в карточке заказа выводилось сырое `invoice.status`, и рядом
+ * с русской подписью «Счёт» стояло английское «published» (medix-web#103
+ * по бэкенду — Medix#88). Значения задаёт InvoiceStatus в домене.
+ */
+export function invoiceStatusLabel(status: string): string {
+  switch (status) {
+    case "draft":
+      return "Черновик";
+    case "published":
+      return "Выставлен";
+    default:
+      return status;
+  }
+}
+
 export function orderSourceLabel(source: string): string {
   switch (source) {
     case "from_rfq":
