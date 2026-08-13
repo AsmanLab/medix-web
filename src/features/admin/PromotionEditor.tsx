@@ -16,9 +16,6 @@ import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import { slugifyCategoryName } from "@/features/catalog/slugify";
 
-const fieldClass =
-  "mt-1.5 flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 type Props = { promotionId?: string };
 
 function toDateInput(iso: string | null | undefined) {
@@ -204,7 +201,7 @@ export function PromotionEditor({ promotionId }: Props) {
                 setTitle(value);
                 if (!slugTouched && !isEdit) setSlug(slugifyCategoryName(value));
               }}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -216,7 +213,7 @@ export function PromotionEditor({ promotionId }: Props) {
                 setSlugTouched(true);
                 setSlug(e.target.value);
               }}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -235,7 +232,7 @@ export function PromotionEditor({ promotionId }: Props) {
               <input
                 value={imageKey}
                 onChange={(e) => setImageKey(e.target.value)}
-                className={fieldClass}
+                className="field-control mt-1.5"
               />
             </label>
             <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-primary">
@@ -273,7 +270,7 @@ export function PromotionEditor({ promotionId }: Props) {
             <input
               value={linkUrl}
               onChange={(e) => setLinkUrl(e.target.value)}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -284,7 +281,7 @@ export function PromotionEditor({ promotionId }: Props) {
                 type="date"
                 value={startsAt}
                 onChange={(e) => setStartsAt(e.target.value)}
-                className={fieldClass}
+                className="field-control mt-1.5"
               />
             </label>
             <label className="block text-xs font-semibold">
@@ -293,7 +290,7 @@ export function PromotionEditor({ promotionId }: Props) {
                 type="date"
                 value={endsAt}
                 onChange={(e) => setEndsAt(e.target.value)}
-                className={fieldClass}
+                className="field-control mt-1.5"
               />
             </label>
             <label className="block text-xs font-semibold">
@@ -302,7 +299,7 @@ export function PromotionEditor({ promotionId }: Props) {
                 type="number"
                 value={sort}
                 onChange={(e) => setSort(Number(e.target.value) || 0)}
-                className={fieldClass}
+                className="field-control mt-1.5"
               />
             </label>
           </div>

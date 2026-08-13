@@ -13,9 +13,6 @@ import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 
-const fieldClass =
-  "mt-1.5 flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 type OfficeDraft = {
   key: string;
   /** id с сервера; null у офиса, который ещё не сохраняли. */
@@ -188,7 +185,7 @@ export function ContactsEditor() {
                     onChange={(e) =>
                       updateOffice(office.key, { name: e.target.value })
                     }
-                    className={fieldClass}
+                    className="field-control mt-1.5"
                   />
                 </label>
                 <Button
@@ -220,7 +217,7 @@ export function ContactsEditor() {
                     onChange={(e) =>
                       updateOffice(office.key, { phone_sales: e.target.value })
                     }
-                    className={fieldClass}
+                    className="field-control mt-1.5"
                   />
                 </label>
                 <label className="block text-xs font-semibold">
@@ -232,7 +229,7 @@ export function ContactsEditor() {
                         phone_service: e.target.value,
                       })
                     }
-                    className={fieldClass}
+                    className="field-control mt-1.5"
                   />
                 </label>
                 <label className="block text-xs font-semibold">
@@ -244,7 +241,7 @@ export function ContactsEditor() {
                         phone_accounting: e.target.value,
                       })
                     }
-                    className={fieldClass}
+                    className="field-control mt-1.5"
                   />
                 </label>
               </div>
@@ -255,7 +252,7 @@ export function ContactsEditor() {
                   onChange={(e) =>
                     updateOffice(office.key, { working_hours: e.target.value })
                   }
-                  className={fieldClass}
+                  className="field-control mt-1.5"
                 />
               </label>
               <label className="block text-xs font-semibold">
@@ -265,7 +262,7 @@ export function ContactsEditor() {
                   onChange={(e) =>
                     updateOffice(office.key, { map_embed_url: e.target.value })
                   }
-                  className={fieldClass}
+                  className="field-control mt-1.5"
                 />
               </label>
             </section>

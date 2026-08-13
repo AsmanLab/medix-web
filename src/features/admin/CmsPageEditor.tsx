@@ -15,11 +15,6 @@ import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import { slugifyCategoryName } from "@/features/catalog/slugify";
 
-const fieldClass =
-  "mt-1.5 flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const textareaClass =
-  "mt-1.5 min-h-[200px] w-full rounded-xl border border-border bg-background px-3 py-2 font-mono text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 type Props = { slug?: string };
 
 export function CmsPageEditor({ slug }: Props) {
@@ -163,7 +158,7 @@ export function CmsPageEditor({ slug }: Props) {
                   setPageSlug(slugifyCategoryName(value));
                 }
               }}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -176,7 +171,7 @@ export function CmsPageEditor({ slug }: Props) {
                 setSlugTouched(true);
                 setPageSlug(e.target.value);
               }}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -197,7 +192,7 @@ export function CmsPageEditor({ slug }: Props) {
             <textarea
               value={bodyHtml}
               onChange={(e) => setBodyHtml(e.target.value)}
-              className={textareaClass}
+              className="field-control mt-1.5 min-h-[200px] py-2 font-mono"
             />
           </label>
 
@@ -206,7 +201,7 @@ export function CmsPageEditor({ slug }: Props) {
             <input
               value={seoTitle}
               onChange={(e) => setSeoTitle(e.target.value)}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 

@@ -17,11 +17,6 @@ import { Button } from "@/components/ui/button";
 import { slugifyCategoryName } from "@/features/catalog/slugify";
 import { cn } from "@/lib/utils";
 
-const fieldClass =
-  "mt-1.5 flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const textareaClass =
-  "mt-1.5 min-h-[88px] w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 type CategoryEditorProps = {
   categoryId?: string;
 };
@@ -172,7 +167,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
               required
               value={nameRu}
               onChange={(e) => onNameChange(e.target.value)}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -181,7 +176,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
             <input
               value={nameEn}
               onChange={(e) => setNameEn(e.target.value)}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -194,7 +189,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
                 setSlugTouched(true);
                 setSlug(e.target.value);
               }}
-              className={cn(fieldClass, "font-mono text-xs")}
+              className={cn("field-control mt-1.5", "font-mono text-xs")}
             />
           </label>
 
@@ -221,7 +216,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
                 type="number"
                 value={sort}
                 onChange={(e) => setSort(Number(e.target.value) || 0)}
-                className={fieldClass}
+                className="field-control mt-1.5"
               />
             </label>
             <label className="flex items-end gap-3 pb-2 text-xs font-semibold">
@@ -241,7 +236,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
               value={imageKey}
               onChange={(e) => setImageKey(e.target.value)}
               placeholder="categories/…"
-              className={cn(fieldClass, "font-mono text-xs")}
+              className={cn("field-control mt-1.5", "font-mono text-xs")}
             />
           </label>
 
@@ -250,7 +245,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
             <input
               value={seoTitle}
               onChange={(e) => setSeoTitle(e.target.value)}
-              className={fieldClass}
+              className="field-control mt-1.5"
             />
           </label>
 
@@ -259,7 +254,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
             <textarea
               value={seoDescription}
               onChange={(e) => setSeoDescription(e.target.value)}
-              className={textareaClass}
+              className="field-control mt-1.5 min-h-[88px] py-2"
             />
           </label>
 

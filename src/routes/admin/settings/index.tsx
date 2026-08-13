@@ -19,9 +19,6 @@ export const Route = createFileRoute("/admin/settings/")({
   component: SettingsAdminPage,
 });
 
-const fieldClass =
-  "mt-1.5 flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 const EMPTY: InvoiceSettingsInput = {
   company_name: "",
   inn: "",
@@ -116,7 +113,7 @@ function SettingsAdminPage() {
                   value={form[key] ?? ""}
                   onChange={(e) => update(key, e.target.value)}
                   placeholder={placeholder}
-                  className={fieldClass}
+                  className="field-control mt-1.5"
                 />
               </label>
             ))}
