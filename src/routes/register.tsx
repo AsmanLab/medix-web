@@ -16,6 +16,7 @@ import {
 } from "@/lib/otp-flow-storage";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { PasswordInput } from "@/components/ui/password-input";
 import { usePageMeta } from "@/lib/page-meta";
 
 export const Route = createFileRoute("/register")({
@@ -340,16 +341,14 @@ function RegisterPage() {
               aria-label="ФИО"
               className="field-control"
             />
-            <input
+            <PasswordInput
               required
-              type="password"
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Пароль (мин. 8)"
               autoComplete="new-password"
               aria-label="Пароль"
-              className="field-control"
             />
             <p className="text-xs text-muted-foreground">
               Данные организации можно будет заполнить позже в профиле.

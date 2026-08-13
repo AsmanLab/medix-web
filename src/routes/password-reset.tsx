@@ -18,6 +18,7 @@ import {
   saveOtpFlow,
 } from "@/lib/otp-flow-storage";
 import { Button } from "@/components/ui/button";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export const Route = createFileRoute("/password-reset")({
   beforeLoad: () => requireGuest(),
@@ -272,28 +273,24 @@ function ResetPage() {
 
         {step === 3 ? (
           <form onSubmit={onSubmitPassword} className="mt-6 space-y-3">
-            <input
+            <PasswordInput
               required
               autoFocus
-              type="password"
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Новый пароль"
               autoComplete="new-password"
               aria-label="Новый пароль"
-              className="field-control"
             />
-            <input
+            <PasswordInput
               required
-              type="password"
               minLength={8}
               value={password2}
               onChange={(e) => setPassword2(e.target.value)}
               placeholder="Повторите пароль"
               autoComplete="new-password"
               aria-label="Повторите пароль"
-              className="field-control"
             />
             {formError ? (
               <p className="text-sm text-destructive">{formError}</p>
