@@ -51,13 +51,28 @@ if (
   firebase.initializeApp(config);
   const messaging = firebase.messaging();
 
+  /*
+   * Уведомление показывает только этот обработчик — и ровно один раз.
+   *
+   * Пока сервер слал сообщение с блоком notification, показывали двое: SDK
+   * Firebase делает это автоматически, а следом вызывался обработчик ниже.
+   * На iPhone заказчик получал два одинаковых уведомления на одно нажатие
+   * «Проверить». Сервер теперь шлёт вебу data-only (см. build_push_message
+   * в medix-core), поэтому автоматического показа больше нет.
+   *
+   * Чтение из notification оставлено запасным путём: у клиентов, чей
+   * service worker обновится позже сервера, заголовок иначе стал бы «Medix».
+   */
   messaging.onBackgroundMessage((payload) => {
-    const title = payload.notification?.title || "Medix";
-    const deepLink = payload.data?.deep_link || "";
+    const data = payload.data || {};
+    const title = data.title || payload.notification?.title || "Medix";
+    const body = data.body || payload.notification?.body || "";
+    const deepLink = data.deep_link || "";
 
     self.registration.showNotification(title, {
-      body: payload.notification?.body || "",
-      icon: "/favicon.svg",
+      body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       // tag по ссылке: повторное уведомление о той же сделке заменяет
       // предыдущее, а не копится стопкой.
       tag: deepLink || "medix",
@@ -97,6 +112,14 @@ function routeForDeepLink(raw) {
   }
   return "/";
 }
+
+/*
+ * Новый service worker вступает в силу сразу, не дожидаясь закрытия всех
+ * окон. Важно для установленных на домашний экран: правку про двойные
+ * уведомления иначе увидели бы только те, кто полностью выгрузил приложение.
+ */
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(clients.claim()));
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();

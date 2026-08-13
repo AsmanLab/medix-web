@@ -53,4 +53,16 @@ describe("PushToggle", () => {
 
     expect(screen.getByRole("button", { name: "Включить" })).toBeTruthy();
   });
+
+  it("у включённых уведомлений объясняет, почему проверка молчит", () => {
+    // Пока приложение открыто, системного уведомления не будет: FCM отдаёт
+    // сообщение самой странице. Без этой строки проверка выглядит так,
+    // будто push не работают, — заказчик так и решил.
+    mocks.pushSupport.mockReturnValue("enabled");
+
+    render(<PushToggle />);
+
+    expect(screen.getByRole("button", { name: "Проверить" })).toBeTruthy();
+    expect(screen.getByText(/сверните приложение/i)).toBeTruthy();
+  });
 });
