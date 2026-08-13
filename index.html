@@ -5,6 +5,31 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Medix</title>
+
+    <!--
+      Установка на домашний экран.
+
+      Не украшение: на iPhone Web Push работает ТОЛЬКО из веб-приложения,
+      добавленного на домашний экран, — в обычной вкладке Safari объекта
+      PushManager нет вовсе, и блок «Уведомления в браузере» в профиле
+      скрывается. Без манифеста с display: standalone (и apple-мета для
+      Safari, который манифест учитывает не полностью) ярлык открывался бы
+      обычной вкладкой, и push так и остался бы недоступен.
+
+      apple-touch-icon отдельным файлом: iOS не берёт иконки из манифеста.
+    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0e8ab4" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Medix" />
+    <!--
+      default, а не black-translucent: последний уводит контент под статус-бар,
+      и липкую шапку пришлось бы двигать вручную. Проверить это на живом
+      iPhone я не могу, поэтому берём вариант, который вёрстку не трогает.
+    -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta
       name="description"
       content="Медицинское оборудование, расходные материалы и сервис для клиник Кыргызстана. Каталог, RFQ и заказы — Medix International."

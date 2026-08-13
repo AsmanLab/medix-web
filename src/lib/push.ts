@@ -18,7 +18,32 @@ const SW_PATH = "/firebase-messaging-sw.js";
 const TOKEN_STORAGE_KEY = "medix.push_token.v1";
 
 export type PushSupport =
-  "ready" | "not-configured" | "unsupported" | "denied" | "enabled";
+  | "ready"
+  | "not-configured"
+  | "unsupported"
+  | "needs-install"
+  | "denied"
+  | "enabled";
+
+/**
+ * iPhone или iPad, включая iPad в десктопном режиме.
+ *
+ * iPadOS с версии 13 представляется как MacIntel, и отличить его от макбука
+ * можно только по наличию тач-экрана.
+ */
+function isIos(): boolean {
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent)) return true;
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
+/** Сайт открыт как приложение с домашнего экрана, а не вкладкой. */
+function isStandalone(): boolean {
+  const iosStandalone = (navigator as { standalone?: boolean }).standalone;
+  return (
+    iosStandalone === true ||
+    window.matchMedia?.("(display-mode: standalone)").matches === true
+  );
+}
 
 /** Токен последней успешной подписки — чтобы снять её при выходе. */
 function readStoredToken(): string | null {
@@ -43,6 +68,12 @@ function writeStoredToken(token: string | null) {
  *
  * `not-configured` — Firebase не настроен: кнопку показывать не нужно вовсе,
  * иначе пользователь нажмёт и ничего не произойдёт.
+ *
+ * `needs-install` — iPhone или iPad во вкладке браузера. Apple разрешает
+ * Web Push только веб-приложениям с домашнего экрана: во вкладке нет ни
+ * PushManager, ни Notification, и включить уведомления нельзя ничем.
+ * Раньше блок в этом случае просто исчезал, и выглядело это как поломка —
+ * на телефоне кнопки нет ни в Safari, ни в Chrome (на iOS он тот же WebKit).
  */
 export function pushSupport(): PushSupport {
   if (typeof window === "undefined") return "unsupported";
@@ -50,9 +81,11 @@ export function pushSupport(): PushSupport {
 
   // Safari до 16.4 и любой браузер без service worker'ов сюда не проходят.
   if (!("serviceWorker" in navigator) || !("Notification" in window)) {
-    return "unsupported";
+    return isIos() && !isStandalone() ? "needs-install" : "unsupported";
   }
-  if (!("PushManager" in window)) return "unsupported";
+  if (!("PushManager" in window)) {
+    return isIos() && !isStandalone() ? "needs-install" : "unsupported";
+  }
 
   if (Notification.permission === "denied") return "denied";
   if (Notification.permission === "granted" && readStoredToken()) {

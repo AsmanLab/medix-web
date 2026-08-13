@@ -30,6 +30,33 @@ export function PushToggle() {
     return null;
   }
 
+  /*
+   * iPhone и iPad: во вкладке браузера включить уведомления нельзя ничем —
+   * Apple отдаёт Web Push только веб-приложениям с домашнего экрана.
+   * Раньше блок здесь просто исчезал, и это читалось как поломка: человек
+   * открывал профиль в Safari, потом в Chrome и нигде не находил кнопку.
+   */
+  if (state === "needs-install") {
+    return (
+      <section className="rounded-2xl border border-border bg-card p-4">
+        <div className="flex items-start gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
+            <BellOff className="h-4 w-4" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium">Уведомления в браузере</p>
+            <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+              На iPhone и iPad уведомления доступны, только когда Medix
+              добавлен на домашний экран. В Safari нажмите «Поделиться» →
+              «На экран „Домой“», откройте Medix с домашнего экрана и вернитесь
+              в профиль — кнопка появится здесь.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   async function onEnable() {
     setBusy(true);
     try {
