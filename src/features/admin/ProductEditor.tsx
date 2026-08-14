@@ -42,6 +42,15 @@ import { fetchMediaDownloadUrl, uploadMediaFile } from "@/api/media";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
+import {
+  DESCRIPTION_PLACEHOLDER,
+  DescriptionFormatHint,
+  DescriptionPreview,
+} from "@/features/admin/DescriptionGuide";
+import {
+  parsePriceInput,
+  productPriceAmount,
+} from "@/features/admin/product-price";
 import { slugifyCategoryName } from "@/features/catalog/slugify";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -99,7 +108,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
     setCategoryIds(existing.category_ids ?? []);
     setAvailability(existing.availability || "on_order");
     setPriceOnRequest(!existing.price);
-    setPriceAmount(existing.price ? String(existing.price) : "");
+    setPriceAmount(productPriceAmount(existing));
     setPublished(existing.is_published);
   }, [existing]);
 
@@ -134,13 +143,8 @@ export function ProductEditor({ productId }: ProductEditorProps) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const parsedPrice = priceOnRequest
-        ? null
-        : Number(priceAmount.replace(",", "."));
-      if (
-        !priceOnRequest &&
-        (Number.isNaN(parsedPrice) || (parsedPrice ?? 0) < 0)
-      ) {
+      const parsedPrice = parsePriceInput(priceAmount, priceOnRequest);
+      if (parsedPrice === undefined) {
         throw Object.assign(new Error("Укажите корректную цену"), {
           status: 400,
           message: "Укажите корректную цену",
@@ -530,9 +534,12 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                 <textarea
                   value={descriptionRu}
                   onChange={(e) => setDescriptionRu(e.target.value)}
-                  className="field-control mt-1.5 min-h-[100px] py-2"
+                  className="field-control mt-1.5 min-h-[220px] py-2 font-mono text-xs leading-6"
+                  placeholder={DESCRIPTION_PLACEHOLDER}
                 />
               </label>
+              <DescriptionFormatHint />
+              <DescriptionPreview text={descriptionRu} />
             </div>
           ) : null}
 

@@ -3399,6 +3399,8 @@ export interface components {
             option_groups: components["schemas"]["OptionGroupOut"][];
             /** Price */
             price: string | null;
+            /** Price Amount */
+            price_amount?: string | null;
             /** Primary Image Key */
             primary_image_key?: string | null;
             /** Primary Image Url */
