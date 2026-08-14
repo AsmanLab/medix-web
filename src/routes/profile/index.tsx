@@ -22,8 +22,8 @@ import { Button } from "@/components/ui/button";
 import {
   clientTypeLabel,
   isVerified,
-  needsVerificationBanner,
   profileInitials,
+  verificationBanner,
   verificationLabel,
 } from "@/features/profile/labels";
 import { PushToggle } from "@/features/profile/PushToggle";
@@ -55,6 +55,10 @@ function ProfilePage() {
     .filter(Boolean)
     .join(", ");
   const verification = api?.verification_status ?? "unverified";
+  const banner = verificationBanner(
+    verification,
+    api?.missing_for_verification,
+  );
 
   if (
     profileQuery.isError &&
@@ -121,22 +125,27 @@ function ProfilePage() {
               </span>
             </section>
 
-            {needsVerificationBanner(verification) ? (
-              <div className="rounded-2xl border border-warning/40 bg-warning-soft p-4 text-warning-strong">
+            {banner ? (
+              <div
+                className={cn(
+                  "rounded-2xl border p-4",
+                  banner.tone === "danger"
+                    ? "border-danger/40 bg-danger-soft text-danger-strong"
+                    : "border-warning/40 bg-warning-soft text-warning-strong",
+                )}
+              >
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
                   <div>
-                    <p className="font-semibold">Проверка организации</p>
+                    <p className="font-semibold">{banner.title}</p>
                     <p className="mt-1 text-xs leading-5 opacity-80">
-                      Пока проверка не завершена, доступны запросы цены (RFQ).
-                      Прямой заказ откроется после подтверждения. Обычно это
-                      занимает 1–2 рабочих дня.
+                      {banner.body}
                     </p>
                     <Link
                       to="/profile/organization"
                       className="mt-2 inline-flex text-xs font-semibold underline underline-offset-2"
                     >
-                      Проверить данные организации →
+                      {banner.cta}
                     </Link>
                   </div>
                 </div>
