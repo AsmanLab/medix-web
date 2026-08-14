@@ -3167,6 +3167,14 @@
             "title": "Id",
             "type": "string"
           },
+          "missing_for_verification": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing For Verification",
+            "type": "array"
+          },
           "organization": {
             "title": "Organization",
             "type": "string"

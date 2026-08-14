@@ -9,7 +9,10 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
-import { CLIENT_TYPE_OPTIONS } from "@/features/profile/labels";
+import {
+  CLIENT_TYPE_OPTIONS,
+  verificationFieldsLabel,
+} from "@/features/profile/labels";
 
 export const Route = createFileRoute("/profile/organization")({
   component: ProfileOrganizationPage,
@@ -28,6 +31,9 @@ function ProfileOrganizationPage() {
     queryFn: ({ signal }) => fetchProfile(signal),
   });
 
+  const missing = profileQuery.data?.missing_for_verification ?? [];
+  const orgRequired = clientType !== "individual";
+
   useEffect(() => {
     if (!profileQuery.data) return;
     setOrganization(profileQuery.data.organization ?? "");
@@ -44,9 +50,22 @@ function ProfileOrganizationPage() {
         address: address.trim() || null,
         client_type: clientType || null,
       }),
-    onSuccess: async () => {
+    onSuccess: async (saved) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
-      toast.success("Данные организации сохранены");
+      const stillMissing = saved.missing_for_verification ?? [];
+      if (stillMissing.length) {
+        // Сервер не берёт профиль в проверку без этих полей — молча уводить
+        // клиента на профиль значит повторить прежнюю немую заглушку.
+        toast.warning(
+          `Сохранено. Для проверки не хватает: ${verificationFieldsLabel(stillMissing)}`,
+        );
+        return;
+      }
+      if (saved.verification_status === "pending_verification") {
+        toast.success("Данные отправлены на проверку менеджеру");
+      } else {
+        toast.success("Данные организации сохранены");
+      }
       await navigate({ to: "/profile" });
     },
     onError: (err) => {
@@ -64,8 +83,27 @@ function ProfileOrganizationPage() {
       </Link>
       <h1 className="mt-4 font-display text-2xl font-bold">Организация</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Используются для верификации, счетов и договоров
+        Используются для верификации, счетов и договоров. Когда обязательные
+        поля заполнены, профиль уходит менеджеру на проверку.
       </p>
+      {missing.length ? (
+        <div className="mt-3 rounded-xl border border-warning/40 bg-warning-soft px-3 py-2 text-xs leading-5 text-warning-strong">
+          Для проверки не хватает: {verificationFieldsLabel(missing)}
+          {missing.includes("full_name") ? (
+            // ФИО живёт на другой странице — иначе подсказка отправляет
+            // искать поле, которого в этой форме нет.
+            <>
+              {". "}
+              <Link
+                to="/profile/edit"
+                className="font-semibold underline underline-offset-2"
+              >
+                ФИО указывается в личных данных →
+              </Link>
+            </>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-6">
         <StateBlock
@@ -96,7 +134,10 @@ function ProfileOrganizationPage() {
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-semibold">Название организации</span>
+              <span className="text-sm font-semibold">
+                Название организации
+                {orgRequired ? <RequiredHint /> : null}
+              </span>
               <input
                 value={organization}
                 onChange={(e) => setOrganization(e.target.value)}
@@ -106,7 +147,10 @@ function ProfileOrganizationPage() {
               />
             </label>
             <label className="block">
-              <span className="text-sm font-semibold">Город</span>
+              <span className="text-sm font-semibold">
+                Город
+                <RequiredHint />
+              </span>
               <input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
@@ -116,7 +160,10 @@ function ProfileOrganizationPage() {
               />
             </label>
             <label className="block">
-              <span className="text-sm font-semibold">Адрес</span>
+              <span className="text-sm font-semibold">
+                Адрес
+                <RequiredHint />
+              </span>
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -136,5 +183,14 @@ function ProfileOrganizationPage() {
         </StateBlock>
       </div>
     </AppShell>
+  );
+}
+
+/** Поля, без которых менеджеру нечего проверять (п. 4.3 ТЗ). */
+function RequiredHint() {
+  return (
+    <span className="ml-1 text-xs font-normal text-muted-foreground">
+      · нужно для проверки
+    </span>
   );
 }

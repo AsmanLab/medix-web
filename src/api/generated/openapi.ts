@@ -3490,6 +3490,11 @@ export interface components {
             full_name: string;
             /** Id */
             id: string;
+            /**
+             * Missing For Verification
+             * @default []
+             */
+            missing_for_verification: string[];
             /** Organization */
             organization: string;
             /**
