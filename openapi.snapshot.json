@@ -2879,6 +2879,17 @@
             ],
             "title": "Price"
           },
+          "price_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Amount"
+          },
           "primary_image_key": {
             "anyOf": [
               {
