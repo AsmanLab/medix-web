@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Boxes, Search } from "lucide-react";
+import { Boxes } from "lucide-react";
 import { useMemo, useState } from "react";
 import { fetchCategories } from "@/api/catalog";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
+import { CatalogSearch } from "@/features/catalog/CatalogSearch";
 import { CategoryFilter } from "@/features/catalog/CategoryFilter";
 import { ProductGrid } from "@/features/catalog/ProductGrid";
 import { buildCategoryTree } from "@/features/catalog/map-category";
@@ -80,6 +81,16 @@ function CatalogIndexPage() {
     });
   }
 
+  function clearSearch() {
+    setDraftQ("");
+    // Снимаем запрос и из адресной строки: очистка одного поля оставила бы
+    // выдачу отфильтрованной, а форма выглядела бы пустой.
+    void navigate({
+      search: (prev) => ({ ...prev, q: undefined }),
+      replace: true,
+    });
+  }
+
   function selectCategory(next?: { id: string; slug: string }) {
     void navigate({
       search: (prev) => ({
@@ -106,30 +117,17 @@ function CatalogIndexPage() {
         найдите товар по названию и артикулу.
       </p>
 
-      <form onSubmit={onSearchSubmit} className="mt-6 flex gap-2" role="search">
-        <label htmlFor="catalog-index-search" className="sr-only">
-          Поиск товаров
-        </label>
-        <div className="relative min-w-0 flex-1">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <input
-            id="catalog-index-search"
-            value={draftQ}
-            onChange={(e) => setDraftQ(e.target.value)}
-            placeholder="Поиск по названию или артикулу"
-            className="field-control pl-10"
-          />
-        </div>
-        <button
-          type="submit"
-          className="h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
-        >
-          Найти
-        </button>
-      </form>
+      <CatalogSearch
+        id="catalog-index-search"
+        label="Поиск товаров"
+        placeholder="Поиск по названию или артикулу"
+        value={draftQ}
+        appliedValue={qFromUrl ?? ""}
+        onChange={setDraftQ}
+        onClear={clearSearch}
+        onSubmit={onSearchSubmit}
+        className="mt-6"
+      />
 
       {/*
        * Две колонки на ПК: категории слева постоянной колонкой, товары
