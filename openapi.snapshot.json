@@ -629,6 +629,12 @@
             ],
             "title": "Parent Id"
           },
+          "product_count": {
+            "default": 0,
+            "description": "Число товаров в категории вместе с подкатегориями — ровно столько отдаст список товаров по этой категории. На витрине считаются опубликованные товары видимых категорий, в админке — все товары и все категории.",
+            "title": "Product Count",
+            "type": "integer"
+          },
           "seo_description": {
             "default": "",
             "title": "Seo Description",

@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import type { CatalogCategoryNode } from "@/features/catalog/map-category";
+import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
 /**
@@ -57,6 +58,16 @@ import { cn } from "@/lib/utils";
  *
  * Раздел с выбранной подкатегорией раскрыт при первой отрисовке: иначе после
  * перезагрузки страницы фильтр выглядит сброшенным, хотя он применён.
+ *
+ * ### Числа у категорий
+ *
+ * Число справа — сколько товаров покажет выдача по этой строке. У раздела
+ * это он сам вместе с подкатегориями, потому что именно так его и листает
+ * витрина. Число раздела не повторяется на строке «Все товары раздела»:
+ * она стоит прямо под заголовком и означает ровно то же самое.
+ *
+ * Если API числа не прислал (витрина уехала раньше бэкенда), счётчиков нет
+ * вовсе — нули на их месте читались бы как пустой каталог.
  */
 
 type CategoryFilterProps = {
@@ -70,6 +81,12 @@ type CategoryFilterProps = {
   /** `null` означает сброс. */
   onSelect: (node: CatalogCategoryNode | null) => void;
   kind: "category" | "subcategory";
+  /**
+   * Число у строки сброса. Нужно странице раздела: там сброс — это «весь
+   * раздел», и у него есть своё количество. В каталоге сброс означает весь
+   * каталог, а его общего числа API не отдаёт, поэтому там счётчика нет.
+   */
+  resetCount?: number | null;
 };
 
 const WORDING = {
@@ -90,6 +107,7 @@ export function CategoryFilter({
   selectedId,
   onSelect,
   kind,
+  resetCount = null,
 }: CategoryFilterProps) {
   const words = WORDING[kind];
   const sheetId = useId();
@@ -136,6 +154,7 @@ export function CategoryFilter({
       nodes={nodes}
       selectedId={selectedId}
       resetLabel={words.reset}
+      resetCount={resetCount}
       onChoose={choose}
     />
   );
@@ -215,11 +234,13 @@ function CategoryTree({
   nodes,
   selectedId,
   resetLabel,
+  resetCount,
   onChoose,
 }: {
   nodes: CatalogCategoryNode[];
   selectedId: string | null;
   resetLabel: string;
+  resetCount: number | null;
   onChoose: (node: CatalogCategoryNode | null) => void;
 }) {
   const branches = nodes.filter((node) => node.children.length > 0);
@@ -241,6 +262,7 @@ function CategoryTree({
     <div>
       <Row
         label={resetLabel}
+        count={resetCount}
         active={!selectedId}
         onClick={() => onChoose(null)}
       />
@@ -264,12 +286,14 @@ function CategoryTree({
                 // этого для скринридера все заголовки одинаковы.
                 aria-current={activeInside ? "true" : undefined}
               >
-                <span className="line-clamp-2">{node.name}</span>
+                <span className="line-clamp-2 flex-1">{node.name}</span>
+                <Count value={node.productCount} />
               </AccordionTrigger>
               <AccordionContent>
                 {/* Не «Все: {название}» — заголовок раздела стоит прямо
                     над этой строкой, и повтор читался как вторая категория
-                    с тем же именем. */}
+                    с тем же именем. Числа здесь тоже нет: оно уже стоит
+                    в заголовке строкой выше и означает ровно это же. */}
                 <Row
                   label="Все товары раздела"
                   active={selectedId === node.id}
@@ -280,6 +304,7 @@ function CategoryTree({
                   <Row
                     key={child.id}
                     label={child.name}
+                    count={child.productCount}
                     active={selectedId === child.id}
                     onClick={() => onChoose(child)}
                     nested
@@ -298,6 +323,7 @@ function CategoryTree({
         <Row
           key={node.id}
           label={node.name}
+          count={node.productCount}
           active={selectedId === node.id}
           onClick={() => onChoose(node)}
         />
@@ -320,13 +346,43 @@ function branchIdFor(
   return found?.id ?? null;
 }
 
+/**
+ * Число товаров у строки.
+ *
+ * Скрыто от скринридера и продублировано словами: «12» само по себе
+ * прочиталось бы как часть названия категории.
+ *
+ * `null` — API числа не прислал (витрина уехала раньше бэкенда). Тогда
+ * счётчика нет вовсе: ноль на этом месте читался бы как пустая категория.
+ */
+function Count({ value }: { value: number | null | undefined }) {
+  if (value === null || value === undefined) return null;
+  return (
+    <>
+      <span
+        className="shrink-0 text-xs tabular-nums text-muted-foreground"
+        aria-hidden
+      >
+        {value}
+      </span>
+      {/* Запятая не для красоты: подписи склеиваются без пробела, и без
+          неё скринридер читает «Коагулометры3 товара». */}
+      <span className="sr-only">
+        {`, ${plural(value, "товар", "товара", "товаров")}`}
+      </span>
+    </>
+  );
+}
+
 function Row({
   label,
+  count = null,
   active,
   onClick,
   nested = false,
 }: {
   label: string;
+  count?: number | null;
   active: boolean;
   onClick: () => void;
   nested?: boolean;
@@ -340,7 +396,7 @@ function Row({
       // скринридера фильтра не существовало.
       aria-pressed={active}
       className={cn(
-        "flex min-h-11 w-full items-center rounded-lg py-2 text-left text-sm transition",
+        "flex min-h-11 w-full items-center gap-2 rounded-lg py-2 text-left text-sm transition",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         // touch-action: manipulation убирает 300ms задержку тапа, которую
         // браузер держит на случай двойного нажатия для зума.
@@ -356,7 +412,8 @@ function Row({
             "text-foreground hover:bg-secondary/70 active:bg-secondary",
       )}
     >
-      <span className="line-clamp-2">{label}</span>
+      <span className="line-clamp-2 flex-1">{label}</span>
+      <Count value={count} />
     </button>
   );
 }

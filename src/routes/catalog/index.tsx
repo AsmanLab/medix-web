@@ -10,7 +10,10 @@ import { Button } from "@/components/ui/button";
 import { CatalogSearch } from "@/features/catalog/CatalogSearch";
 import { CategoryFilter } from "@/features/catalog/CategoryFilter";
 import { ProductGrid } from "@/features/catalog/ProductGrid";
-import { buildCategoryTree } from "@/features/catalog/map-category";
+import {
+  buildCategoryTree,
+  collectCategoryIds,
+} from "@/features/catalog/map-category";
 import { useProductPages } from "@/features/catalog/use-product-pages";
 import { plural } from "@/lib/plural";
 import { usePageMeta } from "@/lib/page-meta";
@@ -64,9 +67,24 @@ function CatalogIndexPage() {
     return null;
   }, [categoryFromUrl, tree]);
 
+  /**
+   * Раздел показывается вместе с подкатегориями — так же, как на странице
+   * раздела.
+   *
+   * Раньше здесь уходил один `category_id`, то есть только товары,
+   * привязанные к самому разделу. В каталоге заказчика таких нет ни одного:
+   * товары висят на подкатегориях, и выбор раздела давал пустую страницу
+   * «Товары не найдены». Теперь число у раздела и его выдача — про одно
+   * и то же.
+   */
+  const selectedCategoryIds = useMemo(
+    () => (selectedCategory ? collectCategoryIds(selectedCategory) : undefined),
+    [selectedCategory],
+  );
+
   const productsQuery = useProductPages({
     q: qFromUrl,
-    categoryId: selectedCategory?.id ?? null,
+    categoryIds: selectedCategoryIds,
   });
   const products = productsQuery.products;
 

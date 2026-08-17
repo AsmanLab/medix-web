@@ -2422,6 +2422,12 @@ export interface components {
             /** Parent Id */
             parent_id: string | null;
             /**
+             * Product Count
+             * @description Число товаров в категории вместе с подкатегориями — ровно столько отдаст список товаров по этой категории. На витрине считаются опубликованные товары видимых категорий, в админке — все товары и все категории.
+             * @default 0
+             */
+            product_count: number;
+            /**
              * Seo Description
              * @default
              */

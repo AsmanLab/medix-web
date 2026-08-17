@@ -215,6 +215,10 @@ function CategoryPage() {
                   selectedId={selectedChild?.id ?? null}
                   onSelect={(node) => selectSubcategory(node ?? undefined)}
                   kind="subcategory"
+                  // Сброс здесь означает «весь раздел», и у него есть своё
+                  // число — в отличие от каталога, где сброс это весь
+                  // каталог, а его общего количества API не отдаёт.
+                  resetCount={section.productCount}
                 />
               ) : null}
 

@@ -10,6 +10,15 @@ export type CatalogCategoryNode = {
   /** Заполняется в админке; до сих пор в разметку страницы не попадало. */
   seoTitle: string;
   seoDescription: string;
+  /**
+   * Сколько товаров покажет выдача по этой категории — вместе
+   * с подкатегориями, так их и листает раздел витрины.
+   *
+   * `null`, если API числа не прислал: поле добавочное, и витрина может
+   * уехать раньше бэкенда. Тогда счётчиков просто нет — вместо нулей,
+   * которые читались бы как «пустая категория».
+   */
+  productCount: number | null;
   children: CatalogCategoryNode[];
 };
 
@@ -37,6 +46,11 @@ function buildTreeFromList(categories: CategoryOut[]): CatalogCategoryNode[] {
       isActive: node.is_active,
       seoTitle: node.seo_title || "",
       seoDescription: node.seo_description || "",
+      // Проверка типа, а не `?? null`: в схеме поле обязательное (у него
+      // есть значение по умолчанию), поэтому TypeScript считает его числом,
+      // а старый бэкенд его просто не пришлёт.
+      productCount:
+        typeof node.product_count === "number" ? node.product_count : null,
       children: build(node.id),
     }));
   }
