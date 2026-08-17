@@ -19,6 +19,7 @@ const sample: CategoryOut[] = [
     image_key: "",
     seo_title: "",
     seo_description: "",
+    product_count: 7,
   },
   {
     id: "child-1",
@@ -31,6 +32,7 @@ const sample: CategoryOut[] = [
     image_key: "",
     seo_title: "",
     seo_description: "",
+    product_count: 3,
   },
   {
     id: "inactive",
@@ -43,6 +45,7 @@ const sample: CategoryOut[] = [
     image_key: "",
     seo_title: "",
     seo_description: "",
+    product_count: 0,
   },
 ];
 
@@ -53,6 +56,27 @@ describe("buildCategoryTree", () => {
     expect(tree[0]?.slug).toBe("diagnostic");
     expect(tree[0]?.children).toHaveLength(1);
     expect(tree[0]?.children[0]?.slug).toBe("ultrasound");
+  });
+});
+
+describe("productCount", () => {
+  it("переносит число товаров из ответа API", () => {
+    const tree = buildCategoryTree(sample);
+    expect(tree[0]?.productCount).toBe(7);
+    expect(tree[0]?.children[0]?.productCount).toBe(3);
+  });
+
+  it("даёт null, если API числа не прислал", () => {
+    // Витрина может уехать раньше бэкенда: поле добавочное. Ноль на его
+    // месте читался бы как пустая категория, поэтому именно null —
+    // счётчик тогда не рисуется вовсе.
+    const withoutCounts = sample.map(
+      ({ product_count: _ignored, ...rest }) => rest as CategoryOut,
+    );
+
+    const tree = buildCategoryTree(withoutCounts);
+
+    expect(tree[0]?.productCount).toBeNull();
   });
 });
 

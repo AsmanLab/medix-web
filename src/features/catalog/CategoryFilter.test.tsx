@@ -124,3 +124,100 @@ describe("CategoryFilter", () => {
     expect(onSelect).toHaveBeenCalledWith(null);
   });
 });
+
+describe("CategoryFilter: числа товаров", () => {
+  const COUNTED: CatalogCategoryNode[] = [
+    {
+      ...node("lab", "Лабораторное оборудование", [
+        { ...node("coag", "Коагулометры"), productCount: 3 },
+        { ...node("urine", "Анализаторы мочи"), productCount: 0 },
+      ]),
+      // Раздел считается вместе с подкатегориями, поэтому его число больше
+      // суммы показанных строк не бывает, но и меньше — тоже.
+      productCount: 4,
+    },
+    { ...node("reagents", "Реагенты для КДЛ"), productCount: 1 },
+  ];
+
+  function renderCounted(resetCount: number | null = null) {
+    render(
+      <CategoryFilter
+        nodes={COUNTED}
+        selectedId={null}
+        onSelect={vi.fn()}
+        kind="category"
+        resetCount={resetCount}
+      />,
+    );
+  }
+
+  it("число раздела включает подкатегории и озвучивается словами", () => {
+    renderCounted();
+
+    const header = screen.getAllByRole("button", {
+      name: /Лабораторное оборудование/,
+    })[0];
+    expect(header.textContent).toContain("4");
+    // Для скринридера «4» рядом с названием прочиталось бы как часть
+    // названия — поэтому число продублировано словами.
+    expect(header).toHaveAccessibleName("Лабораторное оборудование, 4 товара");
+  });
+
+  it("у подкатегорий свои числа, включая ноль", () => {
+    renderCounted();
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /Лабораторное оборудование/ })[0],
+    );
+
+    expect(
+      screen.getAllByRole("button", { name: /Коагулометры/ })[0],
+    ).toHaveAccessibleName("Коагулометры, 3 товара");
+    expect(
+      screen.getAllByRole("button", { name: /Анализаторы мочи/ })[0],
+    ).toHaveAccessibleName("Анализаторы мочи, 0 товаров");
+  });
+
+  it("«Все товары раздела» число не повторяет", () => {
+    // Оно уже стоит в заголовке строкой выше и означает то же самое.
+    renderCounted();
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /Лабораторное оборудование/ })[0],
+    );
+
+    expect(
+      screen.getAllByRole("button", { name: "Все товары раздела" })[0],
+    ).toHaveAccessibleName("Все товары раздела");
+  });
+
+  it("строка сброса показывает число, только если его передали", () => {
+    renderCounted(9);
+
+    expect(
+      screen.getAllByRole("button", { name: /Все товары/ })[0],
+    ).toHaveAccessibleName("Все товары, 9 товаров");
+
+    cleanup();
+    renderCounted(null);
+
+    expect(
+      screen.getAllByRole("button", { name: "Все товары" })[0],
+    ).toHaveAccessibleName("Все товары");
+  });
+
+  it("без чисел от API счётчиков нет вовсе", () => {
+    // Ноль на их месте читался бы как пустой каталог — а это всего лишь
+    // витрина, уехавшая раньше бэкенда.
+    render(
+      <CategoryFilter
+        nodes={TREE}
+        selectedId={null}
+        onSelect={vi.fn()}
+        kind="category"
+      />,
+    );
+
+    expect(
+      screen.getAllByRole("button", { name: "Реагенты для КДЛ" })[0],
+    ).toHaveAccessibleName("Реагенты для КДЛ");
+  });
+});
