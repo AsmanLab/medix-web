@@ -17,9 +17,7 @@ type ProductGalleryProps = {
  * Главная идёт первой, дальше — по полю sort: порядок в админке должен
  * совпадать с порядком на витрине.
  *
- * Кадр 4:3, а не 16:9: медицинская техника — вертикальные корпуса, в широкой
- * рамке они превращались в узкую полоску с полями по бокам. Ширину галереи
- * ограничивает страница товара, здесь блок тянется на всю выданную ширину.
+ * Блок тянется на всю выданную ему ширину — ограничивает её страница товара.
  */
 export function ProductGallery({ images, alt }: ProductGalleryProps) {
   const ordered = useMemo(
@@ -40,7 +38,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
 
   if (ordered.length === 0) {
     return (
-      <div className="grid aspect-[4/3] place-items-center gap-2 bg-primary-soft text-sm text-muted-foreground">
+      <div className="grid aspect-[16/9] place-items-center gap-2 bg-primary-soft text-sm text-muted-foreground">
         <ImageOff className="h-8 w-8" aria-hidden />
         Нет изображения
       </div>
@@ -73,10 +71,10 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
             alt={alt}
             fetchPriority={index === 0 ? "high" : "auto"}
             decoding="async"
-            className="aspect-[4/3] w-full bg-white object-contain"
+            className="aspect-[16/9] w-full bg-white object-contain"
           />
         ) : (
-          <div className="grid aspect-[4/3] place-items-center bg-primary-soft text-sm text-muted-foreground">
+          <div className="grid aspect-[16/9] place-items-center bg-primary-soft text-sm text-muted-foreground">
             Изображение недоступно
           </div>
         )}

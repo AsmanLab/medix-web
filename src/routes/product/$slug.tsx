@@ -203,8 +203,13 @@ function ProductDetailPage() {
              * правой колонке на десктопе, оставаясь одним узлом DOM:
              * дублировать его ради раскладки значило бы завести две кнопки
              * «В корзину».
+             *
+             * Страница уже общего контейнера витрины: на 1320px левая колонка
+             * отдавала фотографии ~900px, кадр занимал почти весь первый
+             * экран, а строка описания под ним получалась длиной, на которой
+             * глаз теряет начало следующей.
              */
-            <article className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_clamp(320px,26vw,380px)] lg:[grid-template-rows:auto_auto_1fr] lg:items-start lg:gap-8">
+            <article className="flex flex-col gap-6 lg:mx-auto lg:max-w-[1060px] lg:grid lg:grid-cols-[minmax(0,1fr)_clamp(320px,26vw,380px)] lg:[grid-template-rows:auto_auto_1fr] lg:items-start lg:gap-8">
               {/* Название над фотографией, а не внутри блока покупки: это
                   заголовок страницы, и читать его сбоку от картинки
                   неестественно. */}
@@ -224,10 +229,7 @@ function ProductDetailPage() {
                 ) : null}
               </header>
 
-              {/* Ширина фотографии ограничена: во всю левую колонку кадр
-                  занимал ~900px, и вкладки с характеристиками уходили
-                  за пределы первого экрана. */}
-              <div className="order-2 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1 lg:row-start-2 lg:max-w-[600px]">
+              <div className="order-2 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1 lg:row-start-2">
                 <ProductGallery
                   images={product.images ?? []}
                   alt={product.name_ru}
