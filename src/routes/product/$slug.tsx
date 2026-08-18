@@ -224,10 +224,7 @@ function ProductDetailPage() {
                 ) : null}
               </header>
 
-              {/* Ширина фотографии ограничена: во всю левую колонку кадр
-                  занимал ~900px, и вкладки с характеристиками уходили
-                  за пределы первого экрана. */}
-              <div className="order-2 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1 lg:row-start-2 lg:max-w-[600px]">
+              <div className="order-2 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1 lg:row-start-2">
                 <ProductGallery
                   images={product.images ?? []}
                   alt={product.name_ru}
