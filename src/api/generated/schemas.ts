@@ -22,6 +22,7 @@ export type ProductListOut = Schemas["ProductListOut"];
 export type ProductDetailOut = Schemas["ProductDetailOut"];
 export type ProductOptionOut = Schemas["ProductOptionOut"];
 export type ProductImageOut = Schemas["ProductImageOut"];
+export type ProductDocumentOut = Schemas["ProductDocumentOut"];
 export type OptionGroupOut = Schemas["OptionGroupOut"];
 export type ProfileResponse = Schemas["ProfileResponse"];
 export type UpdateProfileRequest = Schemas["UpdateProfileRequest"];

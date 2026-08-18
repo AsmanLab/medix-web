@@ -1161,6 +1161,12 @@
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "video_url": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Video Url",
+            "type": "string"
           }
         },
         "required": [
@@ -2925,6 +2931,11 @@
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "video_url": {
+            "default": "",
+            "title": "Video Url",
+            "type": "string"
           }
         },
         "required": [
@@ -4564,6 +4575,18 @@
               }
             ],
             "title": "Slug"
+          },
+          "video_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Url"
           }
         },
         "title": "UpdateProductRequest",

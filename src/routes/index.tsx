@@ -207,7 +207,14 @@ function HomePage() {
                   key={p.id}
                   className="w-[260px] shrink-0 snap-start lg:w-auto"
                 >
-                  <ProductCard product={p} priority={index < 4} />
+                  {/* Лента даёт карточке фиксированные 260px даже на
+                      телефоне — в отличие от каталога, места тут хватает
+                      на артикул, производителя и наличие. */}
+                  <ProductCard
+                    product={p}
+                    priority={index < 4}
+                    density="full"
+                  />
                 </li>
               ))}
             </ul>

@@ -12,6 +12,16 @@ type ProductCardProps = {
    * а `loading="lazy"` на видимой картинке только задерживает отрисовку.
    */
   priority?: boolean;
+  /**
+   * `compact` (по умолчанию) — вид для сетки каталога: ниже 640px товары идут
+   * по двое в ряд, и артикул, производитель и наличие в колонку ~170px уже
+   * не влезают, оставаясь мелким шумом вокруг названия. С 640px вид прежний.
+   *
+   * `full` — для ленты на главной: там карточка фиксированной ширины 260px,
+   * места хватает, а Tailwind считает брейкпоинты по вьюпорту, а не по
+   * контейнеру, и без пропа лента на телефоне обеднела бы заодно с каталогом.
+   */
+  density?: "compact" | "full";
   className?: string;
 };
 
@@ -29,18 +39,22 @@ type ProductCardProps = {
 export function ProductCard({
   product,
   priority,
+  density = "compact",
   className,
 }: ProductCardProps) {
   const origin = [product.manufacturer, product.country]
     .filter(Boolean)
     .join(" · ");
 
+  // Второстепенные строки карточки: в компактном виде появляются с 640px.
+  const meta = density === "full" ? "" : "hidden sm:block";
+
   return (
     <Link
       to="/product/$slug"
       params={{ slug: product.slug }}
       className={cn(
-        "group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card",
+        "group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card sm:rounded-2xl",
         "shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:border-primary/40",
         // На тач-экране `hover:` не срабатывает, и карточка молчала до самого
         // перехода на страницу товара. Нажатие прижимает её вместо подъёма.
@@ -69,28 +83,38 @@ export function ProductCard({
         )}
       </div>
 
-      {/* Отступ одинаковый на всех размерах: в плотной сетке карточка
-          уже ~230–310px, и увеличенный padding съедал бы место у названия. */}
-      <div className="flex flex-1 flex-col p-4">
-        <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
+      {/* Отступ не растёт с шириной: в плотной сетке карточка уже ~230–310px,
+          и увеличенный padding съедал бы место у названия. */}
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <p
+          className={cn(
+            "font-mono text-[11px] tracking-wide text-muted-foreground",
+            meta,
+          )}
+        >
           {product.sku}
         </p>
-        <h3 className="mt-1 line-clamp-2 font-semibold leading-snug text-foreground group-hover:text-primary">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground group-hover:text-primary sm:mt-1 sm:text-base">
           {product.name_ru}
         </h3>
         {origin ? (
-          <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+          <p
+            className={cn(
+              "mt-1 line-clamp-1 text-xs text-muted-foreground",
+              meta,
+            )}
+          >
             {origin}
           </p>
         ) : null}
 
         {/* mt-auto прижимает цену к низу: в сетке цены всех карточек ряда
             оказываются на одной линии независимо от длины названия. */}
-        <div className="mt-auto flex items-end justify-between gap-2 pt-4 text-sm">
-          <span className="text-xs text-muted-foreground">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3 text-sm sm:pt-4">
+          <span className={cn("text-xs text-muted-foreground", meta)}>
             {availabilityLabel(product.availability)}
           </span>
-          <span className="text-right font-semibold text-primary">
+          <span className="ml-auto text-right text-sm font-semibold text-primary sm:text-base">
             {formatMoney(product.price, "По запросу")}
           </span>
         </div>

@@ -24,7 +24,11 @@ import {
 } from "@/features/catalog/configurator-logic";
 import { ProductConfigurator } from "@/features/catalog/ProductConfigurator";
 import { ProductDescription } from "@/features/catalog/ProductDescription";
+import { ProductDocuments } from "@/features/catalog/ProductDocuments";
 import { ProductGallery } from "@/features/catalog/ProductGallery";
+import { ProductTabs, type ProductTab } from "@/features/catalog/ProductTabs";
+import { ProductVideo } from "@/features/catalog/ProductVideo";
+import { parseVideoUrl } from "@/features/catalog/video-url";
 import { formatPrice } from "@/lib/money";
 import { usePageMeta } from "@/lib/page-meta";
 import { useSession } from "@/session/store";
@@ -69,6 +73,44 @@ function ProductDetailPage() {
     () => summarizeConfigPrice(product?.price ?? null, selected),
     [product?.price, selected],
   );
+
+  // Ссылка приходит из админки строкой; неопознанную площадку и мусор
+  // parseVideoUrl отдаёт как null, и вкладка «Видео» просто не появляется.
+  const video = useMemo(
+    () => parseVideoUrl(product?.video_url),
+    [product?.video_url],
+  );
+
+  // Пустые разделы во вкладки не попадают: ярлык, за которым ничего нет,
+  // читается как поломка страницы.
+  const tabs = useMemo<ProductTab[]>(() => {
+    if (!product) return [];
+    const list: ProductTab[] = [];
+
+    if (product.description_ru) {
+      list.push({
+        key: "specs",
+        label: "Технические характеристики",
+        shortLabel: "Характеристики",
+        content: <ProductDescription text={product.description_ru} bare />,
+      });
+    }
+    if (product.documents?.length) {
+      list.push({
+        key: "docs",
+        label: "Документация",
+        content: <ProductDocuments documents={product.documents} />,
+      });
+    }
+    if (video) {
+      list.push({
+        key: "video",
+        label: "Видео",
+        content: <ProductVideo video={video} title={product.name_ru} />,
+      });
+    }
+    return list;
+  }, [product, video]);
 
   // В описание берём производителя, страну и артикул, а не description_ru:
   // он размечен и хранит характеристики списком — в сниппете это мусор.
@@ -149,20 +191,43 @@ function ProductDetailPage() {
         >
           {product ? (
             /*
-             * Две колонки на десктопе: слева медиа и описание, справа —
-             * липкий блок покупки. Карточка была одноколоночной на любом
-             * экране, поэтому на 1920px под галереей во весь контейнер шли
-             * цена и «В корзину», а до кнопки после чтения описания
+             * Две колонки на десктопе: слева название, фотография и вкладки,
+             * справа — липкий блок покупки. Карточка была одноколоночной на
+             * любом экране, поэтому на 1920px под галереей во весь контейнер
+             * шли цена и «В корзину», а до кнопки после чтения описания
              * приходилось скроллить обратно вверх.
              *
              * `order-*` действует только во флексе (мобильная раскладка),
-             * `col-start`/`row` — только в гриде (десктоп). Благодаря этому
-             * блок покупки стоит сразу под галереей на телефоне и в правой
-             * колонке на десктопе, оставаясь одним узлом DOM: дублировать
-             * его ради раскладки значило бы завести две кнопки «В корзину».
+             * `col-start`/`row-start` — только в гриде (десктоп). Благодаря
+             * этому блок покупки стоит сразу под галереей на телефоне и в
+             * правой колонке на десктопе, оставаясь одним узлом DOM:
+             * дублировать его ради раскладки значило бы завести две кнопки
+             * «В корзину».
              */
-            <article className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_clamp(320px,26vw,380px)] lg:items-start lg:gap-8">
-              <div className="order-1 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1">
+            <article className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_clamp(320px,26vw,380px)] lg:[grid-template-rows:auto_auto_1fr] lg:items-start lg:gap-8">
+              {/* Название над фотографией, а не внутри блока покупки: это
+                  заголовок страницы, и читать его сбоку от картинки
+                  неестественно. */}
+              <header className="order-1 lg:col-start-1 lg:row-start-1">
+                <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                  {product.sku}
+                </p>
+                <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">
+                  {product.name_ru}
+                </h1>
+                {product.manufacturer || product.country ? (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {[product.manufacturer, product.country]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : null}
+              </header>
+
+              {/* Ширина фотографии ограничена: во всю левую колонку кадр
+                  занимал ~900px, и вкладки с характеристиками уходили
+                  за пределы первого экрана. */}
+              <div className="order-2 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1 lg:row-start-2 lg:max-w-[600px]">
                 <ProductGallery
                   images={product.images ?? []}
                   alt={product.name_ru}
@@ -171,38 +236,43 @@ function ProductDetailPage() {
 
               {/* grid-row: 1/-1 — область сайдбара во всю высоту сетки,
                   иначе sticky некуда прилипать. */}
-              <aside className="order-2 lg:col-start-2 lg:self-start lg:[grid-row:1/-1] lg:sticky lg:top-24">
-                <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
-                  <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
-                    {product.sku}
-                  </p>
-                  <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl lg:text-2xl">
-                    {product.name_ru}
-                  </h1>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {[product.manufacturer, product.country]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
+              <aside className="order-3 lg:col-start-2 lg:self-start lg:[grid-row:1/-1] lg:sticky lg:top-24">
+                <div className="space-y-5 rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+                  <div>
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                      <p className="text-2xl font-bold text-primary">
+                        {groups.length > 0
+                          ? summary.label
+                          : formatPrice(product.price)}
+                      </p>
+                      <StatusPill tone={availabilityTone(product.availability)}>
+                        {availabilityLabel(product.availability)}
+                      </StatusPill>
+                    </div>
 
-                  <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-                    <p className="text-2xl font-bold text-primary">
-                      {groups.length > 0
-                        ? summary.label
-                        : formatPrice(product.price)}
-                    </p>
-                    <StatusPill tone={availabilityTone(product.availability)}>
-                      {availabilityLabel(product.availability)}
-                    </StatusPill>
+                    {groups.length > 0 && selected.length > 0 ? (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        С учётом выбранной комплектации ({selected.length})
+                      </p>
+                    ) : null}
                   </div>
 
-                  {groups.length > 0 && selected.length > 0 ? (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      С учётом выбранной комплектации ({selected.length})
-                    </p>
+                  {/* Комплектация стоит рядом с ценой и кнопкой: отдельным
+                      блоком под галереей она занимала полосу во всю ширину,
+                      хотя влияет ровно на эти два числа. */}
+                  {groups.length > 0 ? (
+                    <div className="border-t border-border pt-5">
+                      <ProductConfigurator
+                        groups={groups}
+                        basePrice={product.price}
+                        selection={selection}
+                        onSelectionChange={setSelection}
+                        embedded
+                      />
+                    </div>
                   ) : null}
 
-                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
                     <div className="inline-flex items-center rounded-xl border border-border">
                       <button
                         type="button"
@@ -236,58 +306,21 @@ function ProductDetailPage() {
                       <ShoppingCart className="h-4 w-4" />
                       {addMutation.isPending ? "Добавляем…" : "В корзину"}
                     </Button>
-                  </div>
 
-                  {missing.length > 0 ? (
-                    <p className="mt-3 text-xs font-semibold text-destructive">
-                      Сначала выберите:{" "}
-                      {missing.map((g) => g.name_ru).join(", ")}
-                    </p>
-                  ) : null}
+                    {missing.length > 0 ? (
+                      <p className="w-full text-xs font-semibold text-destructive">
+                        Сначала выберите:{" "}
+                        {missing.map((g) => g.name_ru).join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
               </aside>
 
-              {groups.length > 0 ? (
-                <div className="order-3 lg:col-start-1">
-                  <ProductConfigurator
-                    groups={groups}
-                    basePrice={product.price}
-                    selection={selection}
-                    onSelectionChange={setSelection}
-                  />
+              {tabs.length > 0 ? (
+                <div className="order-4 lg:col-start-1 lg:row-start-3">
+                  <ProductTabs tabs={tabs} />
                 </div>
-              ) : null}
-
-              {product.description_ru ? (
-                <div className="order-4 lg:col-start-1">
-                  <ProductDescription text={product.description_ru} />
-                </div>
-              ) : null}
-
-              {product.documents?.length ? (
-                <section className="order-5 rounded-3xl border border-border bg-card p-5 lg:col-start-1">
-                  <h2 className="font-semibold">Документы</h2>
-                  <ul className="mt-2 space-y-2">
-                    {product.documents.map((doc) => (
-                      <li key={doc.id}>
-                        {doc.url ? (
-                          <a
-                            href={doc.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-sm font-medium text-primary"
-                          >
-                            {doc.name}
-                          </a>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">
-                            {doc.name}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
               ) : null}
             </article>
           ) : null}

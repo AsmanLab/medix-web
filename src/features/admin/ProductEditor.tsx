@@ -88,6 +88,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
   const [manufacturer, setManufacturer] = useState("");
   const [country, setCountry] = useState("");
   const [descriptionRu, setDescriptionRu] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [availability, setAvailability] = useState("on_order");
   const [priceOnRequest, setPriceOnRequest] = useState(true);
@@ -105,6 +106,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
     setManufacturer(existing.manufacturer ?? "");
     setCountry(existing.country ?? "");
     setDescriptionRu(existing.description_ru ?? "");
+    setVideoUrl(existing.video_url ?? "");
     setCategoryIds(existing.category_ids ?? []);
     setAvailability(existing.availability || "on_order");
     setPriceOnRequest(!existing.price);
@@ -159,6 +161,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
         manufacturer: manufacturer.trim(),
         country: country.trim(),
         description_ru: descriptionRu.trim(),
+        video_url: videoUrl.trim(),
         availability,
         price_amount: parsedPrice,
       };
@@ -529,6 +532,23 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                   )}
                 </div>
               </fieldset>
+              <label className="block text-xs font-semibold">
+                Ссылка на видео
+                <input
+                  type="url"
+                  inputMode="url"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  className="field-control mt-1.5"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+                <span className="mt-1.5 block font-normal text-muted-foreground">
+                  YouTube или Rutube, один ролик на товар. Вставьте ссылку из
+                  адресной строки — на витрине появится вкладка «Видео».
+                  Оставьте поле пустым, чтобы убрать вкладку.
+                </span>
+              </label>
+
               <label className="block text-xs font-semibold">
                 Описание
                 <textarea

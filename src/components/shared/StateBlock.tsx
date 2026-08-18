@@ -23,6 +23,12 @@ type StateBlockProps = {
   loadingVariant?: LoadingVariant;
   loadingCount?: number;
   cardGridVariant?: CardGridSkeletonVariant;
+  /**
+   * Оверрайд колонок скелетона. Каталог сужает сетку на `lg` (там сбоку
+   * фильтр категорий), и без проброса скелетон рисовал четыре колонки, а
+   * данные приходили в три — макет прыгал ровно в момент отрисовки.
+   */
+  cardGridClassName?: string;
   emptyFallback?: ReactNode;
   emptyIcon?: LucideIcon;
   emptyAction?: ReactNode;
@@ -35,12 +41,19 @@ function resolveLoadingFallback(
   variant: LoadingVariant | undefined,
   count: number,
   cardGridVariant: CardGridSkeletonVariant,
+  cardGridClassName: string | undefined,
 ): ReactNode {
   switch (variant) {
     case "list":
       return <ListSkeleton count={count} />;
     case "card-grid":
-      return <CardGridSkeleton count={count} variant={cardGridVariant} />;
+      return (
+        <CardGridSkeleton
+          count={count}
+          variant={cardGridVariant}
+          className={cardGridClassName}
+        />
+      );
     case "detail":
       return <DetailSkeleton />;
     case "banner":
@@ -68,6 +81,7 @@ export function StateBlock({
   loadingVariant,
   loadingCount = 4,
   cardGridVariant = "category",
+  cardGridClassName,
   emptyFallback,
   emptyIcon,
   emptyAction,
@@ -79,7 +93,12 @@ export function StateBlock({
     return (
       <>
         {loadingFallback ??
-          resolveLoadingFallback(loadingVariant, loadingCount, cardGridVariant)}
+          resolveLoadingFallback(
+            loadingVariant,
+            loadingCount,
+            cardGridVariant,
+            cardGridClassName,
+          )}
       </>
     );
   }

@@ -20,15 +20,20 @@ type ProductGridProps = {
  * не просматривалось.
  *
  * Ширина карточки по брейкпоинтам (контейнер 1320px, gap 16px):
+ *   <640      2 колонки  ~170px
  *   640–767   2 колонки  ~290px
  *   768–1023  3 колонки  ~235–330px
  *   ≥1024     4 колонки  ~232–306px
+ *
+ * На телефоне тоже две колонки: одна карточка во всю ширину экрана отдавала
+ * фотографии пол-экрана, и в поле зрения помещалось полтора товара. Карточка
+ * при этом ужимается — см. `density` в ProductCard.
  */
 export function ProductGrid({ products, className }: ProductGridProps) {
   return (
     <ul
       className={cn(
-        "grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+        "grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4",
         className,
       )}
     >

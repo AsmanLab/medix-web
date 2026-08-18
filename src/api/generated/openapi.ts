@@ -2696,6 +2696,11 @@ export interface components {
             sku: string;
             /** Slug */
             slug: string;
+            /**
+             * Video Url
+             * @default
+             */
+            video_url: string;
         };
         /** CreatePromotionBody */
         CreatePromotionBody: {
@@ -3415,6 +3420,11 @@ export interface components {
             sku: string;
             /** Slug */
             slug: string;
+            /**
+             * Video Url
+             * @default
+             */
+            video_url: string;
         };
         /** ProductDocumentOut */
         ProductDocumentOut: {
@@ -3960,6 +3970,8 @@ export interface components {
             sku?: string | null;
             /** Slug */
             slug?: string | null;
+            /** Video Url */
+            video_url?: string | null;
         };
         /** UpdateProfileRequest */
         UpdateProfileRequest: {

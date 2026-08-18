@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { parseDescription } from "@/features/catalog/product-description";
+import { cn } from "@/lib/utils";
 
 const COLLAPSED_BLOCKS = 6;
 
@@ -13,21 +14,33 @@ const COLLAPSED_BLOCKS = 6;
  *
  * Длинные описания сворачиваются: под характеристиками должны оставаться
  * видимыми кнопка покупки и конфигуратор, а не бесконечная простыня.
+ *
+ * Внутри вкладки «Технические характеристики» сворачивание и собственный
+ * заголовок не нужны: текст и так убран под ярлык, а второй заголовок над
+ * ним читался бы как вложенный раздел — отсюда `bare`.
  */
-export function ProductDescription({ text }: { text: string }) {
+export function ProductDescription({
+  text,
+  bare = false,
+}: {
+  text: string;
+  bare?: boolean;
+}) {
   const blocks = useMemo(() => parseDescription(text), [text]);
   const [expanded, setExpanded] = useState(false);
 
   if (blocks.length === 0) return null;
 
-  const collapsible = blocks.length > COLLAPSED_BLOCKS;
+  const collapsible = !bare && blocks.length > COLLAPSED_BLOCKS;
   const visible = expanded || !collapsible ? blocks : blocks.slice(0, COLLAPSED_BLOCKS);
 
-  return (
-    <section className="rounded-3xl border border-border bg-card p-5">
-      <h2 className="font-semibold">Описание</h2>
+  const Wrapper = bare ? "div" : "section";
 
-      <div className="mt-3 space-y-4">
+  return (
+    <Wrapper className={bare ? undefined : "rounded-3xl border border-border bg-card p-5"}>
+      {bare ? null : <h2 className="font-semibold">Описание</h2>}
+
+      <div className={cn("space-y-4", !bare && "mt-3")}>
         {visible.map((block, i) => {
           switch (block.kind) {
             case "heading":
@@ -95,6 +108,6 @@ export function ProductDescription({ text }: { text: string }) {
           {expanded ? "Свернуть" : "Показать полностью"}
         </Button>
       ) : null}
-    </section>
+    </Wrapper>
   );
 }
