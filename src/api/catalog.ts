@@ -178,6 +178,7 @@ export type CreateProductBody = {
   manufacturer?: string;
   country?: string;
   description_ru?: string;
+  video_url?: string;
   availability?: string;
   price_amount?: number | null;
 };
@@ -191,6 +192,7 @@ export type UpdateProductBody = {
   manufacturer?: string;
   country?: string;
   description_ru?: string;
+  video_url?: string;
   availability?: string;
   price_amount?: number | null;
 };

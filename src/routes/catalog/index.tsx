@@ -196,6 +196,7 @@ function CatalogIndexPage() {
             onRetry={() => void productsQuery.refetch()}
             loadingVariant="card-grid"
             cardGridVariant="catalog"
+            cardGridClassName="lg:grid-cols-3 xl:grid-cols-4"
             loadingCount={6}
             emptyTitle={
               qFromUrl || selectedCategory

@@ -38,14 +38,14 @@ export function CardGridSkeleton({
     return (
       <ul
         className={cn(
-          "flex gap-3 overflow-hidden pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible",
+          "flex gap-4 overflow-hidden pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible",
           className,
         )}
         aria-busy
         aria-label="Загрузка товаров"
       >
         {Array.from({ length: count }, (_, i) => (
-          <li key={i} className="w-[240px] shrink-0 lg:w-auto">
+          <li key={i} className="w-[260px] shrink-0 lg:w-auto">
             <Skeleton className="h-[188px] rounded-2xl" />
           </li>
         ))}
@@ -59,7 +59,7 @@ export function CardGridSkeleton({
       // макет перестраивается — это видно как рывок и штрафуется в CLS.
       <ul
         className={cn(
-          "grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+          "grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4",
           className,
         )}
         aria-busy
@@ -67,15 +67,18 @@ export function CardGridSkeleton({
       >
         {Array.from({ length: count }, (_, i) => (
           <li key={i}>
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="overflow-hidden rounded-xl border border-border bg-card sm:rounded-2xl">
               <Skeleton className="aspect-[4/3] w-full rounded-none" />
-              <div className="space-y-2 p-5">
-                <Skeleton className="h-3 w-16" />
+              <div className="space-y-2 p-3 sm:p-4">
+                {/* Артикул, производитель и наличие карточка показывает
+                    только с 640px — скелетон повторяет это, иначе на
+                    телефоне он выше содержимого. */}
+                <Skeleton className="hidden h-3 w-16 sm:block" />
                 <Skeleton className="h-5 w-[80%]" />
-                <Skeleton className="h-3 w-[40%]" />
+                <Skeleton className="hidden h-3 w-[40%] sm:block" />
                 <div className="flex justify-between pt-1">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="hidden h-4 w-20 sm:block" />
+                  <Skeleton className="ml-auto h-4 w-16" />
                 </div>
               </div>
             </div>

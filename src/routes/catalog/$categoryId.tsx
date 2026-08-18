@@ -256,6 +256,10 @@ function CategoryPage() {
                     onRetry={() => void productsQuery.refetch()}
                     loadingVariant="card-grid"
                     cardGridVariant="catalog"
+                    cardGridClassName={cn(
+                      section.children.length > 0 &&
+                        "lg:grid-cols-3 xl:grid-cols-4",
+                    )}
                     loadingCount={6}
                     emptyTitle="Товары не найдены"
                     emptyDescription="Измените поиск или выберите другую подкатегорию."

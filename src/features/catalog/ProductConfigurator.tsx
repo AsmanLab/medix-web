@@ -17,6 +17,12 @@ type ProductConfiguratorProps = {
   basePrice: string | null;
   selection: ConfigSelection;
   onSelectionChange: (next: ConfigSelection) => void;
+  /**
+   * Встроенный вид — для блока покупки, где конфигуратор стоит рядом с ценой
+   * и кнопкой. Своя рамка там дала бы карточку внутри карточки, а «Итого
+   * конфигурации» повторило бы цену, которая уже посчитана строкой выше.
+   */
+  embedded?: boolean;
 };
 
 export function ProductConfigurator({
@@ -24,13 +30,21 @@ export function ProductConfigurator({
   basePrice,
   selection,
   onSelectionChange,
+  embedded = false,
 }: ProductConfiguratorProps) {
   const sortedGroups = useMemo(
     () => [...groups].sort((a, b) => a.sort - b.sort),
     [groups],
   );
-  const [openIds, setOpenIds] = useState<Set<string>>(
-    () => new Set(sortedGroups.map((g) => g.id)),
+  // Во встроенном виде колонка узкая (320–380px), и все группы, раскрытые
+  // разом, растягивали её на несколько экранов. Открытыми остаются только
+  // те, где выбор обязателен, — с них и начинается сборка комплектации.
+  const [openIds, setOpenIds] = useState<Set<string>>(() =>
+    embedded
+      ? new Set(
+          missingRequiredGroups(sortedGroups, selection).map((g) => g.id),
+        )
+      : new Set(sortedGroups.map((g) => g.id)),
   );
 
   const selected = useMemo(
@@ -75,12 +89,21 @@ export function ProductConfigurator({
   if (sortedGroups.length === 0) return null;
 
   return (
-    <section className="space-y-3 rounded-3xl border border-border bg-card p-5">
+    <section
+      className={cn(
+        "space-y-3",
+        !embedded && "rounded-3xl border border-border bg-card p-5",
+      )}
+    >
       <div>
-        <h2 className="font-semibold">Конфигурация</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Выберите комплектацию и дополнительные опции
-        </p>
+        <h2 className={cn("font-semibold", embedded && "text-sm")}>
+          Конфигурация
+        </h2>
+        {embedded ? null : (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Выберите комплектацию и дополнительные опции
+          </p>
+        )}
       </div>
 
       <ul className="space-y-3">
@@ -205,22 +228,24 @@ export function ProductConfigurator({
         })}
       </ul>
 
-      <div className="rounded-2xl bg-secondary/50 px-4 py-3">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-          Итого конфигурации
-        </p>
-        <p className="mt-1 text-lg font-bold text-primary">{summary.label}</p>
-        {selected.length > 0 ? (
-          <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-            {selected.map((o) => (
-              <li key={o.id}>
-                + {o.name_ru}
-                {o.price ? ` · ${formatMoney(o.price)}` : " · по запросу"}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
+      {embedded ? null : (
+        <div className="rounded-2xl bg-secondary/50 px-4 py-3">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            Итого конфигурации
+          </p>
+          <p className="mt-1 text-lg font-bold text-primary">{summary.label}</p>
+          {selected.length > 0 ? (
+            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+              {selected.map((o) => (
+                <li key={o.id}>
+                  + {o.name_ru}
+                  {o.price ? ` · ${formatMoney(o.price)}` : " · по запросу"}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      )}
     </section>
   );
 }
