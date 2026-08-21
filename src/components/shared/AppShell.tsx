@@ -121,6 +121,9 @@ function Logo({
   );
 }
 
+/** Сколько категорий третьего уровня помещается под подразделом в меню. */
+const MEGA_MENU_LEAVES = 5;
+
 function CatalogMegaMenu({
   categories,
   isLoading,
@@ -300,25 +303,79 @@ function CatalogMegaMenu({
                     Открыть раздел <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
-                <div className="mt-5 grid grid-cols-2 gap-2">
+                {/*
+                 * Два уровня в правой колонке: подраздел заголовком,
+                 * его подкатегории списком под ним. Так меню показывает
+                 * ветку целиком — «Гематология», а под ней
+                 * «Гематологические анализаторы», — и до третьего уровня
+                 * получается один переход, а не два.
+                 *
+                 * Ссылки ведут на `/catalog/{slug}` любого уровня: прежний
+                 * `?subcategory=` описать три уровня уже не может.
+                 */}
+                <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4">
                   {menuCategory.children.length > 0 ? (
                     menuCategory.children.map((subcategory) => (
-                      <Link
-                        key={subcategory.id}
-                        to="/catalog/$categoryId"
-                        params={{
-                          categoryId: menuCategory.slug || menuCategory.id,
-                        }}
-                        search={{
-                          subcategory: subcategory.slug || subcategory.id,
-                          q: undefined,
-                        }}
-                        className="group flex items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-2.5 text-[13px] transition hover:border-border hover:bg-background"
-                      >
-                        <span className="group-hover:text-primary">
+                      <div key={subcategory.id} className="min-w-0">
+                        <Link
+                          to="/catalog/$categoryId"
+                          params={{
+                            categoryId: subcategory.slug || subcategory.id,
+                          }}
+                          search={{ subcategory: undefined, q: undefined }}
+                          className="block rounded-lg px-3 py-2 text-[13px] font-semibold transition hover:bg-background hover:text-primary"
+                        >
                           {subcategory.name}
-                        </span>
-                      </Link>
+                        </Link>
+                        {subcategory.children.length > 0 ? (
+                          <ul className="mt-0.5">
+                            {subcategory.children
+                              .slice(0, MEGA_MENU_LEAVES)
+                              .map((leaf) => (
+                                <li key={leaf.id}>
+                                  <Link
+                                    to="/catalog/$categoryId"
+                                    params={{
+                                      categoryId: leaf.slug || leaf.id,
+                                    }}
+                                    search={{
+                                      subcategory: undefined,
+                                      q: undefined,
+                                    }}
+                                    className="block truncate rounded-lg px-3 py-1.5 text-[13px] text-muted-foreground transition hover:bg-background hover:text-primary"
+                                  >
+                                    {leaf.name}
+                                  </Link>
+                                </li>
+                              ))}
+                            {/* Меню — не каталог: длинный список в нём
+                                пришлось бы прокручивать, а прокрутка
+                                внутри выпадающего меню закрывает его
+                                мышью. Остаток открывается страницей. */}
+                            {subcategory.children.length >
+                            MEGA_MENU_LEAVES ? (
+                              <li>
+                                <Link
+                                  to="/catalog/$categoryId"
+                                  params={{
+                                    categoryId:
+                                      subcategory.slug || subcategory.id,
+                                  }}
+                                  search={{
+                                    subcategory: undefined,
+                                    q: undefined,
+                                  }}
+                                  className="block rounded-lg px-3 py-1.5 text-xs font-semibold text-primary"
+                                >
+                                  Ещё{" "}
+                                  {subcategory.children.length -
+                                    MEGA_MENU_LEAVES}
+                                </Link>
+                              </li>
+                            ) : null}
+                          </ul>
+                        ) : null}
+                      </div>
                     ))
                   ) : (
                     <p className="col-span-2 text-sm text-muted-foreground">

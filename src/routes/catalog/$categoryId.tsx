@@ -13,7 +13,7 @@ import { useProductPages } from "@/features/catalog/use-product-pages";
 import {
   buildCategoryTree,
   collectCategoryIds,
-  findCategoryNode,
+  findCategoryPath,
   type CatalogCategoryNode,
 } from "@/features/catalog/map-category";
 import { ProductGrid } from "@/features/catalog/ProductGrid";
@@ -21,6 +21,18 @@ import { usePageMeta } from "@/lib/page-meta";
 import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
+/**
+ * Страница раздела каталога.
+ *
+ * Адрес — `/catalog/{slug}` для **любого** уровня: slug уникален по всему
+ * дереву, поэтому третий уровень получает такую же собственную страницу,
+ * как и первый, и индексируется поисковиками наравне с ним.
+ *
+ * `?subcategory=` остаётся понимаемым, но больше не создаётся: по нему
+ * приходят ссылки, разосланные до появления третьего уровня. Двух уровней
+ * этому параметру хватало ровно потому, что третьего не было; описать им
+ * «Лаборатория → Гематология → Анализаторы» уже нечем.
+ */
 type CategorySearch = {
   subcategory?: string;
   q?: string;
@@ -51,34 +63,38 @@ function CategoryPage() {
     [categoriesQuery.data],
   );
 
-  const resolved = useMemo(
-    () => findCategoryNode(tree, categoryId),
-    [categoryId, tree],
+  /**
+   * Путь от корня до текущей категории: `[Лаборатория, Гематология,
+   * Гематологические анализаторы]`.
+   *
+   * Старый `?subcategory=` уточняет выбор внутри пути — но только если
+   * названный им узел действительно лежит в этом разделе. Иначе параметр
+   * игнорируется: чужой slug в адресе не должен уводить со страницы,
+   * которую человек открыл.
+   */
+  const path = useMemo(() => {
+    const base = findCategoryPath(tree, categoryId);
+    if (!base || !subcategoryFromUrl) return base;
+    const legacy = findCategoryPath(tree, subcategoryFromUrl);
+    const insideThisSection = legacy?.some((n) => n.id === base.at(-1)?.id);
+    return insideThisSection ? legacy : base;
+  }, [tree, categoryId, subcategoryFromUrl]);
+
+  const root = path?.[0] ?? null;
+  const current = path?.at(-1) ?? null;
+
+  /**
+   * Выдача — всё поддерево текущей категории.
+   *
+   * Товары висят на листьях, а не на разделах: до 17.08 в фильтр уходил
+   * один `category_id`, и выбор раздела давал пустую страницу. С третьим
+   * уровнем это стало вдвойне заметно — у «Гематологии» своих товаров
+   * нет вовсе, они все на «Гематологических анализаторах».
+   */
+  const productCategoryIds = useMemo(
+    () => (current ? collectCategoryIds(current) : []),
+    [current],
   );
-
-  const section: CatalogCategoryNode | null = resolved
-    ? (resolved.parent ?? resolved.node)
-    : null;
-
-  const selectedChild = useMemo(() => {
-    if (!resolved || !section) return null;
-    if (resolved.parent) {
-      return resolved.node;
-    }
-    if (!subcategoryFromUrl) return null;
-    return (
-      section.children.find(
-        (c) => c.id === subcategoryFromUrl || c.slug === subcategoryFromUrl,
-      ) ?? null
-    );
-  }, [resolved, section, subcategoryFromUrl]);
-
-  const productCategoryIds = useMemo(() => {
-    if (!resolved) return [];
-    if (selectedChild) return [selectedChild.id];
-    if (resolved.parent) return [resolved.node.id];
-    return collectCategoryIds(resolved.node);
-  }, [resolved, selectedChild]);
 
   /*
    * Раздел грузился N параллельными запросами (по одному на категорию)
@@ -95,32 +111,22 @@ function CategoryPage() {
 
   // seo_title/seo_description заполняются в админке для каждой категории —
   // до сих пор они никуда не попадали.
-  const metaSource = selectedChild ?? section;
   usePageMeta({
-    title: metaSource?.seoTitle || metaSource?.name,
-    description: metaSource?.seoDescription,
+    title: current?.seoTitle || current?.name,
+    description: current?.seoDescription,
   });
 
-  // История здесь нужна: выбор подкатегории — переход, и «Назад» должен
+  // История здесь нужна: выбор категории — переход, и «Назад» должен
   // снимать фильтр, а не выбрасывать из раздела. С `replace: true` кнопка
   // «Назад» уводила на предыдущую страницу, минуя все сделанные выборы.
-  function selectSubcategory(next?: CatalogCategoryNode) {
-    if (!section) return;
-    if (!next) {
-      void navigate({
-        to: "/catalog/$categoryId",
-        params: { categoryId: section.slug || section.id },
-        search: (prev) => ({ ...prev, subcategory: undefined }),
-      });
-      return;
-    }
+  function selectCategory(next: CatalogCategoryNode | null) {
+    const target = next ?? root;
+    if (!target) return;
     void navigate({
       to: "/catalog/$categoryId",
-      params: { categoryId: section.slug || section.id },
-      search: (prev) => ({
-        ...prev,
-        subcategory: next.slug || next.id,
-      }),
+      params: { categoryId: target.slug || target.id },
+      // Старый параметр снимаем: адрес уровня теперь и есть сам адрес.
+      search: (prev) => ({ ...prev, subcategory: undefined }),
     });
   }
 
@@ -145,7 +151,11 @@ function CategoryPage() {
     });
   }
 
-  const notFound = categoriesQuery.isSuccess && !resolved;
+  const notFound = categoriesQuery.isSuccess && !path;
+  // Сайдбар показывает ветку целиком от корня раздела: с третьим уровнем
+  // иначе не видно, где ты находишься — «Анализаторы» без «Гематологии»
+  // над ними не значат ничего.
+  const hasBranch = (root?.children.length ?? 0) > 0;
 
   return (
     <AppShell>
@@ -167,10 +177,19 @@ function CategoryPage() {
         emptyTitle="Категория не найдена"
         emptyDescription="Проверьте ссылку или вернитесь в каталог."
       >
-        {resolved && section ? (
+        {path && root && current ? (
           <div className="mt-6 space-y-8">
             <header>
-              <nav className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {/*
+               * Крошки строятся из пути, поэтому длина у них любая.
+               * Прежняя версия рисовала ровно два звена, и на третьем
+               * уровне корень из них выпадал: «Каталог / Гематология /
+               * Анализаторы» — «Лаборатории» не было вовсе.
+               */}
+              <nav
+                aria-label="Хлебные крошки"
+                className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
+              >
                 <Link
                   to="/catalog"
                   search={{ q: undefined, category: undefined }}
@@ -178,60 +197,72 @@ function CategoryPage() {
                 >
                   Каталог
                 </Link>
-                <span>/</span>
-                <span className="text-foreground">{section.name}</span>
-                {selectedChild ? (
-                  <>
-                    <span>/</span>
-                    <span className="text-foreground">
-                      {selectedChild.name}
+                {path.map((node, i) => {
+                  const isLast = i === path.length - 1;
+                  return (
+                    <span key={node.id} className="flex items-center gap-2">
+                      <span aria-hidden>/</span>
+                      {isLast ? (
+                        <span className="text-foreground" aria-current="page">
+                          {node.name}
+                        </span>
+                      ) : (
+                        <Link
+                          to="/catalog/$categoryId"
+                          params={{ categoryId: node.slug || node.id }}
+                          search={{ subcategory: undefined, q: undefined }}
+                          className="hover:text-primary"
+                        >
+                          {node.name}
+                        </Link>
+                      )}
                     </span>
-                  </>
-                ) : null}
+                  );
+                })}
               </nav>
               <h1 className="mt-3 font-display text-3xl font-bold tracking-tight">
-                {selectedChild?.name ?? section.name}
+                {current.name}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {section.children.length > 0
-                  ? `${plural(section.children.length, "подкатегория", "подкатегории", "подкатегорий")} · выберите направление или смотрите все товары раздела`
+                {current.children.length > 0
+                  ? `${plural(current.children.length, "подкатегория", "подкатегории", "подкатегорий")} · выберите направление или смотрите все товары раздела`
                   : "Товары в этом разделе"}
               </p>
             </header>
 
             {/*
-             * Та же раскладка, что в каталоге: подкатегории постоянной
+             * Та же раскладка, что в каталоге: дерево раздела постоянной
              * колонкой слева на ПК, кнопкой со шторкой на телефоне.
              */}
             <div
               className={cn(
-                section.children.length > 0 &&
+                hasBranch &&
                   "lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8",
               )}
             >
-              {section.children.length > 0 ? (
+              {hasBranch ? (
                 <CategoryFilter
-                  nodes={section.children}
-                  selectedId={selectedChild?.id ?? null}
-                  onSelect={(node) => selectSubcategory(node ?? undefined)}
+                  nodes={root.children}
+                  selectedId={current.id === root.id ? null : current.id}
+                  onSelect={selectCategory}
                   kind="subcategory"
                   // Сброс здесь означает «весь раздел», и у него есть своё
                   // число — в отличие от каталога, где сброс это весь
                   // каталог, а его общего количества API не отдаёт.
-                  resetCount={section.productCount}
+                  resetCount={root.productCount}
                 />
               ) : null}
 
               {/* Отступ нужен только когда сверху стоит кнопка фильтра:
                   без подкатегорий интервал уже даёт space-y-8 выше. */}
-              <section
-                className={cn(section.children.length > 0 && "mt-8 lg:mt-0")}
-              >
+              <section className={cn(hasBranch && "mt-8 lg:mt-0")}>
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <h2 className="font-display text-xl font-bold">Товары</h2>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {selectedChild?.name ?? "Все товары раздела"}
+                      {current.id === root.id
+                        ? "Все товары раздела"
+                        : current.name}
                     </p>
                   </div>
                   <CatalogSearch
@@ -257,8 +288,7 @@ function CategoryPage() {
                     loadingVariant="card-grid"
                     cardGridVariant="catalog"
                     cardGridClassName={cn(
-                      section.children.length > 0 &&
-                        "lg:grid-cols-3 xl:grid-cols-4",
+                      hasBranch && "lg:grid-cols-3 xl:grid-cols-4",
                     )}
                     loadingCount={6}
                     emptyTitle="Товары не найдены"
@@ -270,8 +300,7 @@ function CategoryPage() {
                       <ProductGrid
                         products={products}
                         className={cn(
-                          section.children.length > 0 &&
-                            "lg:grid-cols-3 xl:grid-cols-4",
+                          hasBranch && "lg:grid-cols-3 xl:grid-cols-4",
                         )}
                       />
                       {productsQuery.hasNextPage ? (
