@@ -33,12 +33,14 @@ import { formatPrice } from "@/lib/money";
 import { usePageMeta } from "@/lib/page-meta";
 import { useSession } from "@/session/store";
 import { contentText } from "@/i18n/content";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/product/$slug")({
   component: ProductDetailPage,
 });
 
 function ProductDetailPage() {
+  const t = useT();
   const { slug } = Route.useParams();
   const navigate = useNavigate();
   const query = useQuery({
@@ -71,8 +73,8 @@ function ProductDetailPage() {
     [groups, selection],
   );
   const summary = useMemo(
-    () => summarizeConfigPrice(product?.price ?? null, selected),
-    [product?.price, selected],
+    () => summarizeConfigPrice(product?.price ?? null, selected, t),
+    [product?.price, selected, t],
   );
 
   // Название на языке страницы. `name` появилось вместе с переводами;
@@ -97,22 +99,22 @@ function ProductDetailPage() {
     if (description) {
       list.push({
         key: "specs",
-        label: "Технические характеристики",
-        shortLabel: "Характеристики",
+        label: t("Технические характеристики"),
+        shortLabel: t("Характеристики"),
         content: <ProductDescription text={description} bare />,
       });
     }
     if (product.documents?.length) {
       list.push({
         key: "docs",
-        label: "Документация",
+        label: t("Документация"),
         content: <ProductDocuments documents={product.documents} />,
       });
     }
     if (video) {
       list.push({
         key: "video",
-        label: "Видео",
+        label: t("Видео"),
         content: <ProductVideo video={video} title={productName} />,
       });
     }
@@ -124,7 +126,7 @@ function ProductDetailPage() {
   usePageMeta({
     title: productName || undefined,
     description: product
-      ? [product.manufacturer, product.country, `Артикул ${product.sku}`]
+      ? [product.manufacturer, product.country, t("Артикул {sku}", { sku: product.sku })]
           .filter(Boolean)
           .join(" · ")
       : null,
@@ -139,9 +141,9 @@ function ProductDetailPage() {
       }),
     onSuccess: (cart) => {
       queryClient.setQueryData(queryKeys.cart.detail(), cart);
-      toast.success("Добавлено в корзину", {
+      toast.success(t("Добавлено в корзину"), {
         action: {
-          label: "Корзина",
+          label: t("Корзина"),
           onClick: () => {
             void navigate({ to: "/cart" });
           },
@@ -150,7 +152,7 @@ function ProductDetailPage() {
     },
     onError: (err) =>
       toast.error(
-        isAppError(err) ? err.message : "Не удалось добавить в корзину",
+        isAppError(err) ? err.message : t("Не удалось добавить в корзину"),
       ),
   });
 
@@ -160,7 +162,7 @@ function ProductDetailPage() {
     // Корзина хранится на сервере, поэтому анонимному пользователю её негде
     // держать — отправляем на вход и возвращаем обратно на карточку.
     if (session.status !== "authenticated") {
-      toast.message("Войдите, чтобы добавить товар в корзину");
+      toast.message(t("Войдите, чтобы добавить товар в корзину"));
       await navigate({
         to: "/login",
         search: { redirect: `/product/${slug}`, phone: undefined },
@@ -170,7 +172,9 @@ function ProductDetailPage() {
 
     if (missing.length > 0) {
       toast.error(
-        `Выберите обязательные опции: ${missing.map((g) => g.name_ru).join(", ")}`,
+        t("Выберите обязательные опции: {names}", {
+          names: missing.map((g) => g.name_ru).join(", "),
+        }),
       );
       return;
     }
@@ -185,7 +189,7 @@ function ProductDetailPage() {
         search={{ q: undefined }}
         className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />К каталогу
+        <ArrowLeft className="h-4 w-4" />{t("К каталогу")}
       </Link>
 
       <div className="mt-6">
@@ -252,10 +256,10 @@ function ProductDetailPage() {
                       <p className="text-2xl font-bold text-primary">
                         {groups.length > 0
                           ? summary.label
-                          : formatPrice(product.price)}
+                          : formatPrice(product.price, t)}
                       </p>
                       <StatusPill tone={availabilityTone(product.availability)}>
-                        {availabilityLabel(product.availability)}
+                        {availabilityLabel(product.availability, t)}
                       </StatusPill>
                     </div>
 
@@ -285,7 +289,7 @@ function ProductDetailPage() {
                     <div className="inline-flex items-center rounded-xl border border-border">
                       <button
                         type="button"
-                        aria-label="Уменьшить количество"
+                        aria-label={t("Уменьшить количество")}
                         disabled={qty <= 1}
                         onClick={() => setQty((q) => Math.max(1, q - 1))}
                         className="grid h-11 w-11 place-items-center text-muted-foreground disabled:opacity-40"
@@ -300,7 +304,7 @@ function ProductDetailPage() {
                       </span>
                       <button
                         type="button"
-                        aria-label="Увеличить количество"
+                        aria-label={t("Увеличить количество")}
                         onClick={() => setQty((q) => q + 1)}
                         className="grid h-11 w-11 place-items-center text-muted-foreground"
                       >
@@ -313,7 +317,7 @@ function ProductDetailPage() {
                       onClick={addToCartClick}
                     >
                       <ShoppingCart className="h-4 w-4" />
-                      {addMutation.isPending ? "Добавляем…" : "В корзину"}
+                      {addMutation.isPending ? t("Добавляем…") : t("В корзину")}
                     </Button>
 
                     {missing.length > 0 ? (

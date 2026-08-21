@@ -52,6 +52,19 @@ export type TranslateValues = Record<string, string | number>;
  * вида `[missing]`: непереведённая строка на витрине должна выглядеть
  * обычным текстом.
  */
+export type Translate = (source: string, values?: TranslateValues) => string;
+
+/**
+ * `Translate`, которая ничего не переводит, но подставляет значения —
+ * ровно так же, как `translate()` ведёт себя на русском (основном языке).
+ * Дефолт для функций вне React (labels.ts, status.ts): их вызывают и из
+ * админки, где `t` никто не передаёт, и с витрины, где передают настоящий.
+ * Без подстановки `identityTranslate("Заполните {fields}", { fields })`
+ * вернула бы шаблон с фигурными скобками as is.
+ */
+export const identityTranslate: Translate = (source, values) =>
+  translate(DEFAULT_LOCALE, source, values);
+
 export function translate(
   locale: Locale,
   source: string,

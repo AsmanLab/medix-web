@@ -7,6 +7,7 @@ import { openDeepLink } from "@/features/notifications/open-deep-link";
 import { playNotificationSound } from "@/lib/notification-sound";
 import type { ForegroundPush } from "@/lib/push";
 import { useSession } from "@/session/store";
+import { useT } from "@/i18n/LocaleProvider";
 
 /**
  * Показывает системное уведомление, когда вкладка открыта, но не видна.
@@ -58,6 +59,7 @@ async function showSystemNotification(message: ForegroundPush) {
  * в течение минуты, до следующего опроса.
  */
 export function PushForegroundBridge() {
+  const t = useT();
   const { status } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -87,7 +89,7 @@ export function PushForegroundBridge() {
               duration: 8000,
               action: message.deepLink
                 ? {
-                    label: "Открыть",
+                    label: t("Открыть"),
                     onClick: () => void openDeepLink(navigate, message.deepLink),
                   }
                 : undefined,

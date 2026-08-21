@@ -29,6 +29,7 @@ import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/session/store";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/cart/")({
   component: CartPage,
@@ -42,7 +43,8 @@ export const Route = createFileRoute("/cart/")({
  * по полю `type` в ответе.
  */
 function CartPage() {
-  usePageMeta({ title: "Корзина", description: null });
+  const t = useT();
+  usePageMeta({ title: t("Корзина"), description: null });
 
   const session = useSession();
   const navigate = useNavigate();
@@ -147,7 +149,7 @@ function CartPage() {
       if (context?.previous) {
         queryClient.setQueryData(queryKeys.cart.detail(), context.previous);
       }
-      onMutationError(err, "Не удалось изменить количество");
+      onMutationError(err, t("Не удалось изменить количество"));
     },
     onSuccess: applyCart,
   });
@@ -155,7 +157,7 @@ function CartPage() {
   const removeMutation = useMutation({
     mutationFn: (lineId: string) => removeCartItem(lineId),
     onSuccess: applyCart,
-    onError: (err) => onMutationError(err, "Не удалось убрать позицию"),
+    onError: (err) => onMutationError(err, t("Не удалось убрать позицию")),
   });
 
   const checkoutMutation = useMutation({
@@ -171,18 +173,18 @@ function CartPage() {
       await queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
       setShowVerifyGate(false);
       if (result.type === "order") {
-        toast.success("Заказ оформлен");
+        toast.success(t("Заказ оформлен"));
         await navigate({
           to: "/orders/$orderId",
           params: { orderId: result.id },
         });
       } else {
-        toast.success("Запрос отправлен менеджеру");
+        toast.success(t("Запрос отправлен менеджеру"));
         await navigate({ to: "/cart/success", search: { rfqId: result.id } });
       }
     },
     onError: (err) =>
-      toast.error(isAppError(err) ? err.message : "Не удалось оформить"),
+      toast.error(isAppError(err) ? err.message : t("Не удалось оформить")),
   });
 
   // Оформление и удаление блокируют страницу, изменение количества — нет:
@@ -217,10 +219,10 @@ function CartPage() {
   }, [isEmpty]);
 
   const primaryLabel = checkoutMutation.isPending
-    ? "Отправка…"
+    ? t("Отправка…")
     : willBeOrder
-      ? "Оформить заказ"
-      : "Отправить запрос на КП";
+      ? t("Оформить заказ")
+      : t("Отправить запрос на КП");
 
   function onPrimaryClick() {
     if (isEmpty || busy) return;
@@ -236,22 +238,23 @@ function CartPage() {
   if (!authenticated) {
     return (
       <AppShell>
-        <h1 className="font-display text-3xl font-bold">Корзина</h1>
+        <h1 className="font-display text-3xl font-bold">{t("Корзина")}</h1>
         <div className="mt-10 text-center">
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary-soft text-primary">
             <ShoppingCart className="h-7 w-7" />
           </div>
-          <h2 className="mt-4 text-lg font-semibold">Войдите в аккаунт</h2>
+          <h2 className="mt-4 text-lg font-semibold">{t("Войдите в аккаунт")}</h2>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-            Корзина хранится в вашем аккаунте, поэтому доступна с любого
-            устройства.
+            {t(
+              "Корзина хранится в вашем аккаунте, поэтому доступна с любого устройства.",
+            )}
           </p>
           <Link
             to="/login"
             search={{ redirect: "/cart", phone: undefined }}
             className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
           >
-            Войти <ArrowRight className="h-4 w-4" />
+            {t("Войти")} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </AppShell>
@@ -260,22 +263,22 @@ function CartPage() {
 
   return (
     <AppShell width="wide">
-      <h1 className="font-display text-3xl font-bold">Корзина</h1>
+      <h1 className="font-display text-3xl font-bold">{t("Корзина")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         {cartQuery.isPending
-          ? "Загружаем…"
+          ? t("Загружаем…")
           : isEmpty
-            ? "Добавьте оборудование из каталога"
-            : plural(groups.length, "позиция", "позиции", "позиций")}
+            ? t("Добавьте оборудование из каталога")
+            : plural(groups.length, t("позиция"), t("позиции"), t("позиций"))}
       </p>
 
       {cartQuery.isError ? (
         <div className="mt-8 rounded-2xl border border-border bg-card p-5">
           <p className="text-sm text-destructive">
-            Не удалось загрузить корзину
+            {t("Не удалось загрузить корзину")}
           </p>
           <Button className="mt-3" onClick={() => void cartQuery.refetch()}>
-            Повторить
+            {t("Повторить")}
           </Button>
         </div>
       ) : null}
@@ -285,18 +288,18 @@ function CartPage() {
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary-soft text-primary">
             <ShoppingCart className="h-7 w-7" />
           </div>
-          <h2 className="mt-4 text-lg font-semibold">Корзина пуста</h2>
+          <h2 className="mt-4 text-lg font-semibold">{t("Корзина пуста")}</h2>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-            Выберите позиции в каталоге. После проверки организации можно
-            оформить заказ сразу; иначе менеджер подготовит коммерческое
-            предложение.
+            {t(
+              "Выберите позиции в каталоге. После проверки организации можно оформить заказ сразу; иначе менеджер подготовит коммерческое предложение.",
+            )}
           </p>
           <Link
             to="/catalog"
             search={{ q: undefined }}
             className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
           >
-            Перейти в каталог <ArrowRight className="h-4 w-4" />
+            {t("Перейти в каталог")} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       ) : null}
@@ -318,8 +321,9 @@ function CartPage() {
                   aria-hidden
                 />
                 <p className="text-sm text-muted-foreground">
-                  Отмеченные позиции больше не продаются — уберите их, чтобы
-                  оформить корзину.
+                  {t(
+                    "Отмеченные позиции больше не продаются — уберите их, чтобы оформить корзину.",
+                  )}
                 </p>
               </div>
             ) : null}
@@ -337,7 +341,7 @@ function CartPage() {
                     </p>
                     {!base.is_available ? (
                       <p className="mt-1 text-xs font-semibold text-destructive">
-                        Товар снят с продажи
+                        {t("Товар снят с продажи")}
                       </p>
                     ) : null}
                     {options.length > 0 ? (
@@ -347,13 +351,13 @@ function CartPage() {
                             + {o.name}
                             {o.unit_price
                               ? ` · ${formatMoney(o.unit_price)}`
-                              : " · по запросу"}
+                              : t(" · по запросу")}
                           </li>
                         ))}
                       </ul>
                     ) : null}
                     <p className="mt-2 text-sm font-semibold text-primary">
-                      {formatMoney(base.line_total, "Цена по запросу")}
+                      {formatMoney(base.line_total, t("Цена по запросу"))}
                     </p>
                   </div>
                   {/* 44px — минимальный тач-таргет из MASTER.md; кнопки
@@ -361,7 +365,7 @@ function CartPage() {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      aria-label={`Уменьшить количество: ${base.name}`}
+                      aria-label={t("Уменьшить количество: {name}", { name: base.name })}
                       disabled={busy || base.qty <= 1}
                       className="grid h-11 w-11 place-items-center rounded-xl border border-border disabled:opacity-40"
                       onClick={() =>
@@ -381,7 +385,7 @@ function CartPage() {
                     </span>
                     <button
                       type="button"
-                      aria-label={`Увеличить количество: ${base.name}`}
+                      aria-label={t("Увеличить количество: {name}", { name: base.name })}
                       disabled={busy}
                       className="grid h-11 w-11 place-items-center rounded-xl border border-border disabled:opacity-40"
                       onClick={() =>
@@ -395,7 +399,7 @@ function CartPage() {
                     </button>
                     <button
                       type="button"
-                      aria-label={`Убрать из корзины: ${base.name}`}
+                      aria-label={t("Убрать из корзины: {name}", { name: base.name })}
                       disabled={busy}
                       className="ml-1 grid h-11 w-11 place-items-center rounded-xl text-destructive disabled:opacity-40"
                       onClick={() => removeMutation.mutate(base.id)}
@@ -413,9 +417,9 @@ function CartPage() {
                   className="block text-sm font-semibold"
                   htmlFor="rfq-manager"
                 >
-                  Менеджер{" "}
+                  {t("Менеджер")}{" "}
                   <span className="font-normal text-muted-foreground">
-                    (необязательно)
+                    {t("(необязательно)")}
                   </span>
                 </label>
                 <select
@@ -425,16 +429,17 @@ function CartPage() {
                   className="field-control mt-2"
                   disabled={busy}
                 >
-                  <option value="">Любой свободный менеджер</option>
+                  <option value="">{t("Любой свободный менеджер")}</option>
                   {managersQuery.data.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.full_name || "Без имени"}
+                      {m.full_name || t("Без имени")}
                     </option>
                   ))}
                 </select>
                 <p className="mt-1.5 text-xs text-muted-foreground">
-                  Если вы уже работаете с кем-то из отдела продаж, выберите его
-                  — заявка попадёт сразу к нему.
+                  {t(
+                    "Если вы уже работаете с кем-то из отдела продаж, выберите его — заявка попадёт сразу к нему.",
+                  )}
                 </p>
               </section>
             ) : null}
@@ -444,9 +449,9 @@ function CartPage() {
                 className="block text-sm font-semibold"
                 htmlFor="rfq-comment"
               >
-                Комментарий{" "}
+                {t("Комментарий")}{" "}
                 <span className="font-normal text-muted-foreground">
-                  (необязательно, уйдёт с запросом КП)
+                  {t("(необязательно, уйдёт с запросом КП)")}
                 </span>
               </label>
               {/*
@@ -459,14 +464,15 @@ function CartPage() {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={3}
-                placeholder="Сроки, комплектация, адрес доставки…"
+                placeholder={t("Сроки, комплектация, адрес доставки…")}
                 className="field-control mt-2 min-h-[96px] resize-y"
                 disabled={busy}
               />
               {willBeOrder ? (
                 <p className="mt-1.5 text-xs text-muted-foreground">
-                  К прямому заказу комментарий не прикладывается — он уйдёт,
-                  если выбрать «Всё же запросить КП».
+                  {t(
+                    "К прямому заказу комментарий не прикладывается — он уйдёт, если выбрать «Всё же запросить КП».",
+                  )}
                 </p>
               ) : null}
             </section>
@@ -477,16 +483,18 @@ function CartPage() {
               ref={summaryRef}
               className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]"
             >
-              <h2 className="font-semibold">Итого</h2>
+              <h2 className="font-semibold">{t("Итого")}</h2>
               <p className="mt-3 text-2xl font-bold text-primary">
-                {formatMoney(cart?.total, "Цена по запросу")}
+                {formatMoney(cart?.total, t("Цена по запросу"))}
               </p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 {willBeOrder
-                  ? "Организация подтверждена — можно оформить заказ с ценами из каталога."
+                  ? t("Организация подтверждена — можно оформить заказ с ценами из каталога.")
                   : hasPriceless
-                    ? "Есть позиции без цены — менеджер подготовит коммерческое предложение (КП)."
-                    : "После подтверждения организации станет доступен прямой заказ. Сейчас можно отправить запрос на КП."}
+                    ? t("Есть позиции без цены — менеджер подготовит коммерческое предложение (КП).")
+                    : t(
+                        "После подтверждения организации станет доступен прямой заказ. Сейчас можно отправить запрос на КП.",
+                      )}
               </p>
 
               <div className="mt-5 flex flex-col gap-3">
@@ -504,7 +512,7 @@ function CartPage() {
                     disabled={busy || hasUnavailable}
                     onClick={() => checkoutMutation.mutate(true)}
                   >
-                    Всё же запросить КП
+                    {t("Всё же запросить КП")}
                   </Button>
                 ) : null}
               </div>
@@ -537,10 +545,10 @@ function CartPage() {
                   hasUnavailable ? "text-destructive" : "text-muted-foreground",
                 )}
               >
-                {hasUnavailable ? "Уберите недоступные" : "Итого"}
+                {hasUnavailable ? t("Уберите недоступные") : t("Итого")}
               </p>
               <p className="truncate font-bold text-primary">
-                {formatMoney(cart?.total, "Цена по запросу")}
+                {formatMoney(cart?.total, t("Цена по запросу"))}
               </p>
             </div>
             <Button
@@ -578,27 +586,26 @@ function CartPage() {
               id="verify-gate-title"
               className="font-display text-xl font-bold"
             >
-              Организация ещё не подтверждена
+              {t("Организация ещё не подтверждена")}
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Запрос на коммерческое предложение можно отправить сейчас —
-              менеджер свяжется с вами. Прямой заказ с ценами каталога станет
-              доступен после проверки организации (или автоматически при
-              принятии КП).
+              {t(
+                "Запрос на коммерческое предложение можно отправить сейчас — менеджер свяжется с вами. Прямой заказ с ценами каталога станет доступен после проверки организации (или автоматически при принятии КП).",
+              )}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button
                 disabled={busy}
                 onClick={() => checkoutMutation.mutate(false)}
               >
-                {checkoutMutation.isPending ? "Отправка…" : "Отправить запрос"}
+                {checkoutMutation.isPending ? t("Отправка…") : t("Отправить запрос")}
               </Button>
               <Button
                 variant="outline"
                 disabled={busy}
                 onClick={() => setShowVerifyGate(false)}
               >
-                Отмена
+                {t("Отмена")}
               </Button>
             </div>
           </div>

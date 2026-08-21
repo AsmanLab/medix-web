@@ -1,6 +1,7 @@
 import { Search, X } from "lucide-react";
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 /**
  * Поле поиска по товарам — одно на каталог и на страницу раздела.
@@ -56,6 +57,7 @@ export function CatalogSearch({
   onSubmit,
   className,
 }: CatalogSearchProps) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const canClear = value.length > 0 || appliedValue.length > 0;
 
@@ -101,7 +103,7 @@ export function CatalogSearch({
           <button
             type="button"
             onClick={clear}
-            aria-label="Очистить поиск"
+            aria-label={t("Очистить поиск")}
             // Кнопка во всю высоту поля: 44px по WCAG 2.5.5 при том, что
             // сама иконка 16px.
             className="absolute inset-y-0 right-0 grid w-11 touch-manipulation place-items-center rounded-e-[0.875rem] text-muted-foreground hover:text-foreground active:bg-secondary"
@@ -114,7 +116,7 @@ export function CatalogSearch({
         type="submit"
         className="h-11 shrink-0 touch-manipulation rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground active:bg-primary/90"
       >
-        Найти
+        {t("Найти")}
       </button>
     </form>
   );

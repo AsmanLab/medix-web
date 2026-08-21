@@ -1,3 +1,16 @@
+import { translate } from "@/i18n/dictionaries";
+import { getLocale } from "@/i18n/locale-store";
+
+/**
+ * Сеть — вне дерева React: запрос может уйти до первой отрисовки компонента
+ * (а то и вовсе из воркера уведомлений), поэтому здесь нет и не может быть
+ * `useT()`. Текущий язык читается напрямую из хранилища — того же самого,
+ * что и `api/client.ts` использует для `?lang=`.
+ */
+function t(source: string, values?: Record<string, string | number>): string {
+  return translate(getLocale(), source, values);
+}
+
 export type AppError = {
   status?: number;
   code?: string;
@@ -64,7 +77,7 @@ export function isAppError(value: unknown): value is AppError {
 
 export function toAppError(
   input: unknown,
-  fallback = "Неизвестная ошибка",
+  fallback = t("Неизвестная ошибка"),
 ): AppError {
   if (isAppError(input)) return input;
   if (input instanceof Error) {
@@ -126,21 +139,21 @@ function retryAfterSeconds(response: Response): number | undefined {
 function defaultMessageForStatus(status: number): string {
   switch (status) {
     case 400:
-      return "Некорректный запрос";
+      return t("Некорректный запрос");
     case 401:
-      return "Требуется вход";
+      return t("Требуется вход");
     case 403:
-      return "Недостаточно прав";
+      return t("Недостаточно прав");
     case 404:
-      return "Не найдено";
+      return t("Не найдено");
     case 409:
-      return "Конфликт данных";
+      return t("Конфликт данных");
     case 422:
-      return "Ошибка валидации";
+      return t("Ошибка валидации");
     case 429:
-      return "Слишком много попыток. Попробуйте позже";
+      return t("Слишком много попыток. Попробуйте позже");
     default:
-      if (status >= 500) return "Ошибка сервера. Попробуйте позже";
-      return `Ошибка запроса (${status})`;
+      if (status >= 500) return t("Ошибка сервера. Попробуйте позже");
+      return t("Ошибка запроса ({status})", { status });
   }
 }

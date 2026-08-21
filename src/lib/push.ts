@@ -13,6 +13,7 @@
 
 import { registerDevice, removeDevice } from "@/api/notifications";
 import { getEnv } from "@/app/env";
+import { identityTranslate, type Translate } from "@/i18n/dictionaries";
 
 const SW_PATH = "/firebase-messaging-sw.js";
 const TOKEN_STORAGE_KEY = "medix.push_token.v1";
@@ -149,11 +150,11 @@ async function subscribeCurrentBrowser(): Promise<string | null> {
  * Возвращает текст для пользователя при отказе — вызывающий показывает его
  * тостом. Бросает только на неожиданных ошибках.
  */
-export async function enablePush(): Promise<
-  { ok: true } | { ok: false; reason: string }
-> {
+export async function enablePush(
+  t: Translate = identityTranslate,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
   if (!getEnv().firebase) {
-    return { ok: false, reason: "Уведомления не настроены" };
+    return { ok: false, reason: t("Уведомления не настроены") };
   }
 
   const permission = await Notification.requestPermission();
@@ -162,14 +163,14 @@ export async function enablePush(): Promise<
       ok: false,
       reason:
         permission === "denied"
-          ? "Уведомления запрещены в настройках браузера — разрешите их для этого сайта"
-          : "Разрешение не выдано",
+          ? t("Уведомления запрещены в настройках браузера — разрешите их для этого сайта")
+          : t("Разрешение не выдано"),
     };
   }
 
   const token = await subscribeCurrentBrowser();
   if (!token) {
-    return { ok: false, reason: "Браузер не выдал токен уведомлений" };
+    return { ok: false, reason: t("Браузер не выдал токен уведомлений") };
   }
   return { ok: true };
 }
@@ -228,7 +229,7 @@ export async function onForegroundPush(
   const app = getApps()[0] ?? initializeApp(config);
 
   return onMessage(getMessaging(app), (payload) => {
-    const title = payload.notification?.title ?? "Новое уведомление";
+    const title = payload.notification?.title ?? identityTranslate("Новое уведомление");
     const body = payload.notification?.body ?? "";
     const deepLink =
       (payload.data?.deep_link as string | undefined)?.trim() || null;

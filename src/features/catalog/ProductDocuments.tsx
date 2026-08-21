@@ -1,5 +1,6 @@
 import { Download, FileText } from "lucide-react";
 import type { ProductDocumentOut } from "@/api/generated/schemas";
+import { useT } from "@/i18n/LocaleProvider";
 
 /**
  * Документация товара: регистрационные удостоверения, паспорта, инструкции.
@@ -16,6 +17,7 @@ export function ProductDocuments({
 }: {
   documents: ProductDocumentOut[];
 }) {
+  const t = useT();
   return (
     <ul className="space-y-2">
       {documents.map((doc) => {
@@ -43,13 +45,13 @@ export function ProductDocuments({
                 {inner}
                 <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary">
                   <Download className="h-4 w-4" aria-hidden />
-                  Скачать
+                  {t("Скачать")}
                 </span>
               </a>
             ) : (
               <div className="flex min-h-11 items-center gap-3 rounded-2xl border border-dashed border-border px-3 py-2.5 text-muted-foreground">
                 {inner}
-                <span className="shrink-0 text-xs">файл недоступен</span>
+                <span className="shrink-0 text-xs">{t("файл недоступен")}</span>
               </div>
             )}
           </li>

@@ -18,6 +18,7 @@ import {
 import { useProductPages } from "@/features/catalog/use-product-pages";
 import { plural } from "@/lib/plural";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 type CatalogSearch = {
   q?: string;
@@ -33,10 +34,12 @@ export const Route = createFileRoute("/catalog/")({
 });
 
 function CatalogIndexPage() {
+  const t = useT();
   usePageMeta({
-    title: "Каталог",
-    description:
+    title: t("Каталог"),
+    description: t(
       "Медицинское оборудование и расходные материалы для клиник Кыргызстана.",
+    ),
   });
 
   const { q: qFromUrl, category: categoryFromUrl } = Route.useSearch();
@@ -119,10 +122,10 @@ function CatalogIndexPage() {
   return (
     <AppShell>
       <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
-        <Boxes className="h-4 w-4" /> Каталог
+        <Boxes className="h-4 w-4" /> {t("Каталог")}
       </div>
       <h1 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-        Медицинское оборудование и материалы
+        {t("Медицинское оборудование и материалы")}
       </h1>
       <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
         Медицинское оборудование и расходные материалы. Выберите категорию или
@@ -131,8 +134,8 @@ function CatalogIndexPage() {
 
       <CatalogSearch
         id="catalog-index-search"
-        label="Поиск товаров"
-        placeholder="Поиск по названию или артикулу"
+        label={t("Поиск товаров")}
+        placeholder={t("Поиск по названию или артикулу")}
         value={draftQ}
         appliedValue={qFromUrl ?? ""}
         onChange={setDraftQ}
@@ -155,7 +158,7 @@ function CatalogIndexPage() {
           error={categoriesQuery.error}
           isEmpty={categoriesQuery.isSuccess && tree.length === 0}
           onRetry={() => void categoriesQuery.refetch()}
-          emptyTitle="Категории пока пусты"
+          emptyTitle={t("Категории пока пусты")}
         >
           <CategoryFilter
             nodes={tree}
@@ -168,16 +171,16 @@ function CatalogIndexPage() {
         <div className="mt-8 min-h-[40rem] lg:mt-0">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
-              <h2 className="font-display text-xl font-bold">Товары</h2>
+              <h2 className="font-display text-xl font-bold">{t("Товары")}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                {selectedCategory?.name ?? "Все опубликованные товары"}
+                {selectedCategory?.name ?? t("Все опубликованные товары")}
               </p>
             </div>
             {products.length > 0 ? (
               <p className="text-xs text-muted-foreground">
                 {productsQuery.hasNextPage
-                  ? `Показано ${products.length}`
-                  : plural(products.length, "товар", "товара", "товаров")}
+                  ? t("Показано {count}", { count: products.length })
+                  : plural(products.length, t("товар"), t("товара"), t("товаров"))}
               </p>
             ) : null}
           </div>
@@ -194,13 +197,13 @@ function CatalogIndexPage() {
             loadingCount={6}
             emptyTitle={
               qFromUrl || selectedCategory
-                ? "Товары не найдены"
-                : "Каталог пока пуст"
+                ? t("Товары не найдены")
+                : t("Каталог пока пуст")
             }
             emptyDescription={
               qFromUrl || selectedCategory
-                ? "Измените поиск или сбросьте фильтр категорий."
-                : "Товары появятся после публикации."
+                ? t("Измените поиск или сбросьте фильтр категорий.")
+                : t("Товары появятся после публикации.")
             }
           >
             <>
@@ -222,8 +225,8 @@ function CatalogIndexPage() {
                     onClick={() => void productsQuery.fetchNextPage()}
                   >
                     {productsQuery.isFetchingNextPage
-                      ? "Загружаем…"
-                      : "Показать ещё"}
+                      ? t("Загружаем…")
+                      : t("Показать ещё")}
                   </Button>
                 </div>
               ) : null}

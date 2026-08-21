@@ -9,6 +9,7 @@ import { isValidKgPhone, normalizePhone } from "@/lib/phone";
 import { isSafeInternalPath } from "@/lib/redirect";
 import { Button } from "@/components/ui/button";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 type LoginSearch = { redirect?: string; phone?: string };
 
@@ -24,7 +25,8 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  usePageMeta({ title: "Вход", description: null });
+  const t = useT();
+  usePageMeta({ title: t("Вход"), description: null });
 
   const nav = useNavigate();
   const { redirect: redirectTo, phone: phoneFromSearch } = Route.useSearch();
@@ -39,13 +41,13 @@ function LoginPage() {
     setFormError(null);
     const normalized = normalizePhone(phone);
     if (!isValidKgPhone(normalized)) {
-      setFormError("Телефон в формате 996XXXXXXXXX");
+      setFormError(t("Телефон в формате 996XXXXXXXXX"));
       return;
     }
     setSubmitting(true);
     try {
       const session = await loginWithPassword(normalized, password);
-      toast.success("Добро пожаловать!");
+      toast.success(t("Добро пожаловать!"));
       const role = session.user!.role;
       if (redirectTo && isSafeInternalPath(redirectTo) && role === "client") {
         await nav({ href: redirectTo });
@@ -54,7 +56,7 @@ function LoginPage() {
       const path = landingPathForRole(role);
       await nav({ href: path });
     } catch (err) {
-      const message = isAppError(err) ? err.message : "Не удалось войти";
+      const message = isAppError(err) ? err.message : t("Не удалось войти");
       setFormError(message);
       toast.error(message);
     } finally {
@@ -69,10 +71,10 @@ function LoginPage() {
         className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-card)]"
       >
         <h1 className="text-center font-display text-2xl font-bold">
-          Вход в Medix
+          {t("Вход в Medix")}
         </h1>
         <p className="mt-1 text-center text-sm text-muted-foreground">
-          Телефон и пароль
+          {t("Телефон и пароль")}
         </p>
         {/*
           На обёртках полей стоял `outline-none` у input и ничего у обёртки,
@@ -85,7 +87,7 @@ function LoginPage() {
           визуально поле — это рамка с иконкой, а не один только input.
         */}
         <label className="mt-6 block text-sm font-medium">
-          Телефон
+          {t("Телефон")}
           {/*
             text-base на мобильном: поля входа единственные на витрине идут
             не через field-control, у них своя рамка с иконкой внутри.
@@ -109,7 +111,7 @@ function LoginPage() {
           </div>
         </label>
         <label className="mt-4 block text-sm font-medium">
-          Пароль
+          {t("Пароль")}
           <div className="mt-2 flex items-center gap-2 rounded-xl border border-border px-3 transition focus-within:border-primary/60 focus-within:ring-3 focus-within:ring-ring/30">
             <LockKeyhole className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
@@ -124,7 +126,7 @@ function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+              aria-label={showPassword ? t("Скрыть пароль") : t("Показать пароль")}
               className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted-foreground hover:text-foreground"
             >
               {showPassword ? (
@@ -142,16 +144,16 @@ function LoginPage() {
         ) : null}
         <div className="mt-3 text-right">
           <Link to="/password-reset" className="text-sm text-primary">
-            Забыли пароль?
+            {t("Забыли пароль?")}
           </Link>
         </div>
         <Button disabled={submitting} className="mt-5 w-full" type="submit">
-          {submitting ? "Входим…" : "Войти"}
+          {submitting ? t("Входим…") : t("Войти")}
         </Button>
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          Нет аккаунта?{" "}
+          {t("Нет аккаунта?")}{" "}
           <Link to="/register" className="font-semibold text-primary">
-            Зарегистрироваться
+            {t("Зарегистрироваться")}
           </Link>
         </p>
       </form>

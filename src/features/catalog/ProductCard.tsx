@@ -5,6 +5,7 @@ import { availabilityLabel } from "@/features/catalog/availability";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { contentText } from "@/i18n/content";
+import { useT } from "@/i18n/LocaleProvider";
 
 type ProductCardProps = {
   product: ProductListOut;
@@ -43,6 +44,7 @@ export function ProductCard({
   density = "compact",
   className,
 }: ProductCardProps) {
+  const t = useT();
   const origin = [product.manufacturer, product.country]
     .filter(Boolean)
     .join(" · ");
@@ -79,7 +81,7 @@ export function ProductCard({
         ) : (
           <span className="absolute inset-0 grid place-items-center text-muted-foreground">
             <ImageOff className="h-7 w-7" aria-hidden />
-            <span className="sr-only">Изображение не добавлено</span>
+            <span className="sr-only">{t("Изображение не добавлено")}</span>
           </span>
         )}
       </div>
@@ -113,10 +115,10 @@ export function ProductCard({
             оказываются на одной линии независимо от длины названия. */}
         <div className="mt-auto flex items-end justify-between gap-2 pt-3 text-sm sm:pt-4">
           <span className={cn("text-xs text-muted-foreground", meta)}>
-            {availabilityLabel(product.availability)}
+            {availabilityLabel(product.availability, t)}
           </span>
           <span className="ml-auto text-right text-sm font-semibold text-primary sm:text-base">
-            {formatMoney(product.price, "По запросу")}
+            {formatMoney(product.price, t("По запросу"))}
           </span>
         </div>
       </div>

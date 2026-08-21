@@ -7,15 +7,17 @@ import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { mapsSearchUrl } from "@/features/cms/promotions";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/contacts")({
   component: ContactsPage,
 });
 
 function ContactsPage() {
+  const t = useT();
   usePageMeta({
-    title: "Контакты",
-    description: "Офисы, телефоны и часы работы Medix International.",
+    title: t("Контакты"),
+    description: t("Офисы, телефоны и часы работы Medix International."),
   });
 
   const query = useQuery({
@@ -27,9 +29,9 @@ function ContactsPage() {
 
   return (
     <AppShell>
-      <h1 className="font-display text-3xl font-bold">Контакты</h1>
+      <h1 className="font-display text-3xl font-bold">{t("Контакты")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Офисы Medix International — продажи, сервис и бухгалтерия
+        {t("Офисы Medix International — продажи, сервис и бухгалтерия")}
       </p>
 
       <div className="mt-8">
@@ -39,20 +41,20 @@ function ContactsPage() {
           error={query.error}
           isEmpty={query.isSuccess && offices.length === 0}
           onRetry={() => void query.refetch()}
-          emptyTitle="Контакты не опубликованы"
-          emptyDescription="Данные появятся после заполнения в CMS."
+          emptyTitle={t("Контакты не опубликованы")}
+          emptyDescription={t("Данные появятся после заполнения в CMS.")}
           emptyFallback={
             <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center">
               <Building2 className="mx-auto h-8 w-8 text-primary" />
-              <p className="mt-3 font-semibold">Офисы пока не добавлены</p>
+              <p className="mt-3 font-semibold">{t("Офисы пока не добавлены")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Пока можно оставить сервисную заявку онлайн.
+                {t("Пока можно оставить сервисную заявку онлайн.")}
               </p>
               <Link
                 to="/service"
                 className="mt-5 inline-flex text-sm font-semibold text-primary"
               >
-                Сервис
+                {t("Сервис")}
               </Link>
             </div>
           }
@@ -84,10 +86,10 @@ function ContactsPage() {
                   ) : null}
 
                   <dl className="mt-4 grid gap-2 sm:grid-cols-3">
-                    <PhoneRow label="Продажи" value={office.phone_sales} />
-                    <PhoneRow label="Сервис" value={office.phone_service} />
+                    <PhoneRow label={t("Продажи")} value={office.phone_sales} />
+                    <PhoneRow label={t("Сервис")} value={office.phone_service} />
                     <PhoneRow
-                      label="Бухгалтерия"
+                      label={t("Бухгалтерия")}
                       value={office.phone_accounting}
                     />
                   </dl>
@@ -99,14 +101,14 @@ function ContactsPage() {
                       rel="noreferrer"
                       className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
                     >
-                      На карте <ExternalLink className="h-3.5 w-3.5" />
+                      {t("На карте")} <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   ) : null}
 
                   {office.map_embed_url?.trim().startsWith("http") ? (
                     <div className="mt-4 overflow-hidden rounded-2xl border border-border">
                       <iframe
-                        title={`Карта — ${office.name}`}
+                        title={t("Карта — {name}", { name: office.name })}
                         src={office.map_embed_url.trim()}
                         className="aspect-[16/9] w-full border-0"
                         loading="lazy"

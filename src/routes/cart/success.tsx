@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/components/shared/AppShell";
+import { useT } from "@/i18n/LocaleProvider";
 
 type SuccessSearch = {
   rfqId?: string;
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/cart/success")({
 });
 
 function CartSuccessPage() {
+  const t = useT();
   const { rfqId } = Route.useSearch();
 
   return (
@@ -22,7 +24,7 @@ function CartSuccessPage() {
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary-soft text-primary">
           <CheckCircle2 className="h-8 w-8" />
         </div>
-        <h1 className="mt-5 font-display text-3xl font-bold">Запрос отправлен</h1>
+        <h1 className="mt-5 font-display text-3xl font-bold">{t("Запрос отправлен")}</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Менеджер подготовит коммерческое предложение. Когда вы примете КП,
           заказ создастся автоматически, а организация будет подтверждена.
@@ -40,21 +42,21 @@ function CartSuccessPage() {
               params={{ rfqId }}
               className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
             >
-              Открыть заявку
+              {t("Открыть заявку")}
             </Link>
           ) : null}
           <Link
             to="/requests"
             className="inline-flex h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-semibold"
           >
-            Все заявки
+            {t("Все заявки")}
           </Link>
           <Link
             to="/catalog"
             search={{ q: undefined }}
             className="inline-flex h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-semibold"
           >
-            В каталог
+            {t("В каталог")}
           </Link>
         </div>
       </div>

@@ -20,6 +20,7 @@ import { ProductGrid } from "@/features/catalog/ProductGrid";
 import { usePageMeta } from "@/lib/page-meta";
 import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 /**
  * Страница раздела каталога.
@@ -48,6 +49,7 @@ export const Route = createFileRoute("/catalog/$categoryId")({
 });
 
 function CategoryPage() {
+  const t = useT();
   const { categoryId } = Route.useParams();
   const { subcategory: subcategoryFromUrl, q: qFromUrl } = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -164,7 +166,7 @@ function CategoryPage() {
         search={{ q: undefined, category: undefined }}
         className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />К каталогу
+        <ArrowLeft className="h-4 w-4" />{t("К каталогу")}
       </Link>
 
       <StateBlock
@@ -174,8 +176,8 @@ function CategoryPage() {
         isEmpty={notFound}
         onRetry={() => void categoriesQuery.refetch()}
         loadingVariant="detail"
-        emptyTitle="Категория не найдена"
-        emptyDescription="Проверьте ссылку или вернитесь в каталог."
+        emptyTitle={t("Категория не найдена")}
+        emptyDescription={t("Проверьте ссылку или вернитесь в каталог.")}
       >
         {path && root && current ? (
           <div className="mt-6 space-y-8">
@@ -187,7 +189,7 @@ function CategoryPage() {
                * Анализаторы» — «Лаборатории» не было вовсе.
                */}
               <nav
-                aria-label="Хлебные крошки"
+                aria-label={t("Хлебные крошки")}
                 className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
               >
                 <Link
@@ -195,7 +197,7 @@ function CategoryPage() {
                   search={{ q: undefined, category: undefined }}
                   className="hover:text-primary"
                 >
-                  Каталог
+                  {t("Каталог")}
                 </Link>
                 {path.map((node, i) => {
                   const isLast = i === path.length - 1;
@@ -225,8 +227,15 @@ function CategoryPage() {
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 {current.children.length > 0
-                  ? `${plural(current.children.length, "подкатегория", "подкатегории", "подкатегорий")} · выберите направление или смотрите все товары раздела`
-                  : "Товары в этом разделе"}
+                  ? t("{count} · выберите направление или смотрите все товары раздела", {
+                      count: plural(
+                        current.children.length,
+                        t("подкатегория"),
+                        t("подкатегории"),
+                        t("подкатегорий"),
+                      ),
+                    })
+                  : t("Товары в этом разделе")}
               </p>
             </header>
 
@@ -258,17 +267,17 @@ function CategoryPage() {
               <section className={cn(hasBranch && "mt-8 lg:mt-0")}>
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <h2 className="font-display text-xl font-bold">Товары</h2>
+                    <h2 className="font-display text-xl font-bold">{t("Товары")}</h2>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {current.id === root.id
-                        ? "Все товары раздела"
+                        ? t("Все товары раздела")
                         : current.name}
                     </p>
                   </div>
                   <CatalogSearch
                     id="category-product-search"
-                    label="Поиск в разделе"
-                    placeholder="Поиск в разделе"
+                    label={t("Поиск в разделе")}
+                    placeholder={t("Поиск в разделе")}
                     value={draftQ}
                     appliedValue={qFromUrl ?? ""}
                     onChange={setDraftQ}
@@ -291,8 +300,8 @@ function CategoryPage() {
                       hasBranch && "lg:grid-cols-3 xl:grid-cols-4",
                     )}
                     loadingCount={6}
-                    emptyTitle="Товары не найдены"
-                    emptyDescription="Измените поиск или выберите другую подкатегорию."
+                    emptyTitle={t("Товары не найдены")}
+                    emptyDescription={t("Измените поиск или выберите другую подкатегорию.")}
                   >
                     <>
                       {/* Четвёртая колонка с xl: на lg сайдбар ужимает
@@ -312,8 +321,8 @@ function CategoryPage() {
                             onClick={() => void productsQuery.fetchNextPage()}
                           >
                             {productsQuery.isFetchingNextPage
-                              ? "Загружаем…"
-                              : "Показать ещё"}
+                              ? t("Загружаем…")
+                              : t("Показать ещё")}
                           </Button>
                         </div>
                       ) : null}

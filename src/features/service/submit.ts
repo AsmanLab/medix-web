@@ -1,3 +1,4 @@
+import type { Translate } from "@/i18n/dictionaries";
 import { uploadMediaFile } from "@/api/media";
 import {
   addServiceRequestPhoto,
@@ -8,12 +9,24 @@ import {
 export const MAX_SERVICE_PHOTOS = 5;
 export const MAX_SERVICE_PHOTO_BYTES = 5 * 1024 * 1024;
 
-export const EQUIPMENT_TYPES = [
-  "Диагностическое оборудование",
-  "Лабораторное оборудование",
-  "Хирургическое оборудование",
-  "Другое",
-] as const;
+/**
+ * Тип оборудования в заявке на сервис.
+ *
+ * `value` уходит в бэкенд свободным текстом (CreateServiceRequestInput)
+ * и должен оставаться на русском вне зависимости от языка интерфейса:
+ * это данные заявки, а не подпись на кнопке. `label` — то, что видит
+ * человек, и оно уже переводимо.
+ */
+export function equipmentTypeOptions(
+  t: Translate = (s) => s,
+): { value: string; label: string }[] {
+  return [
+    { value: "Диагностическое оборудование", label: t("Диагностическое оборудование") },
+    { value: "Лабораторное оборудование", label: t("Лабораторное оборудование") },
+    { value: "Хирургическое оборудование", label: t("Хирургическое оборудование") },
+    { value: "Другое", label: t("Другое") },
+  ];
+}
 
 export type PhotoDraft = {
   id: string;
@@ -33,12 +46,15 @@ export function revokePhotoDraft(photo: PhotoDraft) {
   URL.revokeObjectURL(photo.previewUrl);
 }
 
-export function validateServicePhoto(file: File): string | null {
+export function validateServicePhoto(
+  file: File,
+  t: Translate = (s) => s,
+): string | null {
   if (!file.type.startsWith("image/")) {
-    return "Можно загружать только изображения";
+    return t("Можно загружать только изображения");
   }
   if (file.size > MAX_SERVICE_PHOTO_BYTES) {
-    return "Размер файла не больше 5 МБ";
+    return t("Размер файла не больше 5 МБ");
   }
   return null;
 }

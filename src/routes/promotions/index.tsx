@@ -14,15 +14,17 @@ import {
 } from "@/features/cms/promotions";
 import { StatusPill } from "@/components/ui/status-pill";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/promotions/")({
   component: PromotionsListPage,
 });
 
 function PromotionsListPage() {
+  const t = useT();
   usePageMeta({
-    title: "Акции",
-    description: "Специальные предложения Medix International.",
+    title: t("Акции"),
+    description: t("Специальные предложения Medix International."),
   });
 
   const listQuery = useQuery({
@@ -51,9 +53,9 @@ function PromotionsListPage() {
 
   return (
     <AppShell>
-      <h1 className="font-display text-3xl font-bold">Акции</h1>
+      <h1 className="font-display text-3xl font-bold">{t("Акции")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Специальные предложения Medix International
+        {t("Специальные предложения Medix International")}
       </p>
 
       <div className="mt-8">
@@ -66,15 +68,15 @@ function PromotionsListPage() {
           loadingVariant="list"
           loadingCount={3}
           emptyIcon={Tag}
-          emptyTitle="Акций пока нет"
-          emptyDescription="Загляните в каталог — там актуальные позиции."
+          emptyTitle={t("Акций пока нет")}
+          emptyDescription={t("Загляните в каталог — там актуальные позиции.")}
           emptyAction={
             <Link
               to="/catalog"
               search={{ q: undefined }}
               className="inline-flex text-sm font-semibold text-primary"
             >
-              В каталог
+              {t("В каталог")}
             </Link>
           }
         >
@@ -110,11 +112,11 @@ function PromotionsListPage() {
                           {item.title}
                         </h2>
                         <StatusPill tone={promotionStatusTone(status)}>
-                          {promotionStatusLabel(status)}
+                          {promotionStatusLabel(status, t)}
                         </StatusPill>
                       </div>
                       <p className="mt-2 text-xs text-muted-foreground">
-                        {promotionDateRange(item.starts_at, item.ends_at)}
+                        {promotionDateRange(item.starts_at, item.ends_at, t)}
                       </p>
                     </div>
                   </Link>

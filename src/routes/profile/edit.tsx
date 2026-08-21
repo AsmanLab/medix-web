@@ -10,12 +10,14 @@ import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import { writeLastPhone } from "@/features/profile/labels";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/profile/edit")({
   component: ProfileEditPage,
 });
 
 function ProfileEditPage() {
+  const t = useT();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [fullName, setFullName] = useState("");
@@ -43,11 +45,11 @@ function ProfileEditPage() {
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
-      toast.success("Личные данные сохранены");
+      toast.success(t("Личные данные сохранены"));
       await navigate({ to: "/profile" });
     },
     onError: (err) => {
-      toast.error(isAppError(err) ? err.message : "Не удалось сохранить");
+      toast.error(isAppError(err) ? err.message : t("Не удалось сохранить"));
     },
   });
 
@@ -57,11 +59,11 @@ function ProfileEditPage() {
         to="/profile"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />К профилю
+        <ArrowLeft className="h-4 w-4" />{t("К профилю")}
       </Link>
-      <h1 className="mt-4 font-display text-2xl font-bold">Личные данные</h1>
+      <h1 className="mt-4 font-display text-2xl font-bold">{t("Личные данные")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Как к вам обращаться в заявках и счетах
+        {t("Как к вам обращаться в заявках и счетах")}
       </p>
 
       <div className="mt-6">
@@ -76,24 +78,24 @@ function ProfileEditPage() {
             onSubmit={(e) => {
               e.preventDefault();
               if (!fullName.trim()) {
-                toast.error("Укажите ФИО");
+                toast.error(t("Укажите ФИО"));
                 return;
               }
               saveMutation.mutate();
             }}
           >
             <label className="block">
-              <span className="text-sm font-semibold">ФИО</span>
+              <span className="text-sm font-semibold">{t("ФИО")}</span>
               <input
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="field-control mt-1.5"
-                placeholder="Иванов Иван Иванович"
+                placeholder={t("Иванов Иван Иванович")}
                 autoComplete="name"
               />
             </label>
             <label className="block">
-              <span className="text-sm font-semibold">Телефон</span>
+              <span className="text-sm font-semibold">{t("Телефон")}</span>
               <input
                 value={phone}
                 readOnly
@@ -103,8 +105,9 @@ function ProfileEditPage() {
                 autoComplete="tel"
               />
               <span className="mt-1.5 block text-xs text-muted-foreground">
-                Номер привязан к аккаунту и не меняется здесь. Для смены пароля
-                используйте раздел «Безопасность».
+                {t(
+                  "Номер привязан к аккаунту и не меняется здесь. Для смены пароля используйте раздел «Безопасность».",
+                )}
               </span>
             </label>
             <Button
@@ -112,7 +115,7 @@ function ProfileEditPage() {
               className="w-full"
               disabled={saveMutation.isPending}
             >
-              {saveMutation.isPending ? "Сохранение…" : "Сохранить"}
+              {saveMutation.isPending ? t("Сохранение…") : t("Сохранить")}
             </Button>
           </form>
         </StateBlock>

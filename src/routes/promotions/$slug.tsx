@@ -8,12 +8,14 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { CmsHtml } from "@/features/cms/CmsHtml";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/promotions/$slug")({
   component: PromotionDetailPage,
 });
 
 function PromotionDetailPage() {
+  const t = useT();
   const { slug } = Route.useParams();
 
   const query = useQuery({
@@ -43,7 +45,7 @@ function PromotionDetailPage() {
         to="/promotions"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />К акциям
+        <ArrowLeft className="h-4 w-4" />{t("К акциям")}
       </Link>
 
       <div className="mt-6">
@@ -57,13 +59,13 @@ function PromotionDetailPage() {
             <div className="mx-auto max-w-md text-center">
               <h1 className="font-display text-6xl font-bold">404</h1>
               <p className="mt-3 text-sm text-muted-foreground">
-                Акция не найдена
+                {t("Акция не найдена")}
               </p>
               <Link
                 to="/promotions"
                 className="mt-6 inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
               >
-                Все акции
+                {t("Все акции")}
               </Link>
             </div>
           ) : promo ? (
@@ -102,7 +104,7 @@ function PromotionDetailPage() {
                       rel="noreferrer"
                       className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
                     >
-                      Перейти <ArrowRight className="h-4 w-4" />
+                      {t("Перейти")} <ArrowRight className="h-4 w-4" />
                     </a>
                   ) : (
                     <Link
@@ -110,7 +112,7 @@ function PromotionDetailPage() {
                       search={{ q: undefined }}
                       className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
                     >
-                      В каталог <ArrowRight className="h-4 w-4" />
+                      {t("В каталог")} <ArrowRight className="h-4 w-4" />
                     </Link>
                   )}
                 </div>

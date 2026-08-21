@@ -26,7 +26,7 @@ import { CmsHtml } from "@/features/cms/CmsHtml";
 import {
   createPhotoDraft,
   desiredDateToIso,
-  EQUIPMENT_TYPES,
+  equipmentTypeOptions,
   MAX_SERVICE_PHOTOS,
   revokePhotoDraft,
   submitServiceRequestWithPhotos,
@@ -35,39 +35,44 @@ import {
 } from "@/features/service/submit";
 import { useSession } from "@/session/store";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/service/")({
   component: ServicePage,
 });
 
-const services = [
-  {
-    icon: Wrench,
-    title: "Диагностика и ремонт",
-    text: "Найдём неисправность, согласуем работы и восстановим оборудование.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Гарантийное ТО",
-    text: "Плановое обслуживание по регламенту производителя и Medix.",
-  },
-  {
-    icon: MapPin,
-    title: "Выезд инженера",
-    text: "Специалист приедет в клинику в Бишкеке или другом регионе КР.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Пусконаладка",
-    text: "Установка, настройка и обучение персонала перед началом работы.",
-  },
-] as const;
+function serviceCards(t: ReturnType<typeof useT>) {
+  return [
+    {
+      icon: Wrench,
+      title: t("Диагностика и ремонт"),
+      text: t("Найдём неисправность, согласуем работы и восстановим оборудование."),
+    },
+    {
+      icon: ShieldCheck,
+      title: t("Гарантийное ТО"),
+      text: t("Плановое обслуживание по регламенту производителя и Medix."),
+    },
+    {
+      icon: MapPin,
+      title: t("Выезд инженера"),
+      text: t("Специалист приедет в клинику в Бишкеке или другом регионе КР."),
+    },
+    {
+      icon: CheckCircle2,
+      title: t("Пусконаладка"),
+      text: t("Установка, настройка и обучение персонала перед началом работы."),
+    },
+  ] as const;
+}
 
 function ServicePage() {
+  const t = useT();
   usePageMeta({
-    title: "Сервис и ремонт",
-    description:
+    title: t("Сервис и ремонт"),
+    description: t(
       "Диагностика, ремонт, гарантийное обслуживание и выезд инженера.",
+    ),
   });
 
   const session = useSession();
@@ -132,10 +137,10 @@ function ServicePage() {
     const next: PhotoDraft[] = [...photos];
     for (const file of Array.from(files)) {
       if (next.length >= MAX_SERVICE_PHOTOS) {
-        toast.message(`Максимум ${MAX_SERVICE_PHOTOS} фото`);
+        toast.message(t("Максимум {count} фото", { count: MAX_SERVICE_PHOTOS }));
         break;
       }
-      const err = validateServicePhoto(file);
+      const err = validateServicePhoto(file, t);
       if (err) {
         toast.error(err);
         continue;
@@ -158,7 +163,7 @@ function ServicePage() {
     if (submitting) return;
 
     if (!authenticated) {
-      toast.message("Войдите, чтобы отправить сервисную заявку");
+      toast.message(t("Войдите, чтобы отправить сервисную заявку"));
       await navigate({
         to: "/login",
         search: { redirect: "/service", phone: undefined },
@@ -167,23 +172,23 @@ function ServicePage() {
     }
 
     if (!equipmentType.trim()) {
-      toast.error("Выберите тип оборудования");
+      toast.error(t("Выберите тип оборудования"));
       return;
     }
     if (!description.trim()) {
-      toast.error("Опишите проблему");
+      toast.error(t("Опишите проблему"));
       return;
     }
     if (!address.trim()) {
-      toast.error("Укажите адрес");
+      toast.error(t("Укажите адрес"));
       return;
     }
     if (!contactName.trim()) {
-      toast.error("Укажите контактное лицо");
+      toast.error(t("Укажите контактное лицо"));
       return;
     }
     if (!contactPhone.trim()) {
-      toast.error("Укажите телефон");
+      toast.error(t("Укажите телефон"));
       return;
     }
 
@@ -205,14 +210,14 @@ function ServicePage() {
       );
       for (const photo of photos) revokePhotoDraft(photo);
       setPhotos([]);
-      toast.success("Заявка отправлена");
+      toast.success(t("Заявка отправлена"));
       await navigate({
         to: "/service/success",
         search: { requestId: result.id },
       });
     } catch (err) {
       toast.error(
-        isAppError(err) ? err.message : "Не удалось отправить заявку",
+        isAppError(err) ? err.message : t("Не удалось отправить заявку"),
       );
     } finally {
       setSubmitting(false);
@@ -226,10 +231,10 @@ function ServicePage() {
           <div className="absolute -right-20 -top-24 h-80 w-80 rounded-full bg-primary/30 blur-3xl" />
           <div className="relative z-10 max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em]">
-              <Wrench className="h-3.5 w-3.5" /> Сервисный центр Medix
+              <Wrench className="h-3.5 w-3.5" /> {t("Сервисный центр Medix")}
             </span>
             <h1 className="mt-5 font-display text-[34px] font-bold leading-tight tracking-tight sm:text-5xl">
-              Поддерживаем оборудование в рабочем состоянии
+              {t("Поддерживаем оборудование в рабочем состоянии")}
             </h1>
             <p className="mt-5 max-w-xl text-sm leading-6 text-white/65 sm:text-base sm:leading-7">
               Техническое обслуживание, ремонт, выезд инженера и гарантийная
@@ -252,7 +257,7 @@ function ServicePage() {
       {cmsQuery.data?.body_html ? (
         <section className="mt-8 rounded-3xl border border-border bg-card p-5 sm:p-7">
           <h2 className="font-display text-xl font-bold">
-            {cmsQuery.data.title || "О сервисе"}
+            {cmsQuery.data.title || t("О сервисе")}
           </h2>
           <div className="mt-4">
             <CmsHtml html={cmsQuery.data.body_html} />
@@ -261,7 +266,7 @@ function ServicePage() {
       ) : null}
 
       <section className="mt-10 grid grid-cols-2 gap-3 sm:mt-14 sm:grid-cols-4 sm:gap-5">
-        {services.map(({ icon: Icon, title, text }) => (
+        {serviceCards(t).map(({ icon: Icon, title, text }) => (
           <article
             key={title}
             className="rounded-[22px] border border-border bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5"
@@ -282,20 +287,21 @@ function ServicePage() {
       <section className="mt-12 grid gap-8 pb-6 sm:mt-16 lg:grid-cols-[0.72fr_1.28fr] lg:gap-14">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
-            Заявка на сервис
+            {t("Заявка на сервис")}
           </p>
           <h2 className="mt-2 font-display text-[28px] font-bold leading-tight tracking-tight sm:text-[38px]">
-            Расскажите, что случилось
+            {t("Расскажите, что случилось")}
           </h2>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Укажите оборудование и опишите проблему. Инженер изучит заявку и
-            свяжется с вами для уточнения деталей.
+            {t(
+              "Укажите оборудование и опишите проблему. Инженер изучит заявку и свяжется с вами для уточнения деталей.",
+            )}
           </p>
           <div className="mt-7 space-y-4">
             {[
-              "Заявке присваивается номер и статус «Новая»",
-              "Статус можно отслеживать в личном кабинете",
-              "Можно приложить до 5 фото неисправности",
+              t("Заявке присваивается номер и статус «Новая»"),
+              t("Статус можно отслеживать в личном кабинете"),
+              t("Можно приложить до 5 фото неисправности"),
             ].map((item) => (
               <div key={item} className="flex gap-3 text-sm">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
@@ -308,7 +314,7 @@ function ServicePage() {
               to="/service/requests"
               className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-primary"
             >
-              Мои сервисные заявки <ArrowRight className="h-4 w-4" />
+              {t("Мои сервисные заявки")} <ArrowRight className="h-4 w-4" />
             </Link>
           ) : null}
         </div>
@@ -318,38 +324,38 @@ function ServicePage() {
           className="rounded-[28px] border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-7"
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Тип оборудования *">
+            <FormField label={t("Тип оборудования *")}>
               <select
                 required
                 className="field-control"
                 value={equipmentType}
                 onChange={(e) => setEquipmentType(e.target.value)}
               >
-                <option value="">Выберите тип</option>
-                {EQUIPMENT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                <option value="">{t("Выберите тип")}</option>
+                {equipmentTypeOptions(t).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
             </FormField>
-            <FormField label="Модель или артикул">
+            <FormField label={t("Модель или артикул")}>
               <input
                 className="field-control"
-                placeholder="Например, OMRON M3"
+                placeholder={t("Например, OMRON M3")}
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
               />
             </FormField>
-            <FormField label="Серийный номер">
+            <FormField label={t("Серийный номер")}>
               <input
                 className="field-control"
-                placeholder="Если известен"
+                placeholder={t("Если известен")}
                 value={serialNumber}
                 onChange={(e) => setSerialNumber(e.target.value)}
               />
             </FormField>
-            <FormField label="Желаемая дата визита">
+            <FormField label={t("Желаемая дата визита")}>
               <div className="relative">
                 <CalendarDays className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                 <input
@@ -362,38 +368,38 @@ function ServicePage() {
             </FormField>
           </div>
 
-          <FormField label="Описание проблемы *" className="mt-4">
+          <FormField label={t("Описание проблемы *")} className="mt-4">
             <textarea
               required
               rows={4}
               className="field-control min-h-28 resize-y py-3"
-              placeholder="Что произошло, какие индикаторы горят, когда появилась проблема?"
+              placeholder={t("Что произошло, какие индикаторы горят, когда появилась проблема?")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </FormField>
 
-          <FormField label="Адрес или объект *" className="mt-4">
+          <FormField label={t("Адрес или объект *")} className="mt-4">
             <input
               required
               className="field-control"
-              placeholder="Клиника, город, улица"
+              placeholder={t("Клиника, город, улица")}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
           </FormField>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <FormField label="Контактное лицо *">
+            <FormField label={t("Контактное лицо *")}>
               <input
                 required
                 className="field-control"
-                placeholder="Имя"
+                placeholder={t("Имя")}
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
               />
             </FormField>
-            <FormField label="Телефон *">
+            <FormField label={t("Телефон *")}>
               <input
                 required
                 className="field-control"
@@ -406,7 +412,7 @@ function ServicePage() {
 
           {authenticated && (ordersQuery.data?.length ?? 0) > 0 ? (
             <FormField
-              label="Связать с заказом (необязательно)"
+              label={t("Связать с заказом (необязательно)")}
               className="mt-4"
             >
               <select
@@ -414,7 +420,7 @@ function ServicePage() {
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value)}
               >
-                <option value="">Без привязки</option>
+                <option value="">{t("Без привязки")}</option>
                 {(ordersQuery.data ?? []).map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.id.slice(0, 8)}… · {o.status} · {o.items_count} поз.
@@ -445,7 +451,7 @@ function ServicePage() {
                     />
                     <button
                       type="button"
-                      aria-label="Удалить фото"
+                      aria-label={t("Удалить фото")}
                       className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white"
                       onClick={() => removePhoto(photo.id)}
                     >
@@ -461,7 +467,7 @@ function ServicePage() {
                   <FileUp className="h-5 w-5" />
                 </span>
                 <span>
-                  <b className="block text-foreground">Добавить фото</b>
+                  <b className="block text-foreground">{t("Добавить фото")}</b>
                   До {MAX_SERVICE_PHOTOS} файлов, JPG или PNG, до 5 МБ
                 </span>
                 <input
@@ -484,13 +490,13 @@ function ServicePage() {
             className="mt-5 h-12 w-full"
             disabled={submitting}
           >
-            {submitting ? "Отправляем…" : "Отправить заявку"}
+            {submitting ? t("Отправляем…") : t("Отправить заявку")}
             {!submitting ? <ArrowRight className="h-4 w-4" /> : null}
           </Button>
           <p className="mt-3 text-center text-[10px] leading-4 text-muted-foreground">
             {authenticated
-              ? "После отправки заявка появится в списке сервисных заявок."
-              : "Для отправки заявки потребуется вход в аккаунт."}
+              ? t("После отправки заявка появится в списке сервисных заявок.")
+              : t("Для отправки заявки потребуется вход в аккаунт.")}
           </p>
         </form>
       </section>

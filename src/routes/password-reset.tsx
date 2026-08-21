@@ -19,6 +19,7 @@ import {
 } from "@/lib/otp-flow-storage";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/password-reset")({
   beforeLoad: () => requireGuest(),
@@ -36,6 +37,7 @@ const FALLBACK_COOLDOWN_SEC = 60;
  * sessionStorage — иначе F5 отбрасывал на ввод номера и требовал новой SMS.
  */
 function ResetPage() {
+  const t = useT();
   const nav = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
@@ -100,7 +102,7 @@ function ResetPage() {
     setFormError(null);
     const normalized = normalizePhone(phone);
     if (!isValidKgPhone(normalized)) {
-      setFormError("Телефон в формате 996XXXXXXXXX");
+      setFormError(t("Телефон в формате 996XXXXXXXXX"));
       return;
     }
     setSubmitting(true);
@@ -108,9 +110,9 @@ function ResetPage() {
       await requestCode(normalized);
       setPhone(normalized);
       setStep(2);
-      toast.success("Если аккаунт существует, код отправлен по SMS");
+      toast.success(t("Если аккаунт существует, код отправлен по SMS"));
     } catch (err) {
-      applyError(err, "Не удалось отправить код");
+      applyError(err, t("Не удалось отправить код"));
     } finally {
       setSubmitting(false);
     }
@@ -120,7 +122,7 @@ function ResetPage() {
     e.preventDefault();
     setFormError(null);
     if (otp.trim().length < 4) {
-      setFormError("Введите код из SMS");
+      setFormError(t("Введите код из SMS"));
       return;
     }
     setSubmitting(true);
@@ -142,7 +144,7 @@ function ResetPage() {
         codeExpiresAt: null,
       });
     } catch (err) {
-      applyError(err, "Не удалось подтвердить код");
+      applyError(err, t("Не удалось подтвердить код"));
     } finally {
       setSubmitting(false);
     }
@@ -152,11 +154,11 @@ function ResetPage() {
     e.preventDefault();
     setFormError(null);
     if (password.length < 8) {
-      setFormError("Новый пароль — минимум 8 символов");
+      setFormError(t("Новый пароль — минимум 8 символов"));
       return;
     }
     if (password !== password2) {
-      setFormError("Пароли не совпадают");
+      setFormError(t("Пароли не совпадают"));
       return;
     }
     setSubmitting(true);
@@ -167,10 +169,10 @@ function ResetPage() {
       });
       clearOtpFlow(OTP_FLOW_KEYS.passwordReset);
       await logoutSession();
-      toast.success("Пароль изменён. Войдите с новым паролем");
+      toast.success(t("Пароль изменён. Войдите с новым паролем"));
       await nav({ to: "/login", search: { redirect: undefined, phone } });
     } catch (err) {
-      applyError(err, "Не удалось сменить пароль");
+      applyError(err, t("Не удалось сменить пароль"));
     } finally {
       setSubmitting(false);
     }
@@ -178,10 +180,10 @@ function ResetPage() {
 
   const subtitle =
     step === 1
-      ? "Отправим одноразовый код на ваш номер."
+      ? t("Отправим одноразовый код на ваш номер.")
       : step === 2
-        ? `Код отправлен на ${phone}.`
-        : "Номер подтверждён. Придумайте новый пароль.";
+        ? t("Код отправлен на {phone}.", { phone })
+        : t("Номер подтверждён. Придумайте новый пароль.");
 
   return (
     <main className="grid min-h-dvh place-items-center bg-surface px-5">
@@ -189,10 +191,10 @@ function ResetPage() {
         className="w-full max-w-md rounded-3xl border border-border bg-card p-6"
       >
         <p className="text-xs font-bold uppercase tracking-widest text-primary">
-          Шаг {step} из 3
+          {t("Шаг {step} из 3", { step })}
         </p>
         <h1 className="mt-2 font-display text-2xl font-bold">
-          Восстановление пароля
+          {t("Восстановление пароля")}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
 
@@ -206,14 +208,14 @@ function ResetPage() {
               placeholder="996555000000"
               inputMode="numeric"
               autoComplete="tel"
-              aria-label="Номер телефона"
+              aria-label={t("Номер телефона")}
               className="field-control"
             />
             {formError ? (
               <p className="text-sm text-destructive">{formError}</p>
             ) : null}
             <Button disabled={submitting} className="w-full" type="submit">
-              {submitting ? "Отправляем…" : "Получить код"}
+              {submitting ? t("Отправляем…") : t("Получить код")}
             </Button>
           </form>
         ) : null}
@@ -225,18 +227,18 @@ function ResetPage() {
               autoFocus
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              placeholder="Код из SMS"
+              placeholder={t("Код из SMS")}
               maxLength={8}
               inputMode="numeric"
               autoComplete="one-time-code"
-              aria-label="Код из SMS"
+              aria-label={t("Код из SMS")}
               className="field-control"
             />
             {formError ? (
               <p className="text-sm text-destructive">{formError}</p>
             ) : null}
             <Button disabled={submitting} className="w-full" type="submit">
-              {submitting ? "Проверяем…" : "Подтвердить"}
+              {submitting ? t("Проверяем…") : t("Подтвердить")}
             </Button>
             <div className="flex items-center justify-between">
               <button
@@ -250,7 +252,7 @@ function ResetPage() {
                   clearOtpFlow(OTP_FLOW_KEYS.passwordReset);
                 }}
               >
-                Не тот номер?
+                {t("Не тот номер?")}
               </button>
               <button
                 type="button"
@@ -259,13 +261,13 @@ function ResetPage() {
                 onClick={async () => {
                   try {
                     await requestCode(phone);
-                    toast.success("Код отправлен повторно");
+                    toast.success(t("Код отправлен повторно"));
                   } catch (err) {
-                    applyError(err, "Не удалось отправить код");
+                    applyError(err, t("Не удалось отправить код"));
                   }
                 }}
               >
-                {cooldown > 0 ? `Повтор через ${cooldown} с` : "Отправить снова"}
+                {cooldown > 0 ? t("Повтор через {seconds} с", { seconds: cooldown }) : t("Отправить снова")}
               </button>
             </div>
           </form>
@@ -279,24 +281,24 @@ function ResetPage() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Новый пароль"
+              placeholder={t("Новый пароль")}
               autoComplete="new-password"
-              aria-label="Новый пароль"
+              aria-label={t("Новый пароль")}
             />
             <PasswordInput
               required
               minLength={8}
               value={password2}
               onChange={(e) => setPassword2(e.target.value)}
-              placeholder="Повторите пароль"
+              placeholder={t("Повторите пароль")}
               autoComplete="new-password"
-              aria-label="Повторите пароль"
+              aria-label={t("Повторите пароль")}
             />
             {formError ? (
               <p className="text-sm text-destructive">{formError}</p>
             ) : null}
             <Button disabled={submitting} className="w-full" type="submit">
-              {submitting ? "Сохраняем…" : "Сохранить пароль"}
+              {submitting ? t("Сохраняем…") : t("Сохранить пароль")}
             </Button>
           </form>
         ) : null}
@@ -306,7 +308,7 @@ function ResetPage() {
           search={{ redirect: undefined, phone: undefined }}
           className="mt-5 block text-center text-sm text-primary"
         >
-          Вернуться ко входу
+          {t("Вернуться ко входу")}
         </Link>
       </section>
     </main>

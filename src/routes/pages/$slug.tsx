@@ -7,12 +7,14 @@ import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { CmsHtml } from "@/features/cms/CmsHtml";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/pages/$slug")({
   component: CmsSlugPage,
 });
 
 function CmsSlugPage() {
+  const t = useT();
   const { slug } = Route.useParams();
   const query = useQuery({
     queryKey: queryKeys.cms.page(slug),
@@ -52,7 +54,7 @@ function CmsSlugPage() {
               to="/"
               className="mt-6 inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
             >
-              На главную
+              {t("На главную")}
             </Link>
           </div>
         ) : page ? (
