@@ -32,6 +32,7 @@ import { parseVideoUrl } from "@/features/catalog/video-url";
 import { formatPrice } from "@/lib/money";
 import { usePageMeta } from "@/lib/page-meta";
 import { useSession } from "@/session/store";
+import { contentText } from "@/i18n/content";
 
 export const Route = createFileRoute("/product/$slug")({
   component: ProductDetailPage,
@@ -74,6 +75,11 @@ function ProductDetailPage() {
     [product?.price, selected],
   );
 
+  // Название на языке страницы. `name` появилось вместе с переводами;
+  // на старом бэкенде его нет, и тогда берётся русское — иначе карточка
+  // осталась бы без заголовка.
+  const productName = product ? contentText(product.name, product.name_ru) : "";
+
   // Ссылка приходит из админки строкой; неопознанную площадку и мусор
   // parseVideoUrl отдаёт как null, и вкладка «Видео» просто не появляется.
   const video = useMemo(
@@ -87,12 +93,13 @@ function ProductDetailPage() {
     if (!product) return [];
     const list: ProductTab[] = [];
 
-    if (product.description_ru) {
+    const description = contentText(product.description, product.description_ru);
+    if (description) {
       list.push({
         key: "specs",
         label: "Технические характеристики",
         shortLabel: "Характеристики",
-        content: <ProductDescription text={product.description_ru} bare />,
+        content: <ProductDescription text={description} bare />,
       });
     }
     if (product.documents?.length) {
@@ -106,7 +113,7 @@ function ProductDetailPage() {
       list.push({
         key: "video",
         label: "Видео",
-        content: <ProductVideo video={video} title={product.name_ru} />,
+        content: <ProductVideo video={video} title={productName} />,
       });
     }
     return list;
@@ -115,7 +122,7 @@ function ProductDetailPage() {
   // В описание берём производителя, страну и артикул, а не description_ru:
   // он размечен и хранит характеристики списком — в сниппете это мусор.
   usePageMeta({
-    title: product?.name_ru,
+    title: productName || undefined,
     description: product
       ? [product.manufacturer, product.country, `Артикул ${product.sku}`]
           .filter(Boolean)
@@ -218,7 +225,7 @@ function ProductDetailPage() {
                   {product.sku}
                 </p>
                 <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">
-                  {product.name_ru}
+                  {productName}
                 </h1>
                 {product.manufacturer || product.country ? (
                   <p className="mt-2 text-sm text-muted-foreground">
@@ -232,7 +239,7 @@ function ProductDetailPage() {
               <div className="order-2 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1 lg:row-start-2">
                 <ProductGallery
                   images={product.images ?? []}
-                  alt={product.name_ru}
+                  alt={productName}
                 />
               </div>
 

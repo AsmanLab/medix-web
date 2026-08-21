@@ -24,9 +24,29 @@ export function fetchAdminCategories(
   });
 }
 
+/**
+ * Переводы на запись.
+ *
+ * Плоские `name_ru`/`name_en` остались и означают русское и английское
+ * значение — так их шлёт уже написанный код, включая мобильное
+ * приложение. Словарь `translations` нужен языку, у которого своего
+ * поля нет и не будет (кыргызский), и накладывается поверх плоских.
+ *
+ * Поле, которого в объекте нет, сервер **не трогает**. Поэтому правка
+ * одного названия не стирает SEO и чужие языки.
+ */
+export type CategoryTranslationsBody = Partial<
+  Record<string, { name?: string; seo_title?: string; seo_description?: string }>
+>;
+
+export type ProductTranslationsBody = Partial<
+  Record<string, { name?: string; description?: string }>
+>;
+
 export type CreateCategoryBody = {
   name_ru: string;
   name_en?: string;
+  translations?: CategoryTranslationsBody;
   slug: string;
   parent_id?: string | null;
   sort?: number;
@@ -39,6 +59,7 @@ export type CreateCategoryBody = {
 export type UpdateCategoryBody = {
   name_ru?: string;
   name_en?: string;
+  translations?: CategoryTranslationsBody;
   slug?: string;
   parent_id?: string | null;
   sort?: number;
@@ -173,6 +194,7 @@ export type CreateProductBody = {
   sku: string;
   name_ru: string;
   name_en?: string;
+  translations?: ProductTranslationsBody;
   slug: string;
   category_ids?: string[];
   manufacturer?: string;
@@ -187,6 +209,7 @@ export type UpdateProductBody = {
   sku?: string;
   name_ru?: string;
   name_en?: string;
+  translations?: ProductTranslationsBody;
   slug?: string;
   category_ids?: string[];
   manufacturer?: string;

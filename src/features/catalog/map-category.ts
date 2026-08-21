@@ -1,4 +1,5 @@
 import type { CategoryOut } from "@/api/catalog";
+import { contentText } from "@/i18n/content";
 
 /**
  * Сколько уровней допускает дерево категорий.
@@ -73,8 +74,11 @@ function buildTreeFromList(categories: CategoryOut[]): CatalogCategoryNode[] {
     byParent.set(key, list);
   }
 
+  // Сортировка по показываемому имени, а не по русскому: на другом языке
+  // алфавитный порядок был бы чужим.
   const sortFn = (a: CategoryOut, b: CategoryOut) =>
-    a.sort - b.sort || a.name_ru.localeCompare(b.name_ru, "ru");
+    a.sort - b.sort ||
+    contentText(a.name, a.name_ru).localeCompare(contentText(b.name, b.name_ru));
 
   // `seen` — защита от кольца в данных (A → B → A). Бэкенд такое теперь
   // отбивает на записи, но кольцо могло остаться в базе с прежних времён,
@@ -92,7 +96,7 @@ function buildTreeFromList(categories: CategoryOut[]): CatalogCategoryNode[] {
     return nodes.map((node) => ({
       id: node.id,
       slug: node.slug,
-      name: node.name_ru,
+      name: contentText(node.name, node.name_ru),
       sort: node.sort,
       imageKey: node.image_key || "",
       isActive: node.is_active,

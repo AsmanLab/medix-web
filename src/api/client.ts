@@ -4,6 +4,7 @@ import {
   toAppError,
   type AppError,
 } from "@/api/errors";
+import { getLocale } from "@/i18n/locale-store";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -61,6 +62,10 @@ function buildUrl(path: string, query?: ApiRequestOptions["query"]): string {
   const base = getApiBaseUrl().replace(/\/$/, "");
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = new URL(`${base}${normalizedPath}`);
+  // Язык — ко всем запросам без исключения, а не только к каталогу.
+  // Ручки, которым он не нужен, лишний параметр игнорируют, а вот
+  // перечислять «переводимые» руками означало бы забыть новую.
+  url.searchParams.set("lang", getLocale());
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value === undefined || value === null) continue;

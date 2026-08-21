@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { fetchCategories } from "@/api/catalog";
+import { LocaleSwitcher } from "@/i18n/LocaleSwitcher";
 import { listNotifications } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
 import { fetchCart } from "@/api/cart";
@@ -591,9 +592,11 @@ export function AppShell({
             >
               Контакты
             </Link>
-            {/* Переключатель языка убран: кнопка ничего не делала, а второй
-                локали в проекте нет (ТЗ — только русский). Мёртвый элемент
-                в шапке читается как недоделка. */}
+            {/* Переключатель появится сам, когда в AVAILABLE_LOCALES
+                добавят второй язык. Пока язык один, он не рисуется —
+                ровно поэтому 10.08 отсюда убрали нерабочую кнопку «RU»:
+                мёртвый элемент в шапке читается как недоделка. */}
+            <LocaleSwitcher />
           </div>
         </div>
       </div>

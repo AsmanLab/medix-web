@@ -8,6 +8,8 @@ import {
   deleteAdminCategory,
   fetchAdminCategories,
   updateAdminCategory,
+  type CategoryOut,
+  type CategoryTranslationsBody,
 } from "@/api/catalog";
 import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
@@ -21,8 +23,73 @@ import {
   subtreeHeight,
   MAX_CATEGORY_DEPTH,
 } from "@/features/catalog/map-category";
+import { LanguageTabs } from "@/features/admin/LanguageTabs";
 import { slugifyCategoryName } from "@/features/catalog/slugify";
+import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/i18n/locales";
 import { cn } from "@/lib/utils";
+
+/** Тексты категории на одном языке. */
+type CategoryText = { name: string; seo_title: string; seo_description: string };
+type CategoryTexts = Record<Locale, CategoryText>;
+
+function emptyTexts(): CategoryTexts {
+  return Object.fromEntries(
+    LOCALES.map((locale) => [
+      locale,
+      { name: "", seo_title: "", seo_description: "" },
+    ]),
+  ) as CategoryTexts;
+}
+
+/**
+ * Ответ API в состояние формы.
+ *
+ * Берём `translations`, а не `name_ru`/`name_en`: в словаре есть языки,
+ * у которых плоского поля нет. На старом бэкенде словаря не будет —
+ * тогда работают плоские поля, и форма остаётся рабочей.
+ */
+function textsFromApi(category: CategoryOut): CategoryTexts {
+  const result = emptyTexts();
+  for (const locale of LOCALES) {
+    const row = category.translations?.[locale];
+    if (row) {
+      result[locale] = {
+        name: row.name ?? "",
+        seo_title: row.seo_title ?? "",
+        seo_description: row.seo_description ?? "",
+      };
+    }
+  }
+  if (!category.translations) {
+    result.ru = {
+      name: category.name_ru,
+      seo_title: category.seo_title ?? "",
+      seo_description: category.seo_description ?? "",
+    };
+    result.en = { ...result.en, name: category.name_en ?? "" };
+  }
+  return result;
+}
+
+/**
+ * Состояние формы в тело запроса.
+ *
+ * Отправляются **все** языки, включая опустевшие: пустой перевод — это
+ * команда «удалить», и сервер сам выбросит такую строку. Пропустить
+ * язык означало бы «не трогать», и стереть перевод стало бы нечем.
+ */
+function translationsBody(texts: CategoryTexts): CategoryTranslationsBody {
+  return Object.fromEntries(
+    LOCALES.map((locale) => [
+      locale,
+      {
+        name: texts[locale].name.trim(),
+        seo_title: texts[locale].seo_title.trim(),
+        seo_description: texts[locale].seo_description.trim(),
+      },
+    ]),
+  );
+}
 
 type CategoryEditorProps = {
   categoryId?: string;
@@ -43,30 +110,48 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
     return listQuery.data.find((c) => c.id === categoryId) ?? null;
   }, [categoryId, listQuery.data]);
 
-  const [nameRu, setNameRu] = useState("");
-  const [nameEn, setNameEn] = useState("");
+  /**
+   * Тексты по языкам — один объект вместо отдельных состояний на поле.
+   *
+   * Иначе с тремя языками и тремя полями это девять `useState`, и каждый
+   * новый язык добавлял бы ещё три.
+   */
+  const [texts, setTexts] = useState<CategoryTexts>(emptyTexts);
+  const [lang, setLang] = useState<Locale>(DEFAULT_LOCALE);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [parentId, setParentId] = useState("");
-  const [seoTitle, setSeoTitle] = useState("");
-  const [seoDescription, setSeoDescription] = useState("");
   const [imageKey, setImageKey] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [sort, setSort] = useState(0);
 
   useEffect(() => {
     if (!existing) return;
-    setNameRu(existing.name_ru);
-    setNameEn(existing.name_en ?? "");
+    setTexts(textsFromApi(existing));
     setSlug(existing.slug);
     setSlugTouched(true);
     setParentId(existing.parent_id ?? "");
-    setSeoTitle(existing.seo_title ?? "");
-    setSeoDescription(existing.seo_description ?? "");
     setImageKey(existing.image_key ?? "");
     setIsActive(existing.is_active);
     setSort(existing.sort);
   }, [existing]);
+
+  const nameRu = texts.ru.name;
+
+  function setField(field: keyof CategoryText, value: string) {
+    setTexts((prev) => ({ ...prev, [lang]: { ...prev[lang], [field]: value } }));
+  }
+
+  /** Языки, у которых хоть что-то введено, — для точек на вкладках. */
+  const filled = useMemo(
+    () =>
+      new Set(
+        LOCALES.filter((locale) =>
+          Object.values(texts[locale]).some((v) => v.trim()),
+        ),
+      ),
+    [texts],
+  );
 
   /**
    * Кого можно назначить родителем.
@@ -108,12 +193,16 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const body = {
-        name_ru: nameRu.trim(),
-        name_en: nameEn.trim(),
+        // Плоские поля — ради уже написанных клиентов (мобильное
+        // приложение читает `name_ru`/`name_en` с первого дня). Словарь
+        // `translations` несёт то же самое плюс языки без своих полей.
+        name_ru: texts.ru.name.trim(),
+        name_en: texts.en.name.trim(),
+        seo_title: texts.ru.seo_title.trim(),
+        seo_description: texts.ru.seo_description.trim(),
+        translations: translationsBody(texts),
         slug: slug.trim(),
         parent_id: parentId || null,
-        seo_title: seoTitle.trim(),
-        seo_description: seoDescription.trim(),
         image_key: imageKey.trim(),
         is_active: isActive,
         sort,
@@ -155,8 +244,11 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
   });
 
   function onNameChange(value: string) {
-    setNameRu(value);
-    if (!slugTouched) {
+    setField("name", value);
+    // Slug подставляется только из русского названия: адрес страницы
+    // один на все языки, и собирать его из кыргызского имени значило бы
+    // менять адрес при заполнении перевода.
+    if (lang === DEFAULT_LOCALE && !slugTouched) {
       setSlug(slugifyCategoryName(value));
     }
   }
@@ -176,7 +268,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
           {isEdit ? "Редактирование категории" : "Новая категория"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Название, slug, родитель и SEO для витрины
+          Название и SEO по языкам, slug и место в дереве
         </p>
       </div>
 
@@ -200,24 +292,48 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
             saveMutation.mutate();
           }}
         >
-          <label className="block text-xs font-semibold">
-            Название (RU) *
-            <input
-              required
-              value={nameRu}
-              onChange={(e) => onNameChange(e.target.value)}
-              className="field-control mt-1.5"
-            />
-          </label>
+          {/*
+           * Тексты по языкам. Русский обязателен и служит откатом:
+           * непереведённая категория покажется на витрине по-русски,
+           * а не пустой строкой.
+           */}
+          <LanguageTabs active={lang} onChange={setLang} filled={filled}>
+            <label className="block text-xs font-semibold">
+              {lang === DEFAULT_LOCALE ? "Название *" : "Название"}
+              <input
+                required={lang === DEFAULT_LOCALE}
+                value={texts[lang].name}
+                onChange={(e) => onNameChange(e.target.value)}
+                placeholder={
+                  lang === DEFAULT_LOCALE ? undefined : texts.ru.name
+                }
+                className="field-control mt-1.5"
+              />
+              {lang !== DEFAULT_LOCALE ? (
+                <span className="mt-1.5 block font-normal text-muted-foreground">
+                  Пусто — на витрине покажется русское название.
+                </span>
+              ) : null}
+            </label>
 
-          <label className="block text-xs font-semibold">
-            Название (EN)
-            <input
-              value={nameEn}
-              onChange={(e) => setNameEn(e.target.value)}
-              className="field-control mt-1.5"
-            />
-          </label>
+            <label className="block text-xs font-semibold">
+              SEO title
+              <input
+                value={texts[lang].seo_title}
+                onChange={(e) => setField("seo_title", e.target.value)}
+                className="field-control mt-1.5"
+              />
+            </label>
+
+            <label className="block text-xs font-semibold">
+              SEO description
+              <textarea
+                value={texts[lang].seo_description}
+                onChange={(e) => setField("seo_description", e.target.value)}
+                className="field-control mt-1.5 min-h-[88px] py-2"
+              />
+            </label>
+          </LanguageTabs>
 
           <label className="block text-xs font-semibold">
             Slug *
@@ -290,24 +406,6 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
               onChange={(e) => setImageKey(e.target.value)}
               placeholder="categories/…"
               className={cn("field-control mt-1.5", "font-mono text-xs")}
-            />
-          </label>
-
-          <label className="block text-xs font-semibold">
-            SEO title
-            <input
-              value={seoTitle}
-              onChange={(e) => setSeoTitle(e.target.value)}
-              className="field-control mt-1.5"
-            />
-          </label>
-
-          <label className="block text-xs font-semibold">
-            SEO description
-            <textarea
-              value={seoDescription}
-              onChange={(e) => setSeoDescription(e.target.value)}
-              className="field-control mt-1.5 min-h-[88px] py-2"
             />
           </label>
 

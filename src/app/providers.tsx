@@ -1,6 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, type ReactNode } from "react";
 import { createAppQueryClient } from "@/app/query-client";
+import { LocaleProvider } from "@/i18n/LocaleProvider";
 import { bootstrapSession } from "@/session/store";
 
 const queryClient = createAppQueryClient();
@@ -17,7 +18,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
     void bootstrapSession();
   }, []);
 
+  // LocaleProvider внутри QueryClientProvider: при смене языка он сбрасывает
+  // кэш запросов, а значит должен видеть клиента.
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <LocaleProvider>{children}</LocaleProvider>
+    </QueryClientProvider>
   );
 }

@@ -4,6 +4,7 @@ import type { ProductListOut } from "@/api/catalog";
 import { availabilityLabel } from "@/features/catalog/availability";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { contentText } from "@/i18n/content";
 
 type ProductCardProps = {
   product: ProductListOut;
@@ -95,7 +96,7 @@ export function ProductCard({
           {product.sku}
         </p>
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground group-hover:text-primary sm:mt-1 sm:text-base">
-          {product.name_ru}
+          {contentText(product.name, product.name_ru)}
         </h3>
         {origin ? (
           <p
