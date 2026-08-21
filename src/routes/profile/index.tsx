@@ -246,6 +246,13 @@ function ProfilePage() {
               <LogOut className="h-4 w-4" />
               {t("Выйти из аккаунта")}
             </Button>
+
+            <Link
+              to="/profile/delete"
+              className="block w-full text-center text-sm font-semibold text-danger-strong"
+            >
+              {t("Удалить аккаунт")}
+            </Link>
           </div>
         ) : null}
       </StateBlock>

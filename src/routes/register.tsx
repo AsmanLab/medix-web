@@ -368,12 +368,19 @@ function RegisterPage() {
               <span className="text-muted-foreground">
                 {t("Согласен на обработку персональных данных и принимаю")}{" "}
                 <Link
-                  to="/pages/$slug"
-                  params={{ slug: "privacy" }}
+                  to="/legal/privacy"
                   target="_blank"
                   className="text-primary underline"
                 >
-                  {t("условия")}
+                  {t("политику конфиденциальности")}
+                </Link>{" "}
+                {t("и")}{" "}
+                <Link
+                  to="/legal/terms"
+                  target="_blank"
+                  className="text-primary underline"
+                >
+                  {t("условия пользования")}
                 </Link>
                 .
               </span>
