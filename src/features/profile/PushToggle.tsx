@@ -5,6 +5,7 @@ import { isAppError } from "@/api/errors";
 import { sendTestPush } from "@/api/notifications";
 import { Button } from "@/components/ui/button";
 import { describePushSelfTest } from "@/features/profile/push-self-test";
+import { useT } from "@/i18n/LocaleProvider";
 import {
   disablePush,
   enablePush,
@@ -19,6 +20,7 @@ import {
  * push: кнопка, которая заведомо ничего не сделает, хуже её отсутствия.
  */
 export function PushToggle() {
+  const t = useT();
   const [state, setState] = useState<PushSupport | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -44,12 +46,11 @@ export function PushToggle() {
             <BellOff className="h-4 w-4" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">Уведомления в браузере</p>
+            <p className="text-sm font-medium">{t("Уведомления в браузере")}</p>
             <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-              На iPhone и iPad уведомления доступны, только когда Medix
-              добавлен на домашний экран. В Safari нажмите «Поделиться» →
-              «На экран „Домой“», откройте Medix с домашнего экрана и вернитесь
-              в профиль — кнопка появится здесь.
+              {t(
+                "На iPhone и iPad уведомления доступны, только когда Medix добавлен на домашний экран. В Safari нажмите «Поделиться» → «На экран „Домой“», откройте Medix с домашнего экрана и вернитесь в профиль — кнопка появится здесь.",
+              )}
             </p>
           </div>
         </div>
@@ -60,16 +61,16 @@ export function PushToggle() {
   async function onEnable() {
     setBusy(true);
     try {
-      const result = await enablePush();
+      const result = await enablePush(t);
       if (result.ok) {
         setState("enabled");
-        toast.success("Уведомления включены");
+        toast.success(t("Уведомления включены"));
       } else {
         setState(pushSupport());
         toast.error(result.reason);
       }
     } catch {
-      toast.error("Не удалось включить уведомления");
+      toast.error(t("Не удалось включить уведомления"));
     } finally {
       setBusy(false);
     }
@@ -80,7 +81,7 @@ export function PushToggle() {
     try {
       await disablePush();
       setState("ready");
-      toast.success("Уведомления выключены");
+      toast.success(t("Уведомления выключены"));
     } finally {
       setBusy(false);
     }
@@ -92,11 +93,11 @@ export function PushToggle() {
   async function onTest() {
     setBusy(true);
     try {
-      const verdict = describePushSelfTest(await sendTestPush());
+      const verdict = describePushSelfTest(await sendTestPush(), t);
       toast[verdict.tone](verdict.text);
     } catch (err) {
       toast.error(
-        isAppError(err) ? err.message : "Не удалось проверить уведомления",
+        isAppError(err) ? err.message : t("Не удалось проверить уведомления"),
       );
     } finally {
       setBusy(false);
@@ -117,13 +118,19 @@ export function PushToggle() {
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">Уведомления в браузере</p>
+          <p className="text-sm font-medium">{t("Уведомления в браузере")}</p>
           <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
             {blocked
-              ? "Уведомления запрещены в настройках браузера для этого сайта. Разрешите их в настройках сайта, затем вернитесь сюда."
+              ? t(
+                  "Уведомления запрещены в настройках браузера для этого сайта. Разрешите их в настройках сайта, затем вернитесь сюда.",
+                )
               : enabled
-                ? "Сообщим о котировке, смене статуса заказа и ответе по сервисной заявке, даже если вкладка закрыта."
-                : "Сообщим о котировке, смене статуса заказа и ответе по сервисной заявке. Браузер спросит разрешение."}
+                ? t(
+                    "Сообщим о котировке, смене статуса заказа и ответе по сервисной заявке, даже если вкладка закрыта.",
+                  )
+                : t(
+                    "Сообщим о котировке, смене статуса заказа и ответе по сервисной заявке. Браузер спросит разрешение.",
+                  )}
           </p>
 
           {!blocked ? (
@@ -134,7 +141,7 @@ export function PushToggle() {
                 disabled={busy}
                 onClick={() => void (enabled ? onDisable() : onEnable())}
               >
-                {busy ? "Секунду…" : enabled ? "Выключить" : "Включить"}
+                {busy ? t("Секунду…") : enabled ? t("Выключить") : t("Включить")}
               </Button>
               {enabled ? (
                 <Button
@@ -143,7 +150,7 @@ export function PushToggle() {
                   disabled={busy}
                   onClick={() => void onTest()}
                 >
-                  Проверить
+                  {t("Проверить")}
                 </Button>
               ) : null}
             </div>
@@ -154,8 +161,9 @@ export function PushToggle() {
               выглядит так, будто push не работают, — заказчик так и решил. */}
           {enabled ? (
             <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
-              После нажатия сверните приложение: пока оно открыто, уведомление
-              показывается плашкой внутри, а не в центре уведомлений.
+              {t(
+                "После нажатия сверните приложение: пока оно открыто, уведомление показывается плашкой внутри, а не в центре уведомлений.",
+              )}
             </p>
           ) : null}
         </div>

@@ -1,3 +1,13 @@
+import { identityTranslate, type Translate } from "@/i18n/dictionaries";
+
+/**
+ * Метки статусов в двух средах сразу: у менеджера в админке (всегда
+ * по-русски) и у клиента на витрине (на его языке). `t` необязателен
+ * и по умолчанию ничего не переводит — так админские вызовы остаются
+ * рабочими без правки, а витринные передают `t` из `useT()`.
+ */
+const identity = identityTranslate;
+
 export type RfqStatus =
   | "draft"
   | "submitted"
@@ -8,22 +18,22 @@ export type RfqStatus =
   | "converted_to_order"
   | string;
 
-export function rfqStatusLabel(status: RfqStatus): string {
+export function rfqStatusLabel(status: RfqStatus, t: Translate = identity): string {
   switch (status) {
     case "draft":
-      return "Черновик";
+      return t("Черновик");
     case "submitted":
-      return "Отправлен";
+      return t("Отправлен");
     case "in_review":
-      return "В работе";
+      return t("В работе");
     case "quoted":
-      return "Есть КП";
+      return t("Есть КП");
     case "accepted":
-      return "Принят";
+      return t("Принят");
     case "rejected":
-      return "Отклонён";
+      return t("Отклонён");
     case "converted_to_order":
-      return "В заказ";
+      return t("В заказ");
     default:
       return status;
   }
@@ -56,31 +66,34 @@ export type TimelineStep = {
 };
 
 /** Synthetic timeline from current RFQ status (API has no history events yet). */
-export function buildRfqTimeline(status: RfqStatus): TimelineStep[] {
+export function buildRfqTimeline(
+  status: RfqStatus,
+  t: Translate = identity,
+): TimelineStep[] {
   if (status === "draft") {
     return [
-      { key: "draft", label: "Черновик", state: "active" },
-      { key: "submitted", label: "Отправлен", state: "pending" },
-      { key: "in_review", label: "В работе", state: "pending" },
-      { key: "quoted", label: "Котировка", state: "pending" },
+      { key: "draft", label: t("Черновик"), state: "active" },
+      { key: "submitted", label: t("Отправлен"), state: "pending" },
+      { key: "in_review", label: t("В работе"), state: "pending" },
+      { key: "quoted", label: t("Котировка"), state: "pending" },
     ];
   }
 
   if (status === "rejected") {
     return [
-      { key: "submitted", label: "Отправлен", state: "done" },
-      { key: "in_review", label: "В работе", state: "done" },
-      { key: "quoted", label: "Котировка", state: "done" },
-      { key: "rejected", label: "Отклонён клиентом", state: "active" },
+      { key: "submitted", label: t("Отправлен"), state: "done" },
+      { key: "in_review", label: t("В работе"), state: "done" },
+      { key: "quoted", label: t("Котировка"), state: "done" },
+      { key: "rejected", label: t("Отклонён клиентом"), state: "active" },
     ];
   }
 
   const flow = ["submitted", "in_review", "quoted", "accepted"] as const;
   const labels: Record<(typeof flow)[number], string> = {
-    submitted: "Отправлен",
-    in_review: "В работе",
-    quoted: "Котировка получена",
-    accepted: "Принят",
+    submitted: t("Отправлен"),
+    in_review: t("В работе"),
+    quoted: t("Котировка получена"),
+    accepted: t("Принят"),
   };
 
   let activeIndex = flow.indexOf(status as (typeof flow)[number]);

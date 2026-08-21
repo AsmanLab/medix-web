@@ -1,3 +1,8 @@
+import { identityTranslate, type Translate } from "@/i18n/dictionaries";
+
+/** См. features/rfq/status.ts — тот же приём для меток статусов. */
+const identity = identityTranslate;
+
 export type VerificationStatus =
   | "unverified"
   | "pending_verification"
@@ -14,17 +19,20 @@ export type ClientType =
   | "procurement"
   | string;
 
-export function verificationLabel(status: VerificationStatus): string {
+export function verificationLabel(
+  status: VerificationStatus,
+  t: Translate = identity,
+): string {
   switch (status) {
     case "verified":
-      return "Проверен";
+      return t("Проверен");
     case "pending_verification":
     case "pending":
-      return "На проверке";
+      return t("На проверке");
     case "rejected":
-      return "Отклонён";
+      return t("Отклонён");
     case "unverified":
-      return "Не подтверждён";
+      return t("Не подтверждён");
     default:
       return status;
   }
@@ -34,16 +42,22 @@ export function isVerified(status: VerificationStatus): boolean {
   return status === "verified";
 }
 
-export const VERIFICATION_FIELD_LABELS: Record<string, string> = {
-  full_name: "ФИО контактного лица",
-  organization: "название организации",
-  city: "город",
-  address: "адрес",
-};
+function verificationFieldLabels(t: Translate): Record<string, string> {
+  return {
+    full_name: t("ФИО контактного лица"),
+    organization: t("название организации"),
+    city: t("город"),
+    address: t("адрес"),
+  };
+}
 
-export function verificationFieldsLabel(fields: string[]): string {
+export function verificationFieldsLabel(
+  fields: string[],
+  t: Translate = identity,
+): string {
+  const labels = verificationFieldLabels(t);
   return fields
-    .map((f) => VERIFICATION_FIELD_LABELS[f] ?? f)
+    .map((f) => labels[f] ?? f)
     .join(", ")
     .toLowerCase();
 }
@@ -63,49 +77,69 @@ export type VerificationBanner = {
 export function verificationBanner(
   status: VerificationStatus,
   missing: string[] = [],
+  t: Translate = identity,
 ): VerificationBanner | null {
   if (status === "verified") return null;
 
   if (status === "rejected") {
     return {
       tone: "danger",
-      title: "Верификация отклонена",
+      title: t("Верификация отклонена"),
       body: missing.length
-        ? `Менеджер отклонил заявку. Дополните данные (${verificationFieldsLabel(missing)}) и сохраните — заявка уйдёт на проверку заново.`
-        : "Менеджер отклонил заявку. Проверьте данные организации и сохраните их заново — заявка уйдёт на проверку повторно.",
-      cta: "Исправить данные организации →",
+        ? t(
+            "Менеджер отклонил заявку. Дополните данные ({fields}) и сохраните — заявка уйдёт на проверку заново.",
+            { fields: verificationFieldsLabel(missing, t) },
+          )
+        : t(
+            "Менеджер отклонил заявку. Проверьте данные организации и сохраните их заново — заявка уйдёт на проверку повторно.",
+          ),
+      cta: t("Исправить данные организации →"),
     };
   }
 
   if (status === "pending_verification" || status === "pending") {
     return {
       tone: "warning",
-      title: "Проверка организации",
-      body: "Заявка у менеджера. Пока проверка не завершена, доступны запросы цены (RFQ). Прямой заказ откроется после подтверждения — обычно это занимает 1–2 рабочих дня.",
-      cta: "Проверить данные организации →",
+      title: t("Проверка организации"),
+      body: t(
+        "Заявка у менеджера. Пока проверка не завершена, доступны запросы цены (RFQ). Прямой заказ откроется после подтверждения — обычно это занимает 1–2 рабочих дня.",
+      ),
+      cta: t("Проверить данные организации →"),
     };
   }
 
   return {
     tone: "warning",
-    title: "Данные организации",
+    title: t("Данные организации"),
     body: missing.length
-      ? `Заполните ${verificationFieldsLabel(missing)} — и заявка уйдёт менеджеру на проверку. До подтверждения доступны запросы цены (RFQ), прямой заказ откроется после.`
-      : "Сохраните данные организации — и заявка уйдёт менеджеру на проверку. До подтверждения доступны запросы цены (RFQ), прямой заказ откроется после.",
-    cta: "Заполнить данные организации →",
+      ? t(
+          "Заполните {fields} — и заявка уйдёт менеджеру на проверку. До подтверждения доступны запросы цены (RFQ), прямой заказ откроется после.",
+          { fields: verificationFieldsLabel(missing, t) },
+        )
+      : t(
+          "Сохраните данные организации — и заявка уйдёт менеджеру на проверку. До подтверждения доступны запросы цены (RFQ), прямой заказ откроется после.",
+        ),
+    cta: t("Заполнить данные организации →"),
   };
 }
 
-export const CLIENT_TYPE_OPTIONS: { value: ClientType; label: string }[] = [
-  { value: "clinic", label: "Клиника" },
-  { value: "laboratory", label: "Лаборатория" },
-  { value: "hospital", label: "Больница" },
-  { value: "individual", label: "Физлицо / ИП" },
-  { value: "procurement", label: "Закупки / тендер" },
-];
+export function clientTypeOptions(
+  t: Translate = identity,
+): { value: ClientType; label: string }[] {
+  return [
+    { value: "clinic", label: t("Клиника") },
+    { value: "laboratory", label: t("Лаборатория") },
+    { value: "hospital", label: t("Больница") },
+    { value: "individual", label: t("Физлицо / ИП") },
+    { value: "procurement", label: t("Закупки / тендер") },
+  ];
+}
 
-export function clientTypeLabel(value: ClientType): string {
-  return CLIENT_TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
+export function clientTypeLabel(
+  value: ClientType,
+  t: Translate = identity,
+): string {
+  return clientTypeOptions(t).find((o) => o.value === value)?.label ?? value;
 }
 
 export function profileInitials(fullName: string): string {

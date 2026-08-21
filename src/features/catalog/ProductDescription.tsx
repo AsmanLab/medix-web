@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { parseDescription } from "@/features/catalog/product-description";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 const COLLAPSED_BLOCKS = 6;
 
@@ -26,6 +27,7 @@ export function ProductDescription({
   text: string;
   bare?: boolean;
 }) {
+  const t = useT();
   const blocks = useMemo(() => parseDescription(text), [text]);
   const [expanded, setExpanded] = useState(false);
 
@@ -38,7 +40,7 @@ export function ProductDescription({
 
   return (
     <Wrapper className={bare ? undefined : "rounded-3xl border border-border bg-card p-5"}>
-      {bare ? null : <h2 className="font-semibold">Описание</h2>}
+      {bare ? null : <h2 className="font-semibold">{t("Описание")}</h2>}
 
       <div className={cn("space-y-4", !bare && "mt-3")}>
         {visible.map((block, i) => {
@@ -105,7 +107,7 @@ export function ProductDescription({
           className="mt-4"
           onClick={() => setExpanded((v) => !v)}
         >
-          {expanded ? "Свернуть" : "Показать полностью"}
+          {expanded ? t("Свернуть") : t("Показать полностью")}
         </Button>
       ) : null}
     </Wrapper>

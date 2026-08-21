@@ -1,4 +1,5 @@
 import type { PromotionListItem } from "@/api/cms";
+import { identityTranslate, type Translate } from "@/i18n/dictionaries";
 
 export type PromotionPeriodStatus = "active" | "upcoming" | "expired";
 
@@ -36,14 +37,17 @@ export function promotionStatusTone(
   }
 }
 
-export function promotionStatusLabel(status: PromotionPeriodStatus): string {
+export function promotionStatusLabel(
+  status: PromotionPeriodStatus,
+  t: Translate = identityTranslate,
+): string {
   switch (status) {
     case "active":
-      return "Активна";
+      return t("Активна");
     case "upcoming":
-      return "Скоро";
+      return t("Скоро");
     case "expired":
-      return "Истекла";
+      return t("Истекла");
   }
 }
 
@@ -61,13 +65,14 @@ export function formatPromotionDate(iso: string | null | undefined): string {
 export function promotionDateRange(
   startsAt: string | null | undefined,
   endsAt: string | null | undefined,
+  t: Translate = identityTranslate,
 ): string {
   const start = formatPromotionDate(startsAt);
   const end = formatPromotionDate(endsAt);
   if (start && end) return `${start} — ${end}`;
-  if (start) return `с ${start}`;
-  if (end) return `до ${end}`;
-  return "Сроки не указаны";
+  if (start) return t("с {start}", { start });
+  if (end) return t("до {end}", { end });
+  return t("Сроки не указаны");
 }
 
 export function mapsSearchUrl(address: string): string {

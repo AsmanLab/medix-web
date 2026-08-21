@@ -1,5 +1,6 @@
 import { sanitizeCmsHtml } from "@/features/cms/sanitize";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 type CmsHtmlProps = {
   html: string;
@@ -8,10 +9,11 @@ type CmsHtmlProps = {
 
 /** Renders sanitized CMS HTML body. */
 export function CmsHtml({ html, className }: CmsHtmlProps) {
+  const t = useT();
   const clean = sanitizeCmsHtml(html);
   if (!clean.trim()) {
     return (
-      <p className="text-sm text-muted-foreground">Контент пока не заполнен.</p>
+      <p className="text-sm text-muted-foreground">{t("Контент пока не заполнен.")}</p>
     );
   }
   return (

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { BannerOut } from "@/api/cms";
 import { isSafeInternalPath } from "@/lib/redirect";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 type BannerSliderProps = {
   banners: BannerOut[];
@@ -11,6 +12,7 @@ type BannerSliderProps = {
 };
 
 export function BannerSlider({ banners, imageById }: BannerSliderProps) {
+  const t = useT();
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -56,7 +58,7 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
   }
 
   const imageUrl = imageById[current.id];
-  const cta = current.cta_text?.trim() || "Смотреть каталог";
+  const cta = current.cta_text?.trim() || t("Смотреть каталог");
   const href = current.link_url?.trim() || "/catalog";
 
   function onCta() {
@@ -72,8 +74,8 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
   return (
     <section
       role="region"
-      aria-roledescription="слайдер"
-      aria-label="Баннеры Medix"
+      aria-roledescription={t("слайдер")}
+      aria-label={t("Баннеры Medix")}
       className="relative overflow-hidden rounded-3xl bg-[oklch(0.28_0.05_230)] text-white shadow-[0_22px_70px_-34px_rgba(11,68,99,0.55)]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -114,7 +116,7 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
           Medix International
         </p>
         <h1 className="mt-3 max-w-xl font-display text-3xl font-bold leading-tight sm:text-5xl">
-          {current.title || "Медицинское оборудование для клиник"}
+          {current.title || t("Медицинское оборудование для клиник")}
         </h1>
         {current.subtitle ? (
           <p className="mt-4 max-w-lg text-sm text-white/80 sm:text-base">
@@ -136,7 +138,7 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
         <>
           <button
             type="button"
-            aria-label="Предыдущий слайд"
+            aria-label={t("Предыдущий слайд")}
             onClick={() => go(index - 1)}
             className="absolute top-1/2 left-3 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
           >
@@ -144,7 +146,7 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
           </button>
           <button
             type="button"
-            aria-label="Следующий слайд"
+            aria-label={t("Следующий слайд")}
             onClick={() => go(index + 1)}
             className="absolute top-1/2 right-3 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
           >
@@ -163,7 +165,7 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
               <button
                 key={b.id}
                 type="button"
-                aria-label={`Слайд ${i + 1}`}
+                aria-label={t("Слайд {n}", { n: i + 1 })}
                 aria-current={i === index}
                 onClick={() => go(i)}
                 className="grid h-11 w-8 place-items-center"

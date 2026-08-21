@@ -1,5 +1,12 @@
 import { apiRequest } from "@/api/client";
 import { toAppError } from "@/api/errors";
+import { translate } from "@/i18n/dictionaries";
+import { getLocale } from "@/i18n/locale-store";
+
+/** Вне React, как и api/errors.ts — язык читается из общего хранилища. */
+function t(source: string): string {
+  return translate(getLocale(), source);
+}
 
 type MediaDownloadResponse = {
   key: string;
@@ -81,12 +88,12 @@ export async function uploadFileToPresignedUrl(
       body: file,
     });
   } catch (error) {
-    throw toAppError(error, "Не удалось загрузить файл");
+    throw toAppError(error, t("Не удалось загрузить файл"));
   }
   if (!response.ok) {
     throw toAppError(
       new Error(`Upload failed: ${response.status}`),
-      "Не удалось загрузить файл в хранилище",
+      t("Не удалось загрузить файл в хранилище"),
     );
   }
 }

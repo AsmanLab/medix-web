@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { ProductImageOut } from "@/api/generated/schemas";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 type ProductGalleryProps = {
   images: ProductImageOut[];
@@ -20,6 +21,7 @@ type ProductGalleryProps = {
  * Блок тянется на всю выданную ему ширину — ограничивает её страница товара.
  */
 export function ProductGallery({ images, alt }: ProductGalleryProps) {
+  const t = useT();
   const ordered = useMemo(
     () =>
       [...images].sort((a, b) => {
@@ -40,7 +42,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
     return (
       <div className="grid aspect-[16/9] place-items-center gap-2 bg-primary-soft text-sm text-muted-foreground">
         <ImageOff className="h-8 w-8" aria-hidden />
-        Нет изображения
+        {t("Нет изображения")}
       </div>
     );
   }
@@ -57,7 +59,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
       <div
         className="group relative"
         role={many ? "group" : undefined}
-        aria-label={many ? `Фотографии товара: ${ordered.length}` : undefined}
+        aria-label={many ? t("Фотографии товара: {count}", { count: ordered.length }) : undefined}
         onKeyDown={(e) => {
           if (!many) return;
           if (e.key === "ArrowLeft") step(-1);
@@ -75,7 +77,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
           />
         ) : (
           <div className="grid aspect-[16/9] place-items-center bg-primary-soft text-sm text-muted-foreground">
-            Изображение недоступно
+            {t("Изображение недоступно")}
           </div>
         )}
 
@@ -83,7 +85,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
           <>
             <button
               type="button"
-              aria-label="Предыдущее фото"
+              aria-label={t("Предыдущее фото")}
               onClick={() => step(-1)}
               className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow-sm backdrop-blur transition hover:bg-background"
             >
@@ -91,7 +93,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
             </button>
             <button
               type="button"
-              aria-label="Следующее фото"
+              aria-label={t("Следующее фото")}
               onClick={() => step(1)}
               className="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-background/85 text-foreground shadow-sm backdrop-blur transition hover:bg-background"
             >
@@ -113,7 +115,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
             <li key={image.id} className="shrink-0">
               <button
                 type="button"
-                aria-label={`Фото ${i + 1}`}
+                aria-label={t("Фото {n}", { n: i + 1 })}
                 aria-current={i === index}
                 onClick={() => setIndex(i)}
                 className={cn(
@@ -133,7 +135,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
                   />
                 ) : (
                   <span className="grid h-16 w-20 place-items-center bg-muted text-[10px] text-muted-foreground">
-                    нет
+                    {t("нет")}
                   </span>
                 )}
               </button>

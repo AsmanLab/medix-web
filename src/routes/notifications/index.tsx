@@ -15,6 +15,7 @@ import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/session/guards";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/notifications/")({
   beforeLoad: () => requireAuth({ roles: ["client"] }),
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/notifications/")({
 
 
 function NotificationsPage() {
+  const t = useT();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -46,11 +48,11 @@ function NotificationsPage() {
   const readAll = useMutation({
     mutationFn: () => markAllNotificationsRead(),
     onSuccess: async () => {
-      toast.success("Все прочитаны");
+      toast.success(t("Все прочитаны"));
       await invalidate();
     },
     onError: (err: unknown) => {
-      toast.error(isAppError(err) ? err.message : "Не удалось обновить");
+      toast.error(isAppError(err) ? err.message : t("Не удалось обновить"));
     },
   });
 
@@ -61,11 +63,11 @@ function NotificationsPage() {
     <AppShell>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold">Уведомления</h1>
+          <h1 className="font-display text-3xl font-bold">{t("Уведомления")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {unread > 0
-              ? `Непрочитанных: ${unread}`
-              : "Здесь статусы заказов, счетов и сервиса"}
+              ? t("Непрочитанных: {count}", { count: unread })
+              : t("Здесь статусы заказов, счетов и сервиса")}
           </p>
         </div>
         {unread > 0 ? (
@@ -75,7 +77,7 @@ function NotificationsPage() {
             onClick={() => readAll.mutate()}
           >
             <CheckCheck className="h-4 w-4" aria-hidden />
-            Прочитать все
+            {t("Прочитать все")}
           </Button>
         ) : null}
       </header>
@@ -88,8 +90,8 @@ function NotificationsPage() {
           onRetry={() => void listQuery.refetch()}
           isEmpty={listQuery.isSuccess && items.length === 0}
           emptyIcon={Bell}
-          emptyTitle="Пока нет уведомлений"
-          emptyDescription="Когда менеджер отправит КП, опубликует счёт или обновит сервис — сообщение появится здесь."
+          emptyTitle={t("Пока нет уведомлений")}
+          emptyDescription={t("Когда менеджер отправит КП, опубликует счёт или обновит сервис — сообщение появится здесь.")}
         >
           <ul className="divide-y divide-border rounded-3xl border border-border bg-card">
             {items.map((n) => (

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/components/shared/AppShell";
+import { useT } from "@/i18n/LocaleProvider";
 
 type SuccessSearch = {
   requestId?: string;
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/service/success")({
 });
 
 function ServiceSuccessPage() {
+  const t = useT();
   const { requestId } = Route.useSearch();
 
   return (
@@ -24,7 +26,7 @@ function ServiceSuccessPage() {
           <CheckCircle2 className="h-8 w-8" />
         </div>
         <h1 className="mt-5 font-display text-3xl font-bold">
-          Заявка принята
+          {t("Заявка принята")}
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Инженер свяжется с вами в рабочее время для уточнения деталей и
@@ -45,20 +47,20 @@ function ServiceSuccessPage() {
               params={{ requestId }}
               className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
             >
-              Открыть заявку
+              {t("Открыть заявку")}
             </Link>
           ) : null}
           <Link
             to="/service/requests"
             className="inline-flex h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-semibold"
           >
-            Мои сервисные заявки
+            {t("Мои сервисные заявки")}
           </Link>
           <Link
             to="/service"
             className="inline-flex h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-semibold"
           >
-            Ещё одна заявка
+            {t("Ещё одна заявка")}
           </Link>
         </div>
       </div>

@@ -7,6 +7,7 @@ import type { OrderLineItem } from "@/api/orders";
 import { queryKeys } from "@/api/query-keys";
 import { orderToCartAdditions } from "@/features/orders/repeat-order";
 import { plural } from "@/lib/plural";
+import { useT } from "@/i18n/LocaleProvider";
 
 /**
  * Кладёт позиции прошлого заказа в корзину и ведёт в неё.
@@ -20,6 +21,7 @@ import { plural } from "@/lib/plural";
  * говорим, чего не хватило.
  */
 export function useRepeatOrder() {
+  const t = useT();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -52,15 +54,22 @@ export function useRepeatOrder() {
       if (added === 0) {
         toast.error(
           failed.length > 0
-            ? "Ни одну позицию не удалось добавить: товаров больше нет в каталоге"
-            : "В заказе нет позиций для повтора",
+            ? t("Ни одну позицию не удалось добавить: товаров больше нет в каталоге")
+            : t("В заказе нет позиций для повтора"),
         );
         return;
       }
 
-      const message = `${plural(added, "позиция", "позиции", "позиций")} в корзине`;
+      const message = t("{count} в корзине", {
+        count: plural(added, t("позиция"), t("позиции"), t("позиций")),
+      });
       if (failed.length > 0) {
-        toast.warning(`${message}. Больше не в продаже: ${failed.join(", ")}`);
+        toast.warning(
+          t("{message}. Больше не в продаже: {names}", {
+            message,
+            names: failed.join(", "),
+          }),
+        );
       } else {
         toast.success(message);
       }
@@ -68,6 +77,6 @@ export function useRepeatOrder() {
       await navigate({ to: "/cart" });
     },
     onError: (err) =>
-      toast.error(isAppError(err) ? err.message : "Не удалось повторить заказ"),
+      toast.error(isAppError(err) ? err.message : t("Не удалось повторить заказ")),
   });
 }

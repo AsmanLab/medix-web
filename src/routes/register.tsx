@@ -18,6 +18,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/register")({
   beforeLoad: () => requireGuest(),
@@ -42,7 +43,8 @@ const FALLBACK_COOLDOWN_SEC = 60;
  * трёхшаговой схемы пропадал.
  */
 function RegisterPage() {
-  usePageMeta({ title: "Регистрация", description: null });
+  const t = useT();
+  usePageMeta({ title: t("Регистрация"), description: null });
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const nav = useNavigate();
@@ -130,7 +132,7 @@ function RegisterPage() {
     setFormError(null);
     const normalized = normalizePhone(phone);
     if (!isValidKgPhone(normalized)) {
-      setFormError("Телефон в формате 996XXXXXXXXX");
+      setFormError(t("Телефон в формате 996XXXXXXXXX"));
       return;
     }
     setSubmitting(true);
@@ -138,9 +140,9 @@ function RegisterPage() {
       await requestCode(normalized);
       setPhone(normalized);
       setStep(2);
-      toast.success("Код отправлен по SMS");
+      toast.success(t("Код отправлен по SMS"));
     } catch (err) {
-      applyError(err, "Не удалось отправить код");
+      applyError(err, t("Не удалось отправить код"));
     } finally {
       setSubmitting(false);
     }
@@ -150,7 +152,7 @@ function RegisterPage() {
     e.preventDefault();
     setFormError(null);
     if (otp.length < 4) {
-      setFormError("Введите код из SMS");
+      setFormError(t("Введите код из SMS"));
       return;
     }
     setSubmitting(true);
@@ -172,7 +174,7 @@ function RegisterPage() {
         codeExpiresAt: null,
       });
     } catch (err) {
-      applyError(err, "Не удалось подтвердить код");
+      applyError(err, t("Не удалось подтвердить код"));
     } finally {
       setSubmitting(false);
     }
@@ -182,17 +184,17 @@ function RegisterPage() {
     e.preventDefault();
     setFormError(null);
     if (fullName.trim().length < 2) {
-      setFormError("Укажите ФИО");
+      setFormError(t("Укажите ФИО"));
       return;
     }
     if (password.length < 8) {
-      setFormError("Пароль — минимум 8 символов");
+      setFormError(t("Пароль — минимум 8 символов"));
       return;
     }
     if (!pdConsent) {
       // Дублирует серверную проверку (код consent_required): согласие должно
       // быть осознанным действием, поэтому флаг не проставляется автоматически.
-      setFormError("Нужно согласие на обработку персональных данных");
+      setFormError(t("Нужно согласие на обработку персональных данных"));
       return;
     }
     setSubmitting(true);
@@ -206,10 +208,10 @@ function RegisterPage() {
       });
       clearOtpFlow(OTP_FLOW_KEYS.registration);
       await queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
-      toast.success("Аккаунт создан");
+      toast.success(t("Аккаунт создан"));
       await nav({ to: "/profile" });
     } catch (err) {
-      applyError(err, "Не удалось зарегистрироваться");
+      applyError(err, t("Не удалось зарегистрироваться"));
     } finally {
       setSubmitting(false);
     }
@@ -226,23 +228,23 @@ function RegisterPage() {
 
   const title =
     step === 1
-      ? "Регистрация"
+      ? t("Регистрация")
       : step === 2
-        ? "Подтвердите номер"
-        : "Последний шаг";
+        ? t("Подтвердите номер")
+        : t("Последний шаг");
 
   return (
     <main className="grid min-h-dvh place-items-center bg-surface px-5">
       <section className="w-full max-w-md rounded-3xl border border-border bg-card p-6">
         <p className="text-xs font-bold uppercase tracking-widest text-primary">
-          Шаг {step} из 3
+          {t("Шаг {step} из 3", { step })}
         </p>
         <h1 className="mt-2 font-display text-2xl font-bold">{title}</h1>
 
         {step === 1 ? (
           <form onSubmit={onSubmitPhone} className="mt-6 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Отправим код подтверждения по SMS.
+              {t("Отправим код подтверждения по SMS.")}
             </p>
             <input
               required
@@ -252,14 +254,14 @@ function RegisterPage() {
               placeholder="996555000000"
               inputMode="numeric"
               autoComplete="tel"
-              aria-label="Номер телефона"
+              aria-label={t("Номер телефона")}
               className="field-control"
             />
             {formError ? (
               <p className="text-sm text-destructive">{formError}</p>
             ) : null}
             <Button disabled={submitting} className="w-full" type="submit">
-              {submitting ? "Отправляем…" : "Получить код"}
+              {submitting ? t("Отправляем…") : t("Получить код")}
             </Button>
           </form>
         ) : null}
@@ -267,34 +269,36 @@ function RegisterPage() {
         {step === 2 ? (
           <form onSubmit={onSubmitCode} className="mt-6 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Код отправлен на {phone}
+              {t("Код отправлен на {phone}", { phone })}
             </p>
             <input
               required
               autoFocus
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              placeholder="Код из SMS"
+              placeholder={t("Код из SMS")}
               maxLength={8}
               inputMode="numeric"
               autoComplete="one-time-code"
-              aria-label="Код из SMS"
+              aria-label={t("Код из SMS")}
               className="field-control"
             />
             {secondsLeft !== null ? (
               <p className="text-xs text-muted-foreground">
                 {secondsLeft > 0
-                  ? `Код действует ещё ${Math.floor(secondsLeft / 60)}:${String(
-                      secondsLeft % 60,
-                    ).padStart(2, "0")}`
-                  : "Срок действия кода истёк — запросите новый"}
+                  ? t("Код действует ещё {time}", {
+                      time: `${Math.floor(secondsLeft / 60)}:${String(
+                        secondsLeft % 60,
+                      ).padStart(2, "0")}`,
+                    })
+                  : t("Срок действия кода истёк — запросите новый")}
               </p>
             ) : null}
             {formError ? (
               <p className="text-sm text-destructive">{formError}</p>
             ) : null}
             <Button disabled={submitting} className="w-full" type="submit">
-              {submitting ? "Проверяем…" : "Подтвердить"}
+              {submitting ? t("Проверяем…") : t("Подтвердить")}
             </Button>
             <div className="flex items-center justify-between">
               <button
@@ -302,7 +306,7 @@ function RegisterPage() {
                 className="text-sm text-primary"
                 onClick={backToPhone}
               >
-                Не тот номер?
+                {t("Не тот номер?")}
               </button>
               <button
                 type="button"
@@ -311,15 +315,15 @@ function RegisterPage() {
                 onClick={async () => {
                   try {
                     await requestCode(phone);
-                    toast.success("Код отправлен повторно");
+                    toast.success(t("Код отправлен повторно"));
                   } catch (err) {
-                    applyError(err, "Не удалось отправить код");
+                    applyError(err, t("Не удалось отправить код"));
                   }
                 }}
               >
                 {cooldown > 0
-                  ? `Повтор через ${cooldown} с`
-                  : "Отправить снова"}
+                  ? t("Повтор через {seconds} с", { seconds: cooldown })
+                  : t("Отправить снова")}
               </button>
             </div>
           </form>
@@ -328,17 +332,18 @@ function RegisterPage() {
         {step === 3 ? (
           <form onSubmit={onSubmitProfile} className="mt-6 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Номер {phone} подтверждён. Осталось назвать себя и придумать
-              пароль.
+              {t("Номер {phone} подтверждён. Осталось назвать себя и придумать пароль.", {
+                phone,
+              })}
             </p>
             <input
               required
               autoFocus
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="ФИО"
+              placeholder={t("ФИО")}
               autoComplete="name"
-              aria-label="ФИО"
+              aria-label={t("ФИО")}
               className="field-control"
             />
             <PasswordInput
@@ -346,12 +351,12 @@ function RegisterPage() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Пароль (мин. 8)"
+              placeholder={t("Пароль (мин. 8)")}
               autoComplete="new-password"
-              aria-label="Пароль"
+              aria-label={t("Пароль")}
             />
             <p className="text-xs text-muted-foreground">
-              Данные организации можно будет заполнить позже в профиле.
+              {t("Данные организации можно будет заполнить позже в профиле.")}
             </p>
             <label className="flex items-start gap-2.5 text-sm">
               <input
@@ -361,14 +366,14 @@ function RegisterPage() {
                 className="mt-0.5 h-4 w-4 shrink-0"
               />
               <span className="text-muted-foreground">
-                Согласен на обработку персональных данных и принимаю{" "}
+                {t("Согласен на обработку персональных данных и принимаю")}{" "}
                 <Link
                   to="/pages/$slug"
                   params={{ slug: "privacy" }}
                   target="_blank"
                   className="text-primary underline"
                 >
-                  условия
+                  {t("условия")}
                 </Link>
                 .
               </span>
@@ -381,7 +386,7 @@ function RegisterPage() {
               className="w-full"
               type="submit"
             >
-              {submitting ? "Создаём…" : "Создать аккаунт"}
+              {submitting ? t("Создаём…") : t("Создать аккаунт")}
             </Button>
           </form>
         ) : null}
@@ -391,7 +396,7 @@ function RegisterPage() {
           search={{ redirect: undefined, phone: undefined }}
           className="mt-5 block text-center text-sm text-primary"
         >
-          Уже есть аккаунт
+          {t("Уже есть аккаунт")}
         </Link>
       </section>
     </main>

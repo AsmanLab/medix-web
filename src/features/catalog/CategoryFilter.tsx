@@ -9,6 +9,7 @@ import {
 import type { CatalogCategoryNode } from "@/features/catalog/map-category";
 import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 /**
  * Навигация по категориям каталога — одна на каталог и на страницу раздела.
@@ -101,18 +102,19 @@ type CategoryFilterProps = {
   resetCount?: number | null;
 };
 
-const WORDING = {
-  category: {
-    heading: "Категории",
-    trigger: "Все категории",
-    reset: "Все товары",
-  },
-  subcategory: {
-    heading: "Подкатегории",
-    trigger: "Все подкатегории",
-    reset: "Все товары раздела",
-  },
-} as const;
+function wording(t: ReturnType<typeof useT>, kind: CategoryFilterProps["kind"]) {
+  return kind === "category"
+    ? {
+        heading: t("Категории"),
+        trigger: t("Все категории"),
+        reset: t("Все товары"),
+      }
+    : {
+        heading: t("Подкатегории"),
+        trigger: t("Все подкатегории"),
+        reset: t("Все товары раздела"),
+      };
+}
 
 export function CategoryFilter({
   nodes,
@@ -121,7 +123,8 @@ export function CategoryFilter({
   kind,
   resetCount = null,
 }: CategoryFilterProps) {
-  const words = WORDING[kind];
+  const t = useT();
+  const words = wording(t, kind);
   const sheetId = useId();
   const [sheetOpen, setSheetOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -228,7 +231,7 @@ export function CategoryFilter({
                 ref={closeRef}
                 type="button"
                 onClick={closeSheet}
-                aria-label="Закрыть"
+                aria-label={t("Закрыть")}
                 className="grid size-11 touch-manipulation place-items-center rounded-xl text-muted-foreground active:bg-secondary"
               >
                 <X className="h-5 w-5" aria-hidden />
@@ -292,6 +295,7 @@ function Level({
   onChoose: (node: CatalogCategoryNode | null) => void;
   level: number;
 }) {
+  const t = useT();
   const branches = nodes.filter((node) => node.children.length > 0);
   const leaves = nodes.filter((node) => node.children.length === 0);
 
@@ -342,7 +346,7 @@ function Level({
                       уже стоит в заголовке строкой выше и означает ровно
                       это же. */}
                   <Row
-                    label="Все товары раздела"
+                    label={t("Все товары раздела")}
                     active={selectedId === node.id}
                     onClick={() => onChoose(node)}
                     level={level + 1}
@@ -432,6 +436,7 @@ function branchIdFor(
  * счётчика нет вовсе: ноль на этом месте читался бы как пустая категория.
  */
 function Count({ value }: { value: number | null | undefined }) {
+  const t = useT();
   if (value === null || value === undefined) return null;
   return (
     <>
@@ -444,7 +449,7 @@ function Count({ value }: { value: number | null | undefined }) {
       {/* Запятая не для красоты: подписи склеиваются без пробела, и без
           неё скринридер читает «Коагулометры3 товара». */}
       <span className="sr-only">
-        {`, ${plural(value, "товар", "товара", "товаров")}`}
+        {`, ${plural(value, t("товар"), t("товара"), t("товаров"))}`}
       </span>
     </>
   );

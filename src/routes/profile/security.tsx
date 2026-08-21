@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { readLastPhone, writeLastPhone } from "@/features/profile/labels";
 import { isValidKgPhone, normalizePhone } from "@/lib/phone";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/profile/security")({
   component: ProfileSecurityPage,
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/profile/security")({
 const OTP_COOLDOWN_SEC = 60;
 
 function ProfileSecurityPage() {
+  const t = useT();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
@@ -63,7 +65,7 @@ function ProfileSecurityPage() {
 
     if (!sent) {
       if (!isValidKgPhone(normalized)) {
-        setFormError("Телефон в формате 996XXXXXXXXX");
+        setFormError(t("Телефон в формате 996XXXXXXXXX"));
         return;
       }
       setSubmitting(true);
@@ -74,13 +76,13 @@ function ProfileSecurityPage() {
         writeLastPhone(normalized);
         setSent(true);
         setCooldown(res.retry_after || OTP_COOLDOWN_SEC);
-        toast.success("Если аккаунт существует, код отправлен по SMS");
+        toast.success(t("Если аккаунт существует, код отправлен по SMS"));
       } catch (err) {
         // 429 от серверного лимита: держим кнопку закрытой до конца окна.
         if (isAppError(err) && err.status === 429 && err.retryAfter) {
           setCooldown(err.retryAfter);
         }
-        setFormError(isAppError(err) ? err.message : "Не удалось отправить код");
+        setFormError(isAppError(err) ? err.message : t("Не удалось отправить код"));
       } finally {
         setSubmitting(false);
       }
@@ -88,15 +90,15 @@ function ProfileSecurityPage() {
     }
 
     if (otp.trim().length < 4) {
-      setFormError("Введите код из SMS");
+      setFormError(t("Введите код из SMS"));
       return;
     }
     if (password.length < 8) {
-      setFormError("Новый пароль — минимум 8 символов");
+      setFormError(t("Новый пароль — минимум 8 символов"));
       return;
     }
     if (password !== password2) {
-      setFormError("Пароли не совпадают");
+      setFormError(t("Пароли не совпадают"));
       return;
     }
 
@@ -117,9 +119,9 @@ function ProfileSecurityPage() {
       setPassword("");
       setPassword2("");
       setSent(false);
-      toast.success("Пароль обновлён");
+      toast.success(t("Пароль обновлён"));
     } catch (err) {
-      setFormError(isAppError(err) ? err.message : "Не удалось сменить пароль");
+      setFormError(isAppError(err) ? err.message : t("Не удалось сменить пароль"));
     } finally {
       setSubmitting(false);
     }
@@ -131,11 +133,11 @@ function ProfileSecurityPage() {
         to="/profile"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />К профилю
+        <ArrowLeft className="h-4 w-4" />{t("К профилю")}
       </Link>
-      <h1 className="mt-4 font-display text-2xl font-bold">Безопасность</h1>
+      <h1 className="mt-4 font-display text-2xl font-bold">{t("Безопасность")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Смена пароля через SMS-код (как при восстановлении)
+        {t("Смена пароля через SMS-код (как при восстановлении)")}
       </p>
 
       <form onSubmit={(e) => void onSubmit(e)} className="mt-6 space-y-4">
@@ -144,15 +146,15 @@ function ProfileSecurityPage() {
             <KeyRound className="h-4 w-4" />
           </span>
           <div>
-            <p className="text-sm font-medium">Новый пароль</p>
+            <p className="text-sm font-medium">{t("Новый пароль")}</p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Минимум 8 символов. Подтверждается кодом из SMS.
+              {t("Минимум 8 символов. Подтверждается кодом из SMS.")}
             </p>
           </div>
         </div>
 
         <label className="block">
-          <span className="text-sm font-semibold">Телефон</span>
+          <span className="text-sm font-semibold">{t("Телефон")}</span>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -167,18 +169,18 @@ function ProfileSecurityPage() {
         {sent ? (
           <>
             <label className="block">
-              <span className="text-sm font-semibold">Код из SMS</span>
+              <span className="text-sm font-semibold">{t("Код из SMS")}</span>
               <input
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 className="field-control mt-1.5"
-                placeholder="Код из SMS"
+                placeholder={t("Код из SMS")}
                 inputMode="numeric"
                 autoComplete="one-time-code"
               />
             </label>
             <label className="block">
-              <span className="text-sm font-semibold">Новый пароль</span>
+              <span className="text-sm font-semibold">{t("Новый пароль")}</span>
               <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -187,7 +189,7 @@ function ProfileSecurityPage() {
               />
             </label>
             <label className="block">
-              <span className="text-sm font-semibold">Подтвердите пароль</span>
+              <span className="text-sm font-semibold">{t("Подтвердите пароль")}</span>
               <PasswordInput
                 value={password2}
                 onChange={(e) => setPassword2(e.target.value)}
@@ -206,10 +208,10 @@ function ProfileSecurityPage() {
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting
-            ? "Отправка…"
+            ? t("Отправка…")
             : sent
-              ? "Обновить пароль"
-              : "Получить код"}
+              ? t("Обновить пароль")
+              : t("Получить код")}
         </Button>
 
         {sent ? (
@@ -222,7 +224,7 @@ function ProfileSecurityPage() {
               void (async () => {
                 const normalized = normalizePhone(phone);
                 if (!isValidKgPhone(normalized)) {
-                  setFormError("Телефон в формате 996XXXXXXXXX");
+                  setFormError(t("Телефон в формате 996XXXXXXXXX"));
                   return;
                 }
                 setSubmitting(true);
@@ -230,10 +232,10 @@ function ProfileSecurityPage() {
                 try {
                   await requestPasswordReset(normalized);
                   setCooldown(OTP_COOLDOWN_SEC);
-                  toast.success("Код отправлен повторно");
+                  toast.success(t("Код отправлен повторно"));
                 } catch (err) {
                   setFormError(
-                    isAppError(err) ? err.message : "Не удалось отправить код",
+                    isAppError(err) ? err.message : t("Не удалось отправить код"),
                   );
                 } finally {
                   setSubmitting(false);
@@ -242,8 +244,8 @@ function ProfileSecurityPage() {
             }}
           >
             {cooldown > 0
-              ? `Отправить код снова через ${cooldown}с`
-              : "Отправить код снова"}
+              ? t("Отправить код снова через {seconds}с", { seconds: cooldown })
+              : t("Отправить код снова")}
           </button>
         ) : null}
       </form>

@@ -597,6 +597,12 @@
       },
       "CategoryOut": {
         "properties": {
+          "depth": {
+            "default": 1,
+            "description": "Уровень в дереве: 1 — корневая категория, 2 — подкатегория, 3 — подкатегория подкатегории. Глубже трёх не бывает. Считается сервером, чтобы клиенту не приходилось разбирать цепочку `parent_id` ради отступа в списке.",
+            "title": "Depth",
+            "type": "integer"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -609,6 +615,12 @@
           "is_active": {
             "title": "Is Active",
             "type": "boolean"
+          },
+          "name": {
+            "default": "",
+            "description": "Название на языке запроса, с откатом на русский.",
+            "title": "Name",
+            "type": "string"
           },
           "name_en": {
             "title": "Name En",
@@ -652,6 +664,14 @@
           "sort": {
             "title": "Sort",
             "type": "integer"
+          },
+          "translations": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CategoryTextOut"
+            },
+            "description": "Все заведённые переводы. Языка нет в словаре — перевода нет.",
+            "title": "Translations",
+            "type": "object"
           }
         },
         "required": [
@@ -664,6 +684,66 @@
           "is_active"
         ],
         "title": "CategoryOut",
+        "type": "object"
+      },
+      "CategoryTextIn": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "seo_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seo Description"
+          },
+          "seo_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seo Title"
+          }
+        },
+        "title": "CategoryTextIn",
+        "type": "object"
+      },
+      "CategoryTextOut": {
+        "properties": {
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "seo_description": {
+            "default": "",
+            "title": "Seo Description",
+            "type": "string"
+          },
+          "seo_title": {
+            "default": "",
+            "title": "Seo Title",
+            "type": "string"
+          }
+        },
+        "title": "CategoryTextOut",
         "type": "object"
       },
       "CheckoutCartRequest": {
@@ -981,6 +1061,20 @@
             "default": 0,
             "title": "Sort",
             "type": "integer"
+          },
+          "translations": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/CategoryTextIn"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Translations"
           }
         },
         "required": [
@@ -1161,6 +1255,20 @@
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "translations": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ProductTextIn"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Translations"
           },
           "video_url": {
             "default": "",
@@ -2835,6 +2943,12 @@
             "title": "Country",
             "type": "string"
           },
+          "description": {
+            "default": "",
+            "description": "Описание на языке запроса, с откатом на русский.",
+            "title": "Description",
+            "type": "string"
+          },
           "description_ru": {
             "title": "Description Ru",
             "type": "string"
@@ -2863,6 +2977,12 @@
           },
           "manufacturer": {
             "title": "Manufacturer",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "description": "Название на языке запроса, с откатом на русский.",
+            "title": "Name",
             "type": "string"
           },
           "name_en": {
@@ -2931,6 +3051,14 @@
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "translations": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ProductTextOut"
+            },
+            "description": "Все заведённые переводы. Языка нет в словаре — перевода нет.",
+            "title": "Translations",
+            "type": "object"
           },
           "video_url": {
             "default": "",
@@ -3053,6 +3181,12 @@
             "title": "Manufacturer",
             "type": "string"
           },
+          "name": {
+            "default": "",
+            "description": "Название на языке запроса, с откатом на русский.",
+            "title": "Name",
+            "type": "string"
+          },
           "name_en": {
             "title": "Name En",
             "type": "string"
@@ -3101,6 +3235,14 @@
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "translations": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ProductTextOut"
+            },
+            "description": "Все заведённые переводы. Языка нет в словаре — перевода нет.",
+            "title": "Translations",
+            "type": "object"
           }
         },
         "required": [
@@ -3171,6 +3313,50 @@
           "sort"
         ],
         "title": "ProductOptionOut",
+        "type": "object"
+      },
+      "ProductTextIn": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "ProductTextIn",
+        "type": "object"
+      },
+      "ProductTextOut": {
+        "properties": {
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "title": "ProductTextOut",
         "type": "object"
       },
       "ProfileResponse": {
@@ -4233,6 +4419,20 @@
               }
             ],
             "title": "Sort"
+          },
+          "translations": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/CategoryTextIn"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Translations"
           }
         },
         "title": "UpdateCategoryRequest",
@@ -4575,6 +4775,20 @@
               }
             ],
             "title": "Slug"
+          },
+          "translations": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ProductTextIn"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Translations"
           },
           "video_url": {
             "anyOf": [
@@ -5017,6 +5231,42 @@
     "/api/v1/admin/catalog/categories": {
       "get": {
         "operationId": "admin_list_categories_api_v1_admin_catalog_categories_get",
+        "parameters": [
+          {
+            "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+              "title": "Lang"
+            }
+          },
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5679,6 +5929,40 @@
               "title": "Limit",
               "type": "integer"
             }
+          },
+          {
+            "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+              "title": "Lang"
+            }
+          },
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
           }
         ],
         "responses": {
@@ -6026,6 +6310,40 @@
               "format": "uuid",
               "title": "Product Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+              "title": "Lang"
+            }
+          },
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
             }
           }
         ],
@@ -12364,6 +12682,42 @@
     "/api/v1/catalog/categories": {
       "get": {
         "operationId": "get_categories_api_v1_catalog_categories_get",
+        "parameters": [
+          {
+            "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+              "title": "Lang"
+            }
+          },
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -12526,6 +12880,40 @@
               "title": "Limit",
               "type": "integer"
             }
+          },
+          {
+            "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+              "title": "Lang"
+            }
+          },
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
           }
         ],
         "responses": {
@@ -12600,6 +12988,40 @@
             "schema": {
               "title": "Slug",
               "type": "string"
+            }
+          },
+          {
+            "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском.",
+              "title": "Lang"
+            }
+          },
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
             }
           }
         ],

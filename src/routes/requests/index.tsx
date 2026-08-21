@@ -13,13 +13,15 @@ import {
 } from "@/features/rfq/status";
 import { StatusPill } from "@/components/ui/status-pill";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/requests/")({
   component: RequestsListPage,
 });
 
 function RequestsListPage() {
-  usePageMeta({ title: "Запросы КП", description: null });
+  const t = useT();
+  usePageMeta({ title: t("Запросы КП"), description: null });
 
   const query = useQuery({
     queryKey: queryKeys.rfq.list(),
@@ -36,9 +38,9 @@ function RequestsListPage() {
 
   return (
     <AppShell>
-      <h1 className="font-display text-3xl font-bold">Мои заявки</h1>
+      <h1 className="font-display text-3xl font-bold">{t("Мои заявки")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Запросы цены (RFQ) и коммерческие предложения
+        {t("Запросы цены (RFQ) и коммерческие предложения")}
       </p>
       <CommerceTabs active="requests" />
 
@@ -51,15 +53,15 @@ function RequestsListPage() {
           onRetry={() => void query.refetch()}
           loadingVariant="list"
           emptyIcon={FileText}
-          emptyTitle="Заявок пока нет"
-          emptyDescription="Соберите корзину и отправьте запрос на коммерческое предложение. Менеджер подготовит КП — после принятия появится заказ."
+          emptyTitle={t("Заявок пока нет")}
+          emptyDescription={t("Соберите корзину и отправьте запрос на коммерческое предложение. Менеджер подготовит КП — после принятия появится заказ.")}
           emptyAction={
             <Link
               to="/catalog"
               search={{ q: undefined }}
               className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
             >
-              В каталог <ArrowRight className="h-4 w-4" />
+              {t("В каталог")} <ArrowRight className="h-4 w-4" />
             </Link>
           }
         >
@@ -85,7 +87,7 @@ function RequestsListPage() {
                       </p>
                     </div>
                     <StatusPill tone={tone}>
-                      {rfqStatusLabel(rfq.status)}
+                      {rfqStatusLabel(rfq.status, t)}
                     </StatusPill>
                   </Link>
                 </li>

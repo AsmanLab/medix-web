@@ -1,4 +1,5 @@
 import type { PushSelfTest } from "@/api/notifications";
+import { identityTranslate, type Translate } from "@/i18n/dictionaries";
 
 export type SelfTestVerdict = {
   tone: "success" | "warning" | "error";
@@ -13,18 +14,21 @@ export type SelfTestVerdict = {
  * от FCM показываем как есть: он технический, но это единственная зацепка,
  * а сочинённая замена вроде «что-то пошло не так» не помогает никому.
  */
-export function describePushSelfTest(report: PushSelfTest): SelfTestVerdict {
+export function describePushSelfTest(
+  report: PushSelfTest,
+  t: Translate = identityTranslate,
+): SelfTestVerdict {
   if (!report.firebase_configured) {
     return {
       tone: "error",
-      text: "Уведомления не настроены на сервере — сообщите администратору",
+      text: t("Уведомления не настроены на сервере — сообщите администратору"),
     };
   }
 
   if (report.devices === 0) {
     return {
       tone: "warning",
-      text: "Этот браузер не зарегистрирован. Выключите и включите уведомления заново",
+      text: t("Этот браузер не зарегистрирован. Выключите и включите уведомления заново"),
     };
   }
 
@@ -33,8 +37,8 @@ export function describePushSelfTest(report: PushSelfTest): SelfTestVerdict {
     return {
       tone: "error",
       text: reason
-        ? `Сервер не смог отправить: ${reason}`
-        : "Сервер не смог отправить уведомление",
+        ? t("Сервер не смог отправить: {reason}", { reason })
+        : t("Сервер не смог отправить уведомление"),
     };
   }
 
@@ -43,7 +47,10 @@ export function describePushSelfTest(report: PushSelfTest): SelfTestVerdict {
     tone: partial ? "warning" : "success",
     // Устройств может быть несколько: телефон, рабочий и домашний браузер.
     text: partial
-      ? `Отправлено на ${report.sent} из ${report.devices} — часть устройств больше недоступна`
-      : "Отправлено. Уведомление должно появиться в течение нескольких секунд",
+      ? t("Отправлено на {sent} из {devices} — часть устройств больше недоступна", {
+          sent: report.sent,
+          devices: report.devices,
+        })
+      : t("Отправлено. Уведомление должно появиться в течение нескольких секунд"),
   };
 }

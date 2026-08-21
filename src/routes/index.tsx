@@ -18,45 +18,52 @@ import { BannerSkeleton } from "@/components/shared/skeletons";
 import { ProductCard } from "@/features/catalog/ProductCard";
 import { buildCategoryTree } from "@/features/catalog/map-category";
 import { BannerSlider } from "@/features/home/BannerSlider";
+import { useT } from "@/i18n/LocaleProvider";
 
-const FALLBACK_BANNER: BannerOut = {
-  id: "fallback",
-  image_key: "",
-  title: "Медицинское оборудование для клиник Кыргызстана",
-  subtitle: "Каталог, запросы цены (RFQ), заказы и сервис — в одном кабинете.",
-  cta_text: "Смотреть каталог",
-  link_url: "/catalog",
-  deep_link: "",
-};
+/** Баннер на случай, если в CMS ещё ни одного не завели. */
+function fallbackBanner(t: ReturnType<typeof useT>): BannerOut {
+  return {
+    id: "fallback",
+    image_key: "",
+    title: t("Медицинское оборудование для клиник Кыргызстана"),
+    subtitle: t("Каталог, запросы цены (RFQ), заказы и сервис — в одном кабинете."),
+    cta_text: t("Смотреть каталог"),
+    link_url: "/catalog",
+    deep_link: "",
+  };
+}
 
-const trust = [
-  {
-    icon: BadgeCheck,
-    title: "Официальные поставки",
-    text: "Сертификаты и регистрационные документы",
-  },
-  {
-    icon: PackageCheck,
-    title: "Склад в Бишкеке",
-    text: "Популярные позиции уже в наличии",
-  },
-  {
-    icon: Wrench,
-    title: "Собственный сервис",
-    text: "Монтаж, обучение и обслуживание",
-  },
-  {
-    icon: MapPinned,
-    title: "Доставка по КР",
-    text: "До вашей клиники или лаборатории",
-  },
-] as const;
+function trustItems(t: ReturnType<typeof useT>) {
+  return [
+    {
+      icon: BadgeCheck,
+      title: t("Официальные поставки"),
+      text: t("Сертификаты и регистрационные документы"),
+    },
+    {
+      icon: PackageCheck,
+      title: t("Склад в Бишкеке"),
+      text: t("Популярные позиции уже в наличии"),
+    },
+    {
+      icon: Wrench,
+      title: t("Собственный сервис"),
+      text: t("Монтаж, обучение и обслуживание"),
+    },
+    {
+      icon: MapPinned,
+      title: t("Доставка по КР"),
+      text: t("До вашей клиники или лаборатории"),
+    },
+  ] as const;
+}
 
 export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
 function HomePage() {
+  const t = useT();
   const bannersQuery = useQuery({
     queryKey: queryKeys.cms.banners(),
     queryFn: ({ signal }) => fetchBanners(signal),
@@ -65,8 +72,8 @@ function HomePage() {
   const banners = useMemo(() => {
     if (bannersQuery.isLoading) return [];
     const list = bannersQuery.data ?? [];
-    return list.length > 0 ? list : [FALLBACK_BANNER];
-  }, [bannersQuery.data, bannersQuery.isLoading]);
+    return list.length > 0 ? list : [fallbackBanner(t)];
+  }, [bannersQuery.data, bannersQuery.isLoading, t]);
 
   const imageKeys = useMemo(
     () => banners.map((b) => b.image_key).filter(Boolean),
@@ -117,10 +124,10 @@ function HomePage() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
-                Каталог
+                {t("Каталог")}
               </p>
               <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">
-                Направления
+                {t("Направления")}
               </h2>
             </div>
             <Link
@@ -128,7 +135,7 @@ function HomePage() {
               search={{ q: undefined }}
               className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary"
             >
-              Все категории <ArrowRight className="h-4 w-4" />
+              {t("Все категории")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
@@ -140,8 +147,8 @@ function HomePage() {
             onRetry={() => void categoriesQuery.refetch()}
             loadingVariant="card-grid"
             loadingCount={8}
-            emptyTitle="Категории пока не опубликованы"
-            emptyDescription="Разделы появятся после публикации в админке."
+            emptyTitle={t("Категории пока не опубликованы")}
+            emptyDescription={t("Разделы появятся после публикации в админке.")}
           >
             <ul className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
               {rootCategories.map((cat) => (
@@ -169,10 +176,10 @@ function HomePage() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
-                Подборка
+                {t("Подборка")}
               </p>
               <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">
-                Товары в каталоге
+                {t("Товары в каталоге")}
               </h2>
             </div>
             <Link
@@ -180,7 +187,7 @@ function HomePage() {
               search={{ q: undefined }}
               className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary"
             >
-              В каталог <ArrowRight className="h-4 w-4" />
+              {t("В каталог")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
@@ -193,13 +200,13 @@ function HomePage() {
             loadingVariant="card-grid"
             cardGridVariant="product"
             loadingCount={4}
-            emptyTitle="Товары пока не опубликованы"
-            emptyDescription="Позиции появятся после публикации каталога."
+            emptyTitle={t("Товары пока не опубликованы")}
+            emptyDescription={t("Позиции появятся после публикации каталога.")}
           >
             {/* На узких экранах подборка листается вбок, на широких
                 становится сеткой — но карточка внутри та же, что в каталоге. */}
             <ul
-              aria-label="Товары в каталоге"
+              aria-label={t("Товары в каталоге")}
               className="mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible"
             >
               {products.map((p, index) => (
@@ -223,10 +230,10 @@ function HomePage() {
 
         <section>
           <h2 className="font-display text-2xl font-bold tracking-tight">
-            Почему Medix
+            {t("Почему Medix")}
           </h2>
           <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {trust.map((item) => (
+            {trustItems(t).map((item) => (
               <li key={item.title} className="py-1">
                 <item.icon className="h-6 w-6 text-primary" />
                 <p className="mt-3 text-sm font-semibold">{item.title}</p>
@@ -240,31 +247,32 @@ function HomePage() {
 
         <section className="rounded-3xl bg-gradient-to-br from-primary/15 via-surface to-mint/25 px-6 py-10 sm:px-10">
           <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            Нужен сервис или консультация?
+            {t("Нужен сервис или консультация?")}
           </h2>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            Поможем с подбором оборудования, запуском и обслуживанием — оставьте
-            сервисную заявку или посмотрите каталог.
+            {t(
+              "Поможем с подбором оборудования, запуском и обслуживанием — оставьте сервисную заявку или посмотрите каталог.",
+            )}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               to="/service"
               className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground"
             >
-              Заявка на сервис
+              {t("Заявка на сервис")}
             </Link>
             <Link
               to="/contacts"
               className="inline-flex h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-semibold"
             >
-              Контакты
+              {t("Контакты")}
             </Link>
             <Link
               to="/catalog"
               search={{ q: undefined }}
               className="inline-flex h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-semibold"
             >
-              Открыть каталог
+              {t("Открыть каталог")}
             </Link>
           </div>
         </section>

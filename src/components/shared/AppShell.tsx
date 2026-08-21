@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { fetchCategories } from "@/api/catalog";
+import { LocaleSwitcher } from "@/i18n/LocaleSwitcher";
 import { listNotifications } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
 import { fetchCart } from "@/api/cart";
@@ -29,10 +30,12 @@ import {
 import { useSession } from "@/session/store";
 import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 type Tab = {
   to: string;
-  label: string;
+  /** Русский текст — сам служит ключом словаря, см. i18n/dictionaries.ts. */
+  labelKey: string;
   icon: typeof LayoutGrid;
   match: (p: string) => boolean;
 };
@@ -40,19 +43,19 @@ type Tab = {
 const mobileTabs: Tab[] = [
   {
     to: "/catalog",
-    label: "Каталог",
+    labelKey: "Каталог",
     icon: LayoutGrid,
     match: (p) => p.startsWith("/catalog") || p.startsWith("/product"),
   },
   {
     to: "/cart",
-    label: "Корзина",
+    labelKey: "Корзина",
     icon: ShoppingCart,
     match: (p) => p.startsWith("/cart"),
   },
   {
     to: "/orders",
-    label: "Заказы",
+    labelKey: "Заказы",
     icon: Package,
     match: (p) => p.startsWith("/orders") || p.startsWith("/requests"),
   },
@@ -60,13 +63,13 @@ const mobileTabs: Tab[] = [
   // только через подвал, а подвал прячется под таб-баром.
   {
     to: "/service",
-    label: "Сервис",
+    labelKey: "Сервис",
     icon: Wrench,
     match: (p) => p.startsWith("/service"),
   },
   {
     to: "/profile",
-    label: "Профиль",
+    labelKey: "Профиль",
     icon: User,
     match: (p) =>
       p.startsWith("/profile") ||
@@ -82,13 +85,14 @@ function Logo({
   compact?: boolean;
   inverted?: boolean;
 }) {
+  const t = useT();
   return (
     <Link
       to="/"
       // min-h-11: в компактном виде значок 36px, и ссылка была ниже нормы
       // тач-таргета. Высота шапки 56px, поэтому 44 помещаются без правок.
       className="inline-flex min-h-11 shrink-0 items-center gap-3"
-      aria-label="Medix — на главную"
+      aria-label={t("Medix — на главную")}
     >
       <span
         className={cn(
@@ -131,6 +135,7 @@ function CatalogMegaMenu({
   categories: CatalogCategoryNode[];
   isLoading: boolean;
 }) {
+  const t = useT();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [menuCategoryId, setMenuCategoryId] = useState<string | null>(null);
 
@@ -200,13 +205,13 @@ function CatalogMegaMenu({
               : "text-foreground/75 hover:text-primary",
           )}
         >
-          Каталог
+          {t("Каталог")}
         </Link>
         <button
           type="button"
           aria-expanded={open}
           aria-controls="catalog-mega-menu"
-          aria-label={open ? "Скрыть категории" : "Показать категории"}
+          aria-label={open ? t("Скрыть категории") : t("Показать категории")}
           onClick={() => setOpen((v) => !v)}
           className="grid h-11 w-8 place-items-center text-foreground/75 hover:text-primary"
         >
@@ -223,14 +228,14 @@ function CatalogMegaMenu({
       <div
         id="catalog-mega-menu"
         role="navigation"
-        aria-label="Каталог — категории"
+        aria-label={t("Каталог — категории")}
         hidden={!open}
         className="absolute top-full left-1/2 z-50 w-[min(900px,calc(100vw-2rem))] max-w-[900px] -translate-x-1/2 pt-[19px] xl:left-[-175px] xl:w-[900px] xl:translate-x-0"
       >
         <div className="grid overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_26px_70px_-28px_rgba(15,51,80,.45)] lg:grid-cols-[240px_1fr] xl:grid-cols-[280px_1fr]">
           <div className="border-r border-border bg-background/70 p-3">
             <div className="px-3 pt-1 pb-2 text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
-              Категории
+              {t("Категории")}
             </div>
             {isLoading ? (
               <div className="space-y-2 px-2 py-1">
@@ -243,7 +248,7 @@ function CatalogMegaMenu({
               </div>
             ) : categories.length === 0 ? (
               <p className="px-3 py-2 text-sm text-muted-foreground">
-                Категории скоро появятся
+                {t("Категории скоро появятся")}
               </p>
             ) : (
               categories.map((category) => (
@@ -269,7 +274,7 @@ function CatalogMegaMenu({
               search={{ q: undefined, category: undefined }}
               className="mt-2 flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-primary"
             >
-              Весь каталог <ArrowRight className="h-3.5 w-3.5" />
+              {t("Весь каталог")} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
@@ -282,11 +287,11 @@ function CatalogMegaMenu({
                       {menuCategory.children.length > 0
                         ? plural(
                             menuCategory.children.length,
-                            "подкатегория",
-                            "подкатегории",
-                            "подкатегорий",
+                            t("подкатегория"),
+                            t("подкатегории"),
+                            t("подкатегорий"),
                           )
-                        : "Раздел"}
+                        : t("Раздел")}
                     </p>
                     <p className="mt-1 font-display text-xl font-bold">
                       {menuCategory.name}
@@ -300,7 +305,7 @@ function CatalogMegaMenu({
                     search={{ subcategory: undefined, q: undefined }}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
                   >
-                    Открыть раздел <ArrowRight className="h-3.5 w-3.5" />
+                    {t("Открыть раздел")} <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
                 {/*
@@ -379,14 +384,14 @@ function CatalogMegaMenu({
                     ))
                   ) : (
                     <p className="col-span-2 text-sm text-muted-foreground">
-                      Подкатегории не добавлены
+                      {t("Подкатегории не добавлены")}
                     </p>
                   )}
                 </div>
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Выберите категорию слева
+                {t("Выберите категорию слева")}
               </p>
             )}
           </div>
@@ -403,6 +408,7 @@ function NotificationsBell({
   unreadCount: number;
   className?: string;
 }) {
+  const t = useT();
   return (
     <Link
       to="/notifications"
@@ -412,10 +418,10 @@ function NotificationsBell({
       )}
       aria-label={
         unreadCount > 0
-          ? `Уведомления, непрочитанных ${unreadCount}`
-          : "Уведомления"
+          ? t("Уведомления, непрочитанных {count}", { count: unreadCount })
+          : t("Уведомления")
       }
-      title="Уведомления"
+      title={t("Уведомления")}
     >
       <Bell className="h-[18px] w-[18px]" aria-hidden />
       {unreadCount > 0 ? (
@@ -450,6 +456,7 @@ export function AppShell({
   /** Переопределяет ширину, вычисленную по адресу страницы. */
   width?: ContentWidth;
 }) {
+  const t = useT();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const session = useSession();
@@ -514,7 +521,7 @@ export function AppShell({
     path.startsWith("/service/requests");
 
   const profileTo = authenticated ? "/profile" : "/login";
-  const profileLabel = authenticated ? "Кабинет" : "Войти";
+  const profileLabel = authenticated ? t("Кабинет") : t("Войти");
 
   /*
    * Высота мобильной навигации публикуется в --bottom-nav-h.
@@ -562,14 +569,14 @@ export function AppShell({
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-lg"
       >
-        Перейти к содержимому
+        {t("Перейти к содержимому")}
       </a>
 
       <div className="hidden border-b border-border/70 bg-card text-[12px] text-muted-foreground lg:block">
         <div className="mx-auto flex h-9 max-w-[1320px] items-center justify-between px-6">
           <div className="flex items-center gap-5">
             <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-primary" /> Бишкек, Кыргызстан
+              <MapPin className="h-3.5 w-3.5 text-primary" /> {t("Бишкек, Кыргызстан")}
             </span>
             <a
               href="tel:+996312660066"
@@ -583,17 +590,19 @@ export function AppShell({
               to="/service"
               className="transition-colors hover:text-primary"
             >
-              Сервис и ремонт
+              {t("Сервис и ремонт")}
             </Link>
             <Link
               to="/contacts"
               className="transition-colors hover:text-primary"
             >
-              Контакты
+              {t("Контакты")}
             </Link>
-            {/* Переключатель языка убран: кнопка ничего не делала, а второй
-                локали в проекте нет (ТЗ — только русский). Мёртвый элемент
-                в шапке читается как недоделка. */}
+            {/* Переключатель появится сам, когда в AVAILABLE_LOCALES
+                добавят второй язык. Пока язык один, он не рисуется —
+                ровно поэтому 10.08 отсюда убрали нерабочую кнопку «RU»:
+                мёртвый элемент в шапке читается как недоделка. */}
+            <LocaleSwitcher />
           </div>
         </div>
       </div>
@@ -612,8 +621,10 @@ export function AppShell({
               to="/cart"
               aria-label={
                 cartCount > 0
-                  ? `Корзина, ${plural(cartCount, "позиция", "позиции", "позиций")}`
-                  : "Корзина"
+                  ? t("Корзина, {count}", {
+                      count: plural(cartCount, t("позиция"), t("позиции"), t("позиций")),
+                    })
+                  : t("Корзина")
               }
               className="relative grid h-11 w-11 place-items-center rounded-full text-muted-foreground"
             >
@@ -642,8 +653,8 @@ export function AppShell({
             <input
               value={headerQuery}
               onChange={(event) => setHeaderQuery(event.target.value)}
-              aria-label="Поиск по каталогу"
-              placeholder="Поиск по каталогу"
+              aria-label={t("Поиск по каталогу")}
+              placeholder={t("Поиск по каталогу")}
               // type="search" даёт на телефоне крестик очистки и кнопку
               // «Найти» вместо «Enter» на клавиатуре.
               type="search"
@@ -659,7 +670,7 @@ export function AppShell({
           <Logo />
 
           <nav
-            aria-label="Основная навигация"
+            aria-label={t("Основная навигация")}
             className="flex items-center gap-4 text-sm font-medium xl:gap-7"
           >
             <Link
@@ -670,7 +681,7 @@ export function AppShell({
                   : "text-foreground/75 hover:text-primary"
               }
             >
-              Главная
+              {t("Главная")}
             </Link>
             <CatalogMegaMenu
               categories={categoryTree}
@@ -684,7 +695,7 @@ export function AppShell({
                   : "text-foreground/75 hover:text-primary"
               }
             >
-              О компании
+              {t("О компании")}
             </Link>
             <Link
               to="/service"
@@ -694,7 +705,7 @@ export function AppShell({
                   : "text-foreground/75 hover:text-primary"
               }
             >
-              Сервис
+              {t("Сервис")}
             </Link>
           </nav>
 
@@ -703,14 +714,14 @@ export function AppShell({
             className="ml-auto flex h-11 max-w-[200px] min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-background px-4 transition-colors focus-within:border-primary/60 xl:max-w-[280px]"
             role="search"
           >
-            <button type="submit" aria-label="Найти в каталоге">
+            <button type="submit" aria-label={t("Найти в каталоге")}>
               <Search className="h-4 w-4 text-muted-foreground" aria-hidden />
             </button>
             <input
               value={headerQuery}
               onChange={(event) => setHeaderQuery(event.target.value)}
-              aria-label="Поиск по каталогу"
-              placeholder="Поиск по каталогу"
+              aria-label={t("Поиск по каталогу")}
+              placeholder={t("Поиск по каталогу")}
               className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </form>
@@ -723,12 +734,12 @@ export function AppShell({
           <Link
             to="/cart"
             aria-label={
-              cartCount > 0 ? `Корзина, ${cartCount} поз.` : "Корзина"
+              cartCount > 0 ? t("Корзина, {count} поз.", { count: cartCount }) : t("Корзина")
             }
             className="relative inline-flex h-11 items-center gap-2 rounded-full border border-border px-3 text-sm font-semibold transition-colors hover:border-primary/40 hover:text-primary xl:px-4"
           >
             <ShoppingCart className="h-[18px] w-[18px]" aria-hidden />
-            <span className="hidden xl:inline">Корзина</span>
+            <span className="hidden xl:inline">{t("Корзина")}</span>
             {cartCount > 0 ? (
               <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] text-white">
                 {cartCount}
@@ -771,32 +782,32 @@ export function AppShell({
            * зазор убран, потому что теперь высоту держат сами ссылки.
            */}
           <nav
-            aria-label="Ссылки в подвале"
+            aria-label={t("Ссылки в подвале")}
             className="flex flex-wrap gap-x-4 text-muted-foreground"
           >
             <Link
               to="/about"
               className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
             >
-              О компании
+              {t("О компании")}
             </Link>
             <Link
               to="/promotions"
               className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
             >
-              Акции
+              {t("Акции")}
             </Link>
             <Link
               to="/contacts"
               className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
             >
-              Контакты
+              {t("Контакты")}
             </Link>
             <Link
               to="/service"
               className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
             >
-              Сервис
+              {t("Сервис")}
             </Link>
             {privacyPage ? (
               <Link
@@ -813,7 +824,7 @@ export function AppShell({
 
       <nav
         ref={bottomNavRef}
-        aria-label="Мобильная навигация"
+        aria-label={t("Мобильная навигация")}
         className="fixed inset-x-0 bottom-0 z-50 w-full border-t border-border bg-card/95 backdrop-blur lg:hidden"
         style={{
           boxShadow: "var(--shadow-nav)",
@@ -827,7 +838,7 @@ export function AppShell({
             const profileTab = tab.to === "/profile";
             const href = profileTab ? profileTo : tab.to;
             const badge = tab.to === "/cart" && cartCount > 0;
-            const label = profileTab && !authenticated ? "Вход" : tab.label;
+            const label = profileTab && !authenticated ? t("Вход") : t(tab.labelKey);
 
             return (
               <li key={tab.to}>
