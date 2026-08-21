@@ -59,6 +59,18 @@ import { cn } from "@/lib/utils";
  * Раздел с выбранной подкатегорией раскрыт при первой отрисовке: иначе после
  * перезагрузки страницы фильтр выглядит сброшенным, хотя он применён.
  *
+ * ### Три уровня
+ *
+ * Дерево заказчика — «Лаборатория → Гематология → Гематологические
+ * анализаторы». Рисуется рекурсией, и правило одно на любой глубине: есть
+ * дети — раскрывающийся заголовок, нет — строка выбора. Прежняя версия
+ * знала ровно про два уровня и внуков **теряла молча**: они лежали
+ * в дереве, но в разметку не попадали.
+ *
+ * Уровень читается по отступу и по насыщенности шрифта: раздел — жирный,
+ * подраздел — средний, третий уровень — обычный. Шевроны при этом стоят
+ * на своих отступах, то есть вложенность видно и в свёрнутом виде.
+ *
  * ### Числа у категорий
  *
  * Число справа — сколько товаров покажет выдача по этой строке. У раздела
@@ -243,12 +255,49 @@ function CategoryTree({
   resetCount: number | null;
   onChoose: (node: CatalogCategoryNode | null) => void;
 }) {
+  return (
+    <div>
+      <Row
+        label={resetLabel}
+        count={resetCount}
+        active={!selectedId}
+        onClick={() => onChoose(null)}
+        level={0}
+      />
+      <Level
+        nodes={nodes}
+        selectedId={selectedId}
+        onChoose={onChoose}
+        level={0}
+      />
+    </div>
+  );
+}
+
+/**
+ * Один уровень дерева: сначала раскрывающиеся ветки, потом листья.
+ *
+ * Листья идут после аккордеона намеренно — иначе список раскрывающихся
+ * заголовков разрывался бы обычными строками, и было бы неясно, где ещё
+ * есть что раскрыть.
+ */
+function Level({
+  nodes,
+  selectedId,
+  onChoose,
+  level,
+}: {
+  nodes: CatalogCategoryNode[];
+  selectedId: string | null;
+  onChoose: (node: CatalogCategoryNode | null) => void;
+  level: number;
+}) {
   const branches = nodes.filter((node) => node.children.length > 0);
   const leaves = nodes.filter((node) => node.children.length === 0);
 
-  // Раскрытым держим раздел с текущим выбором. Значение управляемое,
-  // а не начальное: выбор меняется и снаружи — из адресной строки, когда
-  // человек пришёл по ссылке или нажал «Назад».
+  // Раскрытой держим ветку с текущим выбором — на своём уровне. Значение
+  // управляемое, а не начальное: выбор меняется и снаружи, из адресной
+  // строки, когда человек пришёл по ссылке или нажал «Назад».
   const [openId, setOpenId] = useState<string>(
     () => branchIdFor(branches, selectedId) ?? "",
   );
@@ -259,66 +308,58 @@ function CategoryTree({
   }, [branches, selectedId]);
 
   return (
-    <div>
-      <Row
-        label={resetLabel}
-        count={resetCount}
-        active={!selectedId}
-        onClick={() => onChoose(null)}
-      />
+    <>
+      {branches.length > 0 ? (
+        <Accordion
+          type="single"
+          collapsible
+          value={openId}
+          onValueChange={setOpenId}
+        >
+          {branches.map((node) => {
+            const activeInside =
+              selectedId === node.id || containsSelection(node, selectedId);
 
-      <Accordion
-        type="single"
-        collapsible
-        value={openId}
-        onValueChange={setOpenId}
-      >
-        {branches.map((node) => {
-          const activeInside =
-            selectedId === node.id ||
-            node.children.some((child) => child.id === selectedId);
-
-          return (
-            <AccordionItem key={node.id} value={node.id}>
-              <AccordionTrigger
-                className={cn(activeInside && "text-primary")}
-                // Раздел с выбором внутри помечен не только цветом: без
-                // этого для скринридера все заголовки одинаковы.
-                aria-current={activeInside ? "true" : undefined}
-              >
-                <span className="line-clamp-2 flex-1">{node.name}</span>
-                <Count value={node.productCount} />
-              </AccordionTrigger>
-              <AccordionContent>
-                {/* Не «Все: {название}» — заголовок раздела стоит прямо
-                    над этой строкой, и повтор читался как вторая категория
-                    с тем же именем. Числа здесь тоже нет: оно уже стоит
-                    в заголовке строкой выше и означает ровно это же. */}
-                <Row
-                  label="Все товары раздела"
-                  active={selectedId === node.id}
-                  onClick={() => onChoose(node)}
-                  nested
-                />
-                {node.children.map((child) => (
+            return (
+              <AccordionItem key={node.id} value={node.id}>
+                <AccordionTrigger
+                  className={cn(
+                    activeInside && "text-primary",
+                    indentFor(level),
+                    weightFor(level),
+                  )}
+                  // Ветка с выбором внутри помечена не только цветом: без
+                  // этого для скринридера все заголовки одинаковы.
+                  aria-current={activeInside ? "true" : undefined}
+                >
+                  <span className="line-clamp-2 flex-1">{node.name}</span>
+                  <Count value={node.productCount} />
+                </AccordionTrigger>
+                <AccordionContent>
+                  {/* Не «Все: {название}» — заголовок ветки стоит прямо
+                      над этой строкой, и повтор читался как вторая
+                      категория с тем же именем. Числа здесь тоже нет: оно
+                      уже стоит в заголовке строкой выше и означает ровно
+                      это же. */}
                   <Row
-                    key={child.id}
-                    label={child.name}
-                    count={child.productCount}
-                    active={selectedId === child.id}
-                    onClick={() => onChoose(child)}
-                    nested
+                    label="Все товары раздела"
+                    active={selectedId === node.id}
+                    onClick={() => onChoose(node)}
+                    level={level + 1}
                   />
-                ))}
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
+                  <Level
+                    nodes={node.children}
+                    selectedId={selectedId}
+                    onChoose={onChoose}
+                    level={level + 1}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
+      ) : null}
 
-      {/* Разделы без подкатегорий: раскрывать нечего, поэтому обычная
-          строка выбора — и она идёт после аккордеона, чтобы не разрывать
-          список раскрывающихся заголовков. */}
       {leaves.map((node) => (
         <Row
           key={node.id}
@@ -326,22 +367,57 @@ function CategoryTree({
           count={node.productCount}
           active={selectedId === node.id}
           onClick={() => onChoose(node)}
+          level={level}
         />
       ))}
-    </div>
+    </>
   );
 }
 
-/** Раздел, внутри которого лежит выбранный узел (или сам выбранный раздел). */
+/**
+ * Отступ и насыщенность по уровню.
+ *
+ * Массивы, а не арифметика в классе: Tailwind собирает CSS, разбирая
+ * исходники строками, и `ps-${n}` в шаблоне не даёт никакого класса вовсе.
+ * Ниже третьего уровня дерево не опускается (предел стоит на бэкенде),
+ * поэтому последний элемент повторяется как запас — на случай, если предел
+ * когда-нибудь поднимут раньше, чем поправят вёрстку.
+ */
+const INDENT = ["px-3", "ps-7 pe-3", "ps-11 pe-3", "ps-11 pe-3"] as const;
+const WEIGHT = [
+  "font-semibold",
+  "font-medium",
+  "font-normal",
+  "font-normal",
+] as const;
+
+function indentFor(level: number): string {
+  return INDENT[Math.min(level, INDENT.length - 1)]!;
+}
+
+function weightFor(level: number): string {
+  return WEIGHT[Math.min(level, WEIGHT.length - 1)]!;
+}
+
+/** Лежит ли выбранный узел где-то в поддереве этой ветки. */
+function containsSelection(
+  node: CatalogCategoryNode,
+  selectedId: string | null,
+): boolean {
+  if (!selectedId) return false;
+  return node.children.some(
+    (child) => child.id === selectedId || containsSelection(child, selectedId),
+  );
+}
+
+/** Ветка, внутри которой лежит выбранный узел (или сама выбранная ветка). */
 function branchIdFor(
   branches: CatalogCategoryNode[],
   selectedId: string | null,
 ): string | null {
   if (!selectedId) return null;
   const found = branches.find(
-    (node) =>
-      node.id === selectedId ||
-      node.children.some((child) => child.id === selectedId),
+    (node) => node.id === selectedId || containsSelection(node, selectedId),
   );
   return found?.id ?? null;
 }
@@ -379,13 +455,13 @@ function Row({
   count = null,
   active,
   onClick,
-  nested = false,
+  level,
 }: {
   label: string;
   count?: number | null;
   active: boolean;
   onClick: () => void;
-  nested?: boolean;
+  level: number;
 }) {
   return (
     <button
@@ -401,9 +477,9 @@ function Row({
         // touch-action: manipulation убирает 300ms задержку тапа, которую
         // браузер держит на случай двойного нажатия для зума.
         "touch-manipulation",
-        // Отступ у вложенного уровня — вместе с более лёгким шрифтом это
-        // и есть признак уровня.
-        nested ? "ps-7 pe-3 font-normal" : "px-3 font-semibold",
+        // Отступ — вместе с насыщенностью шрифта это и есть признак уровня.
+        indentFor(level),
+        weightFor(level),
         active
           ? "bg-primary-soft text-primary"
           : // active: нужен отдельно от hover: на тач-экране hover не

@@ -8,12 +8,19 @@ import {
   deleteAdminCategory,
   fetchAdminCategories,
   updateAdminCategory,
-  type CategoryOut,
 } from "@/api/catalog";
 import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
+import {
+  buildAdminCategoryTree,
+  collectCategoryIds,
+  findCategoryNode,
+  flattenCategoryTree,
+  subtreeHeight,
+  MAX_CATEGORY_DEPTH,
+} from "@/features/catalog/map-category";
 import { slugifyCategoryName } from "@/features/catalog/slugify";
 import { cn } from "@/lib/utils";
 
@@ -61,9 +68,41 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
     setSort(existing.sort);
   }, [existing]);
 
+  /**
+   * Кого можно назначить родителем.
+   *
+   * Прежде это был плоский список всех категорий: в нём нельзя было понять,
+   * где какая лежит, и ничто не мешало выбрать родителем **собственную
+   * подкатегорию**. Такая ветка не «ломается» громко — она просто исчезает
+   * с витрины, потому что обход дерева идёт от корней и в кольцо не заходит.
+   *
+   * Отсеиваются три группы, и все три бэкенд теперь отбивает с 422 — здесь
+   * они убраны из списка, чтобы человек не натыкался на отказ после
+   * сохранения:
+   *
+   * - сама категория;
+   * - её потомки (кольцо);
+   * - те, под кем ветка не поместится в три уровня. Считается высота самой
+   *   ветки, а не только уровень родителя: раздел с подкатегориями встаёт
+   *   на третий уровень «нормально», а его дети оказываются четвёртым.
+   */
   const parentOptions = useMemo(() => {
-    const all = listQuery.data ?? [];
-    return all.filter((c) => c.id !== categoryId);
+    const tree = buildAdminCategoryTree(listQuery.data ?? []);
+    const rows = flattenCategoryTree(tree);
+    if (!categoryId) {
+      // Новая категория — лист: под неё нужен хотя бы один свободный
+      // уровень у родителя.
+      return rows.filter((c) => c.depth < MAX_CATEGORY_DEPTH);
+    }
+
+    const self = findCategoryNode(tree, categoryId);
+    if (!self) return rows;
+
+    const forbidden = new Set(collectCategoryIds(self));
+    const height = subtreeHeight(self);
+    return rows.filter(
+      (c) => !forbidden.has(c.id) && c.depth + height <= MAX_CATEGORY_DEPTH,
+    );
   }, [listQuery.data, categoryId]);
 
   const saveMutation = useMutation({
@@ -201,12 +240,26 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
               className="field-control mt-1.5"
             >
               <option value="">Корневая категория</option>
-              {parentOptions.map((c: CategoryOut) => (
+              {parentOptions.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name_ru} ({c.slug})
+                  {/*
+                   * Неразрывные пробелы, а не отступ стилями: содержимое
+                   * <option> браузеры оформляют по-своему, и обычные
+                   * пробелы в начале схлопываются. Без отступа список
+                   * из трёх уровней читается как каша.
+                   */}
+                  {"  ".repeat(c.depth - 1)}
+                  {c.depth > 1 ? "└ " : ""}
+                  {c.name} ({c.slug})
                 </option>
               ))}
             </select>
+            <span className="mt-1.5 block font-normal text-muted-foreground">
+              Дерево ограничено {MAX_CATEGORY_DEPTH} уровнями — например,
+              «Лаборатория → Гематология → Гематологические анализаторы».
+              Категории, под которыми эта ветка не поместится, а также её
+              собственные подкатегории в списке не показаны.
+            </span>
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">

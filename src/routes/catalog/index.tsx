@@ -13,6 +13,7 @@ import { ProductGrid } from "@/features/catalog/ProductGrid";
 import {
   buildCategoryTree,
   collectCategoryIds,
+  findCategoryNode,
 } from "@/features/catalog/map-category";
 import { useProductPages } from "@/features/catalog/use-product-pages";
 import { plural } from "@/lib/plural";
@@ -52,20 +53,13 @@ function CatalogIndexPage() {
     [categoriesQuery.data],
   );
 
-  const selectedCategory = useMemo(() => {
-    if (!categoryFromUrl) return null;
-    for (const section of tree) {
-      if (section.id === categoryFromUrl || section.slug === categoryFromUrl) {
-        return section;
-      }
-      for (const child of section.children) {
-        if (child.id === categoryFromUrl || child.slug === categoryFromUrl) {
-          return child;
-        }
-      }
-    }
-    return null;
-  }, [categoryFromUrl, tree]);
+  // Поиск идёт по всему дереву. Прежняя версия обходила ровно два уровня
+  // двумя вложенными циклами, и категория третьего уровня из адреса
+  // не находилась: фильтр молча сбрасывался в «весь каталог».
+  const selectedCategory = useMemo(
+    () => (categoryFromUrl ? findCategoryNode(tree, categoryFromUrl) : null),
+    [categoryFromUrl, tree],
+  );
 
   /**
    * Раздел показывается вместе с подкатегориями — так же, как на странице

@@ -51,6 +51,10 @@ import {
   parsePriceInput,
   productPriceAmount,
 } from "@/features/admin/product-price";
+import {
+  buildAdminCategoryTree,
+  flattenCategoryTree,
+} from "@/features/catalog/map-category";
 import { slugifyCategoryName } from "@/features/catalog/slugify";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -138,6 +142,12 @@ export function ProductEditor({ productId }: ProductEditorProps) {
   }, [existing]);
 
   const categories = categoriesQuery.data ?? [];
+
+  // Плоский список в порядке обхода дерева — с уровнем у каждой строки.
+  const categoryRows = useMemo(
+    () => flattenCategoryTree(buildAdminCategoryTree(categories)),
+    [categories],
+  );
 
   async function invalidateAll() {
     await queryClient.invalidateQueries({ queryKey: queryKeys.catalog.all });
@@ -504,29 +514,53 @@ export function ProductEditor({ productId }: ProductEditorProps) {
               </div>
               <fieldset>
                 <legend className="text-xs font-semibold">Категории</legend>
-                <div className="mt-2 flex max-h-48 flex-wrap gap-2 overflow-y-auto rounded-xl border border-border p-3">
-                  {categories.length === 0 ? (
-                    <span className="text-xs text-muted-foreground">
+                {/*
+                 * Дерево с отступами, а не облако пилюль вперемешку.
+                 * С тремя уровнями плоский список стал неоднозначным:
+                 * «Реагенты» есть и в гематологии, и в биохимии, и по
+                 * одному названию не понять, куда кладёшь товар.
+                 *
+                 * Порядок — обход дерева, поэтому подкатегория всегда
+                 * стоит под своим разделом.
+                 */}
+                <div className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-border p-1.5">
+                  {categoryRows.length === 0 ? (
+                    <span className="block p-2 text-xs text-muted-foreground">
                       Категории не загружены
                     </span>
                   ) : (
-                    categories.map((c) => (
+                    categoryRows.map((c) => (
                       <label
                         key={c.id}
+                        style={{
+                          // Отступ по уровню: 12px на ступень. Через style,
+                          // а не класс, потому что Tailwind собирает CSS
+                          // разбором исходников и `ps-${n}` не даёт класса.
+                          paddingInlineStart: `${8 + (c.depth - 1) * 16}px`,
+                        }}
                         className={cn(
-                          "inline-flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs",
+                          "flex cursor-pointer items-center gap-2 rounded-lg py-1.5 pe-2 text-xs",
                           categoryIds.includes(c.id)
-                            ? "border-primary bg-primary-soft text-primary"
-                            : "border-border",
+                            ? "bg-primary-soft font-semibold text-primary"
+                            : "hover:bg-muted/60",
+                          // Не активная на витрине категория помечена
+                          // здесь же: иначе товар кладут в раздел, которого
+                          // покупатель не видит, и это выясняется потом.
+                          !c.isActive && "text-muted-foreground",
                         )}
                       >
                         <input
                           type="checkbox"
-                          className="sr-only"
+                          className="h-3.5 w-3.5 shrink-0 rounded border-border"
                           checked={categoryIds.includes(c.id)}
                           onChange={() => toggleCategory(c.id)}
                         />
-                        {c.name_ru}
+                        <span className="truncate">{c.name}</span>
+                        {!c.isActive ? (
+                          <span className="shrink-0 text-[10px] text-muted-foreground">
+                            скрыта
+                          </span>
+                        ) : null}
                       </label>
                     ))
                   )}

@@ -125,6 +125,101 @@ describe("CategoryFilter", () => {
   });
 });
 
+describe("CategoryFilter: три уровня", () => {
+  /** Дерево заказчика: Лаборатория → ГЕМАТОЛОГИЯ → анализаторы и реагенты. */
+  const DEEP: CatalogCategoryNode[] = [
+    node("lab", "Лаборатория", [
+      node("hema", "ГЕМАТОЛОГИЯ", [
+        node("analyzers", "Гематологические анализаторы"),
+        node("reagents", "Реагенты для гематологии"),
+      ]),
+      node("bio", "БИОХИМИЯ"),
+    ]),
+  ];
+
+  function renderDeep(selectedId: string | null) {
+    const onSelect = vi.fn();
+    render(
+      <CategoryFilter
+        nodes={DEEP}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        kind="category"
+      />,
+    );
+    return onSelect;
+  }
+
+  it("третий уровень раскрывается вторым нажатием", () => {
+    // Прежняя версия знала только про два уровня и внуков теряла молча:
+    // они лежали в дереве, но в разметку не попадали вовсе.
+    renderDeep(null);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Лаборатория" })[0]);
+    const middle = screen.getAllByRole("button", { name: "ГЕМАТОЛОГИЯ" })[0];
+    expect(middle.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.click(middle);
+
+    expect(
+      screen.getAllByRole("button", {
+        name: "Гематологические анализаторы",
+      })[0],
+    ).toBeTruthy();
+  });
+
+  it("выбор третьего уровня отдаёт сам узел", () => {
+    const onSelect = renderDeep(null);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Лаборатория" })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "ГЕМАТОЛОГИЯ" })[0]);
+    fireEvent.click(
+      screen.getAllByRole("button", {
+        name: "Гематологические анализаторы",
+      })[0],
+    );
+
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "analyzers" }),
+    );
+  });
+
+  it("обе ветки над выбранным узлом раскрыты сразу", () => {
+    // Иначе, придя по ссылке на категорию третьего уровня, человек видит
+    // фильтр полностью свёрнутым — как будто он не применён.
+    renderDeep("analyzers");
+
+    expect(
+      screen
+        .getAllByRole("button", { name: "Лаборатория" })[0]
+        .getAttribute("aria-expanded"),
+    ).toBe("true");
+    expect(
+      screen
+        .getAllByRole("button", { name: "ГЕМАТОЛОГИЯ" })[0]
+        .getAttribute("aria-expanded"),
+    ).toBe("true");
+    expect(
+      screen.getAllByRole("button", {
+        name: "Гематологические анализаторы",
+      })[0],
+    ).toBeTruthy();
+  });
+
+  it("подраздел без своих детей остаётся строкой выбора", () => {
+    const onSelect = renderDeep(null);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Лаборатория" })[0]);
+    const leaf = screen.getAllByRole("button", { name: "БИОХИМИЯ" })[0];
+
+    expect(leaf.getAttribute("aria-expanded")).toBeNull();
+    fireEvent.click(leaf);
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "bio" }),
+    );
+  });
+});
+
 describe("CategoryFilter: числа товаров", () => {
   const COUNTED: CatalogCategoryNode[] = [
     {
