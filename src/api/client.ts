@@ -4,6 +4,13 @@ import {
   toAppError,
   type AppError,
 } from "@/api/errors";
+import { translate } from "@/i18n/dictionaries";
+import { getLocale } from "@/i18n/locale-store";
+
+/** Вне React, как и api/errors.ts — язык читается из общего хранилища. */
+function t(source: string): string {
+  return translate(getLocale(), source);
+}
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -61,6 +68,10 @@ function buildUrl(path: string, query?: ApiRequestOptions["query"]): string {
   const base = getApiBaseUrl().replace(/\/$/, "");
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = new URL(`${base}${normalizedPath}`);
+  // Язык — ко всем запросам без исключения, а не только к каталогу.
+  // Ручки, которым он не нужен, лишний параметр игнорируют, а вот
+  // перечислять «переводимые» руками означало бы забыть новую.
+  url.searchParams.set("lang", getLocale());
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value === undefined || value === null) continue;
@@ -151,8 +162,8 @@ export async function apiRequest<T>(options: ApiRequestOptions): Promise<T> {
   } catch (error) {
     if ((error as AppError)?.status) throw error;
     if (error instanceof DOMException && error.name === "AbortError") {
-      throw toAppError(error, "Запрос отменён");
+      throw toAppError(error, t("Запрос отменён"));
     }
-    throw toAppError(error, "Не удалось выполнить запрос");
+    throw toAppError(error, t("Не удалось выполнить запрос"));
   }
 }

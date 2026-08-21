@@ -63,7 +63,15 @@ export function formatMoney(
   return formatAmount(parsed.amount, parsed.currency);
 }
 
-/** Цена товара: «Цена по запросу», когда её нет. */
-export function formatPrice(raw: string | null | undefined): string {
-  return formatMoney(raw, "Цена по запросу");
+/**
+ * Цена товара: «Цена по запросу», когда её нет.
+ *
+ * `t` необязателен по тому же приёму, что и метки статусов в модулях
+ * status.ts — админские вызовы работают без правки.
+ */
+export function formatPrice(
+  raw: string | null | undefined,
+  t: (source: string) => string = (s) => s,
+): string {
+  return formatMoney(raw, t("Цена по запросу"));
 }

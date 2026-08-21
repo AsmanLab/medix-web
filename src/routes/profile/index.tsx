@@ -29,12 +29,14 @@ import {
 import { PushToggle } from "@/features/profile/PushToggle";
 import { logoutSession } from "@/session/store";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/profile/")({
   component: ProfilePage,
 });
 
 function ProfilePage() {
+  const t = useT();
   const navigate = useNavigate();
 
   const profileQuery = useQuery({
@@ -50,7 +52,7 @@ function ProfilePage() {
   const api = profileQuery.data;
   const displayName =
     api?.full_name?.trim() ||
-    (profileQuery.isLoading ? "Загрузка…" : "Имя не указано");
+    (profileQuery.isLoading ? t("Загрузка…") : t("Имя не указано"));
   const orgLine = [api?.organization?.trim(), api?.city?.trim()]
     .filter(Boolean)
     .join(", ");
@@ -58,6 +60,7 @@ function ProfilePage() {
   const banner = verificationBanner(
     verification,
     api?.missing_for_verification,
+    t,
   );
 
   if (
@@ -73,15 +76,15 @@ function ProfilePage() {
 
   async function onLogout() {
     await logoutSession(getAppQueryClient());
-    toast.success("Вы вышли из аккаунта");
+    toast.success(t("Вы вышли из аккаунта"));
     await navigate({ to: "/login" });
   }
 
   return (
     <AppShell>
-      <h1 className="font-display text-3xl font-bold">Профиль</h1>
+      <h1 className="font-display text-3xl font-bold">{t("Профиль")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Личные данные, организация и безопасность
+        {t("Личные данные, организация и безопасность")}
       </p>
 
       <StateBlock
@@ -99,13 +102,13 @@ function ProfilePage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{displayName}</p>
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {api.phone || "Телефон не указан"}
+                  {api.phone || t("Телефон не указан")}
                 </p>
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {orgLine || "Организация не указана"}
+                  {orgLine || t("Организация не указана")}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {clientTypeLabel(api.client_type)}
+                  {clientTypeLabel(api.client_type, t)}
                 </p>
               </div>
               <span
@@ -121,7 +124,7 @@ function ProfilePage() {
                         : "bg-muted text-muted-foreground",
                 )}
               >
-                {verificationLabel(verification)}
+                {verificationLabel(verification, t)}
               </span>
             </section>
 
@@ -161,10 +164,10 @@ function ProfilePage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium">
-                  История заказов
+                  {t("История заказов")}
                 </span>
                 <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                  Заказы, статусы и счета
+                  {t("Заказы, статусы и счета")}
                 </span>
               </span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -178,9 +181,9 @@ function ProfilePage() {
                 <Package className="h-4 w-4" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">Заявки на КП</span>
+                <span className="block text-sm font-medium">{t("Заявки на КП")}</span>
                 <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                  Запросы цены и коммерческие предложения
+                  {t("Запросы цены и коммерческие предложения")}
                 </span>
               </span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -195,10 +198,10 @@ function ProfilePage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium">
-                  Сервисные заявки
+                  {t("Сервисные заявки")}
                 </span>
                 <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                  История и статусы · новая заявка
+                  {t("История и статусы · новая заявка")}
                 </span>
               </span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -208,29 +211,29 @@ function ProfilePage() {
 
             <section className="overflow-hidden rounded-2xl border border-border bg-card">
               <p className="border-b border-border px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                Данные
+                {t("Данные")}
               </p>
               <MenuRow
                 to="/profile/edit"
                 icon={UserRound}
-                label="Личные данные"
+                label={t("Личные данные")}
                 hint={
                   [api.full_name?.trim(), api.phone?.trim()]
                     .filter(Boolean)
-                    .join(" · ") || "ФИО и телефон"
+                    .join(" · ") || t("ФИО и телефон")
                 }
               />
               <MenuRow
                 to="/profile/organization"
                 icon={Building2}
-                label="Организация"
-                hint={api.organization?.trim() || "Реквизиты и адрес"}
+                label={t("Организация")}
+                hint={api.organization?.trim() || t("Реквизиты и адрес")}
               />
               <MenuRow
                 to="/profile/security"
                 icon={KeyRound}
-                label="Безопасность"
-                hint="Смена пароля"
+                label={t("Безопасность")}
+                hint={t("Смена пароля")}
                 last
               />
             </section>
@@ -241,8 +244,15 @@ function ProfilePage() {
               onClick={() => void onLogout()}
             >
               <LogOut className="h-4 w-4" />
-              Выйти из аккаунта
+              {t("Выйти из аккаунта")}
             </Button>
+
+            <Link
+              to="/profile/delete"
+              className="block w-full text-center text-sm font-semibold text-danger-strong"
+            >
+              {t("Удалить аккаунт")}
+            </Link>
           </div>
         ) : null}
       </StateBlock>

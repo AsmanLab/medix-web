@@ -12,12 +12,14 @@ import {
   shortRequestId,
 } from "@/features/service/status";
 import { StatusPill } from "@/components/ui/status-pill";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/service/requests/")({
   component: ServiceRequestsListPage,
 });
 
 function ServiceRequestsListPage() {
+  const t = useT();
   const query = useQuery({
     queryKey: queryKeys.service.list(),
     queryFn: ({ signal }) => listServiceRequests(signal),
@@ -34,16 +36,16 @@ function ServiceRequestsListPage() {
     <AppShell>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold">Сервисные заявки</h1>
+          <h1 className="font-display text-3xl font-bold">{t("Сервисные заявки")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            История вызовов инженера и статусы работ
+            {t("История вызовов инженера и статусы работ")}
           </p>
         </div>
         <Link
           to="/service"
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
         >
-          Новая заявка <ArrowRight className="h-4 w-4" />
+          {t("Новая заявка")} <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
 
@@ -56,14 +58,14 @@ function ServiceRequestsListPage() {
           onRetry={() => void query.refetch()}
           loadingVariant="list"
           emptyIcon={Wrench}
-          emptyTitle="Сервисных заявок пока нет"
-          emptyDescription="Опишите оборудование и проблему — мы примем заявку в работу."
+          emptyTitle={t("Сервисных заявок пока нет")}
+          emptyDescription={t("Опишите оборудование и проблему — мы примем заявку в работу.")}
           emptyAction={
             <Link
               to="/service"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
             >
-              Создать заявку <ArrowRight className="h-4 w-4" />
+              {t("Создать заявку")} <ArrowRight className="h-4 w-4" />
             </Link>
           }
         >
@@ -79,13 +81,13 @@ function ServiceRequestsListPage() {
                   >
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        Заявка
+                        {t("Заявка")}
                       </p>
                       <p className="mt-0.5 font-mono text-sm font-semibold">
                         {shortRequestId(item.id)}
                       </p>
                       <p className="mt-2 truncate text-sm font-medium">
-                        {item.equipment_type || "Оборудование"}
+                        {item.equipment_type || t("Оборудование")}
                         {item.model ? ` · ${item.model}` : ""}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -93,7 +95,7 @@ function ServiceRequestsListPage() {
                       </p>
                     </div>
                     <StatusPill tone={tone}>
-                      {serviceStatusLabel(item.status)}
+                      {serviceStatusLabel(item.status, t)}
                     </StatusPill>
                   </Link>
                 </li>

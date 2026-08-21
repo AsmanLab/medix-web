@@ -11,6 +11,7 @@ import {
 } from "@/features/catalog/configurator-logic";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 type ProductConfiguratorProps = {
   groups: OptionGroupOut[];
@@ -32,6 +33,7 @@ export function ProductConfigurator({
   onSelectionChange,
   embedded = false,
 }: ProductConfiguratorProps) {
+  const t = useT();
   const sortedGroups = useMemo(
     () => [...groups].sort((a, b) => a.sort - b.sort),
     [groups],
@@ -52,8 +54,8 @@ export function ProductConfigurator({
     [selection, sortedGroups],
   );
   const summary = useMemo(
-    () => summarizeConfigPrice(basePrice, selected),
-    [basePrice, selected],
+    () => summarizeConfigPrice(basePrice, selected, t),
+    [basePrice, selected, t],
   );
   const missing = useMemo(
     () => missingRequiredGroups(sortedGroups, selection),
@@ -97,11 +99,11 @@ export function ProductConfigurator({
     >
       <div>
         <h2 className={cn("font-semibold", embedded && "text-sm")}>
-          Конфигурация
+          {t("Конфигурация")}
         </h2>
         {embedded ? null : (
           <p className="mt-1 text-xs text-muted-foreground">
-            Выберите комплектацию и дополнительные опции
+            {t("Выберите комплектацию и дополнительные опции")}
           </p>
         )}
       </div>
@@ -134,13 +136,13 @@ export function ProductConfigurator({
                     {group.name_ru}
                     {single ? (
                       <span className="ml-2 text-[11px] font-medium text-primary">
-                        выберите один
+                        {t("выберите один")}
                       </span>
                     ) : null}
                   </span>
                   {required ? (
                     <span className="text-[11px] font-semibold text-destructive">
-                      Обязательный выбор
+                      {t("Обязательный выбор")}
                     </span>
                   ) : null}
                 </span>
@@ -160,7 +162,7 @@ export function ProductConfigurator({
                   className="space-y-2 border-t border-border px-4 py-3"
                 >
                   {opts.map((opt) => {
-                    const priceLabel = formatMoney(opt.price, "По запросу");
+                    const priceLabel = formatMoney(opt.price, t("По запросу"));
                     if (single) {
                       const checked = selection.singles[group.id] === opt.id;
                       return (
@@ -186,7 +188,7 @@ export function ProductConfigurator({
                             </span>
                             <span className="mt-0.5 block text-xs text-muted-foreground">
                               {priceLabel}
-                              {opt.is_required ? " · обяз." : ""}
+                              {opt.is_required ? t(" · обяз.") : ""}
                             </span>
                           </span>
                         </label>
@@ -231,7 +233,7 @@ export function ProductConfigurator({
       {embedded ? null : (
         <div className="rounded-2xl bg-secondary/50 px-4 py-3">
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-            Итого конфигурации
+            {t("Итого конфигурации")}
           </p>
           <p className="mt-1 text-lg font-bold text-primary">{summary.label}</p>
           {selected.length > 0 ? (
@@ -239,7 +241,7 @@ export function ProductConfigurator({
               {selected.map((o) => (
                 <li key={o.id}>
                   + {o.name_ru}
-                  {o.price ? ` · ${formatMoney(o.price)}` : " · по запросу"}
+                  {o.price ? ` · ${formatMoney(o.price)}` : t(" · по запросу")}
                 </li>
               ))}
             </ul>

@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 export type ProductTab = {
   /** Устойчивый ключ вкладки — по нему строятся id для aria-controls. */
@@ -33,6 +34,7 @@ export type ProductTab = {
  * активный ярлык, а между ярлыками ходят стрелками (roving tabindex).
  */
 export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
+  const t = useT();
   const baseId = useId();
   const [active, setActive] = useState(0);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -65,7 +67,7 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
           с остальными на телефон не помещается. */}
       <div
         role="tablist"
-        aria-label="Информация о товаре"
+        aria-label={t("Информация о товаре")}
         onKeyDown={onKeyDown}
         className="flex gap-1 overflow-x-auto border-b border-border px-2 pt-2"
       >

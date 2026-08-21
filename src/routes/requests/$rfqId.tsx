@@ -32,12 +32,14 @@ import {
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/requests/$rfqId")({
   component: RequestDetailPage,
 });
 
 function RequestDetailPage() {
+  const t = useT();
   const { rfqId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -69,7 +71,7 @@ function RequestDetailPage() {
   const acceptMutation = useMutation({
     mutationFn: () => acceptRfqQuote(rfqId),
     onSuccess: async (result) => {
-      toast.success("КП принято — заказ создан, организация подтверждена");
+      toast.success(t("КП принято — заказ создан, организация подтверждена"));
       await queryClient.invalidateQueries({ queryKey: queryKeys.rfq.all });
       await queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
       await navigate({
@@ -78,24 +80,24 @@ function RequestDetailPage() {
       });
     },
     onError: (err) => {
-      toast.error(isAppError(err) ? err.message : "Не удалось принять КП");
+      toast.error(isAppError(err) ? err.message : t("Не удалось принять КП"));
     },
   });
 
   const rejectMutation = useMutation({
     mutationFn: () => rejectRfqQuote(rfqId),
     onSuccess: async () => {
-      toast.success("Котировка отклонена");
+      toast.success(t("Котировка отклонена"));
       await queryClient.invalidateQueries({ queryKey: queryKeys.rfq.all });
     },
     onError: (err) => {
-      toast.error(isAppError(err) ? err.message : "Не удалось отклонить КП");
+      toast.error(isAppError(err) ? err.message : t("Не удалось отклонить КП"));
     },
   });
 
   const rfq = detailQuery.data;
   const tone = rfq ? rfqStatusTone(rfq.status) : "muted";
-  const timeline = rfq ? buildRfqTimeline(rfq.status) : [];
+  const timeline = rfq ? buildRfqTimeline(rfq.status, t) : [];
   const canDecide = rfq?.status === "quoted";
   const invoice = invoiceQuery.data;
   const invoicePublished =
@@ -110,7 +112,7 @@ function RequestDetailPage() {
       window.open(res.download_url, "_blank", "noopener,noreferrer");
     } catch (err) {
       toast.error(
-        isAppError(err) ? err.message : "Счёт пока недоступен для скачивания",
+        isAppError(err) ? err.message : t("Счёт пока недоступен для скачивания"),
       );
     }
   }
@@ -139,7 +141,7 @@ function RequestDetailPage() {
         to="/requests"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />К заявкам
+        <ArrowLeft className="h-4 w-4" />{t("К заявкам")}
       </Link>
 
       <div className="mt-6">
@@ -155,7 +157,7 @@ function RequestDetailPage() {
               <header className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Запрос на котировку
+                    {t("Запрос на котировку")}
                   </p>
                   <h1 className="mt-1 font-display text-2xl font-bold">RFQ</h1>
                   <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
@@ -166,12 +168,12 @@ function RequestDetailPage() {
                   </p>
                 </div>
                 <StatusPill tone={tone}>
-                  {rfqStatusLabel(rfq.status)}
+                  {rfqStatusLabel(rfq.status, t)}
                 </StatusPill>
               </header>
 
               <section className="rounded-2xl border border-border bg-card p-5">
-                <h2 className="font-semibold">Статус</h2>
+                <h2 className="font-semibold">{t("Статус")}</h2>
                 <Timeline steps={timeline} />
               </section>
 
@@ -190,7 +192,7 @@ function RequestDetailPage() {
                         </p>
                       </div>
                       <p className="shrink-0 text-sm font-semibold text-primary">
-                        {formatMoney(item.unit_price, "По запросу")}
+                        {formatMoney(item.unit_price, t("По запросу"))}
                       </p>
                     </li>
                   ))}
@@ -204,7 +206,7 @@ function RequestDetailPage() {
 
               {rfq.quote ? (
                 <section className="rounded-2xl border border-border bg-card p-5">
-                  <h2 className="font-semibold">Коммерческое предложение</h2>
+                  <h2 className="font-semibold">{t("Коммерческое предложение")}</h2>
                   {rfq.quote.valid_until ? (
                     <p className="mt-1 text-xs text-muted-foreground">
                       Действует до {formatRfqDate(rfq.quote.valid_until)}
@@ -229,9 +231,9 @@ function RequestDetailPage() {
                     ))}
                   </ul>
                   <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                    <span className="text-sm font-semibold">Итого</span>
+                    <span className="text-sm font-semibold">{t("Итого")}</span>
                     <span className="text-lg font-bold text-primary">
-                      {formatMoney(rfq.quote.total, "По запросу")}
+                      {formatMoney(rfq.quote.total, t("По запросу"))}
                     </span>
                   </div>
                   {rfq.quote.conditions ? (
@@ -243,7 +245,7 @@ function RequestDetailPage() {
                   {canDecide ? (
                     <div className="mt-5 space-y-3">
                       <p className="text-xs leading-5 text-muted-foreground">
-                        Принятие КП создаёт заказ и подтверждает организацию.
+                        {t("Принятие КП создаёт заказ и подтверждает организацию.")}
                       </p>
                       <div className="flex flex-wrap gap-3">
                         <Button
@@ -282,13 +284,13 @@ function RequestDetailPage() {
 
               {invoicePublished ? (
                 <section className="rounded-2xl border border-border bg-card p-5">
-                  <h2 className="font-semibold">Счёт</h2>
+                  <h2 className="font-semibold">{t("Счёт")}</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Статус: {invoice?.status}
                   </p>
                   {invoicePdfPending ? (
                     <p className="mt-4 text-sm text-muted-foreground">
-                      PDF готовится — обновите страницу через минуту.
+                      {t("PDF готовится — обновите страницу через минуту.")}
                     </p>
                   ) : (
                     <Button
@@ -297,7 +299,7 @@ function RequestDetailPage() {
                       onClick={() => void onDownloadInvoice()}
                     >
                       <Download className="h-4 w-4" />
-                      Скачать счёт
+                      {t("Скачать счёт")}
                     </Button>
                   )}
                 </section>

@@ -1,5 +1,6 @@
 ﻿import type { OptionGroupOut, ProductOptionOut } from "@/api/generated/schemas";
 import { formatAmount } from "@/lib/money";
+import { identityTranslate, type Translate } from "@/i18n/dictionaries";
 
 export type { OptionGroupOut, ProductOptionOut };
 
@@ -113,6 +114,7 @@ export type PriceSummary = {
 export function summarizeConfigPrice(
   basePrice: string | null | undefined,
   selected: ProductOptionOut[],
+  t: Translate = identityTranslate,
 ): PriceSummary {
   const parts: Array<string | null> = [basePrice ?? null];
   for (const opt of selected) {
@@ -124,7 +126,7 @@ export function summarizeConfigPrice(
     return {
       hasPriceless: true,
       totalAmount: null,
-      label: "Цена по запросу",
+      label: t("Цена по запросу"),
     };
   }
 

@@ -20,12 +20,14 @@ import {
 } from "@/features/service/status";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/service/requests/$requestId")({
   component: ServiceRequestDetailPage,
 });
 
 function ServiceRequestDetailPage() {
+  const t = useT();
   const { requestId } = Route.useParams();
 
   const detailQuery = useQuery({
@@ -39,7 +41,7 @@ function ServiceRequestDetailPage() {
 
   const sr = detailQuery.data;
   const tone = sr ? serviceStatusTone(sr.status) : "muted";
-  const timeline = sr ? buildServiceTimeline(sr.status) : [];
+  const timeline = sr ? buildServiceTimeline(sr.status, t) : [];
   const showComments =
     !!sr &&
     (sr.comments.length > 0 ||
@@ -57,7 +59,7 @@ function ServiceRequestDetailPage() {
         to="/service/requests"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />К заявкам
+        <ArrowLeft className="h-4 w-4" />{t("К заявкам")}
       </Link>
 
       <div className="mt-6">
@@ -73,10 +75,10 @@ function ServiceRequestDetailPage() {
               <header className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Сервисная заявка
+                    {t("Сервисная заявка")}
                   </p>
                   <h1 className="mt-1 font-display text-2xl font-bold">
-                    {sr.equipment_type || "Заявка"}
+                    {sr.equipment_type || t("Заявка")}
                   </h1>
                   <p className="mt-1 font-mono text-xs text-muted-foreground">
                     {sr.id}
@@ -86,12 +88,12 @@ function ServiceRequestDetailPage() {
                   </p>
                 </div>
                 <StatusPill tone={tone}>
-                  {serviceStatusLabel(sr.status)}
+                  {serviceStatusLabel(sr.status, t)}
                 </StatusPill>
               </header>
 
               <section className="rounded-3xl border border-border bg-card p-5">
-                <h2 className="font-semibold">Статус</h2>
+                <h2 className="font-semibold">{t("Статус")}</h2>
                 <ol className="mt-4 space-y-3">
                   {timeline.map((step) => (
                     <li key={step.key} className="flex items-start gap-3">
@@ -124,20 +126,20 @@ function ServiceRequestDetailPage() {
               </section>
 
               <section className="rounded-3xl border border-border bg-card p-5">
-                <h2 className="font-semibold">Оборудование и проблема</h2>
+                <h2 className="font-semibold">{t("Оборудование и проблема")}</h2>
                 <dl className="mt-4 space-y-3 text-sm">
-                  <Row label="Тип" value={sr.equipment_type || "—"} />
-                  <Row label="Модель" value={sr.model || "—"} />
-                  <Row label="Серийный номер" value={sr.serial_number || "—"} />
+                  <Row label={t("Тип")} value={sr.equipment_type || "—"} />
+                  <Row label={t("Модель")} value={sr.model || "—"} />
+                  <Row label={t("Серийный номер")} value={sr.serial_number || "—"} />
                   <Row
-                    label="Желаемая дата"
+                    label={t("Желаемая дата")}
                     value={
                       sr.desired_date ? formatServiceDate(sr.desired_date) : "—"
                     }
                   />
                   <div>
                     <dt className="text-xs font-semibold text-muted-foreground">
-                      Описание
+                      {t("Описание")}
                     </dt>
                     <dd className="mt-1 whitespace-pre-wrap leading-6">
                       {sr.description || "—"}
@@ -147,23 +149,23 @@ function ServiceRequestDetailPage() {
               </section>
 
               <section className="rounded-3xl border border-border bg-card p-5">
-                <h2 className="font-semibold">Контакты и адрес</h2>
+                <h2 className="font-semibold">{t("Контакты и адрес")}</h2>
                 <dl className="mt-4 space-y-3 text-sm">
-                  <Row label="Адрес" value={sr.address || "—"} />
-                  <Row label="Контакт" value={sr.contact_name || "—"} />
-                  <Row label="Телефон" value={sr.contact_phone || "—"} />
+                  <Row label={t("Адрес")} value={sr.address || "—"} />
+                  <Row label={t("Контакт")} value={sr.contact_name || "—"} />
+                  <Row label={t("Телефон")} value={sr.contact_phone || "—"} />
                   {sr.order_id ? (
-                    <Row label="Заказ" value={sr.order_id} mono />
+                    <Row label={t("Заказ")} value={sr.order_id} mono />
                   ) : null}
                 </dl>
               </section>
 
               <section className="rounded-3xl border border-border bg-card p-5">
-                <h2 className="font-semibold">Фото</h2>
+                <h2 className="font-semibold">{t("Фото")}</h2>
                 {sr.photo_urls.length === 0 ? (
                   <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                     <ImageIcon className="h-4 w-4" />
-                    Фото не приложены
+                    {t("Фото не приложены")}
                   </p>
                 ) : (
                   <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -177,7 +179,7 @@ function ServiceRequestDetailPage() {
                         >
                           <img
                             src={url}
-                            alt="Фото к заявке"
+                            alt={t("Фото к заявке")}
                             loading="lazy"
                             decoding="async"
                             className="aspect-square w-full object-cover"
@@ -193,7 +195,7 @@ function ServiceRequestDetailPage() {
                 <section className="rounded-3xl border border-border bg-card p-5">
                   <h2 className="flex items-center gap-2 font-semibold">
                     <MessageSquare className="h-4 w-4 text-primary" />
-                    Комментарии инженера
+                    {t("Комментарии инженера")}
                   </h2>
                   {sr.comments.length === 0 ? (
                     <p className="mt-3 text-sm text-muted-foreground">

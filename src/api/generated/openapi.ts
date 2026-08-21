@@ -2406,6 +2406,12 @@ export interface components {
         };
         /** CategoryOut */
         CategoryOut: {
+            /**
+             * Depth
+             * @description Уровень в дереве: 1 — корневая категория, 2 — подкатегория, 3 — подкатегория подкатегории. Глубже трёх не бывает. Считается сервером, чтобы клиенту не приходилось разбирать цепочку `parent_id` ради отступа в списке.
+             * @default 1
+             */
+            depth: number;
             /** Id */
             id: string;
             /**
@@ -2415,6 +2421,12 @@ export interface components {
             image_key: string;
             /** Is Active */
             is_active: boolean;
+            /**
+             * Name
+             * @description Название на языке запроса, с откатом на русский.
+             * @default
+             */
+            name: string;
             /** Name En */
             name_en: string;
             /** Name Ru */
@@ -2441,6 +2453,40 @@ export interface components {
             slug: string;
             /** Sort */
             sort: number;
+            /**
+             * Translations
+             * @description Все заведённые переводы. Языка нет в словаре — перевода нет.
+             */
+            translations?: {
+                [key: string]: components["schemas"]["CategoryTextOut"];
+            };
+        };
+        /** CategoryTextIn */
+        CategoryTextIn: {
+            /** Name */
+            name?: string | null;
+            /** Seo Description */
+            seo_description?: string | null;
+            /** Seo Title */
+            seo_title?: string | null;
+        };
+        /** CategoryTextOut */
+        CategoryTextOut: {
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Seo Description
+             * @default
+             */
+            seo_description: string;
+            /**
+             * Seo Title
+             * @default
+             */
+            seo_title: string;
         };
         /** CheckoutCartRequest */
         CheckoutCartRequest: {
@@ -2593,6 +2639,10 @@ export interface components {
              * @default 0
              */
             sort: number;
+            /** Translations */
+            translations?: {
+                [key: string]: components["schemas"]["CategoryTextIn"];
+            } | null;
         };
         /** CreateOptionGroupRequest */
         CreateOptionGroupRequest: {
@@ -2696,6 +2746,10 @@ export interface components {
             sku: string;
             /** Slug */
             slug: string;
+            /** Translations */
+            translations?: {
+                [key: string]: components["schemas"]["ProductTextIn"];
+            } | null;
             /**
              * Video Url
              * @default
@@ -3390,6 +3444,12 @@ export interface components {
             category_ids: string[];
             /** Country */
             country: string;
+            /**
+             * Description
+             * @description Описание на языке запроса, с откатом на русский.
+             * @default
+             */
+            description: string;
             /** Description Ru */
             description_ru: string;
             /** Documents */
@@ -3402,6 +3462,12 @@ export interface components {
             is_published: boolean;
             /** Manufacturer */
             manufacturer: string;
+            /**
+             * Name
+             * @description Название на языке запроса, с откатом на русский.
+             * @default
+             */
+            name: string;
             /** Name En */
             name_en: string;
             /** Name Ru */
@@ -3420,6 +3486,13 @@ export interface components {
             sku: string;
             /** Slug */
             slug: string;
+            /**
+             * Translations
+             * @description Все заведённые переводы. Языка нет в словаре — перевода нет.
+             */
+            translations?: {
+                [key: string]: components["schemas"]["ProductTextOut"];
+            };
             /**
              * Video Url
              * @default
@@ -3462,6 +3535,12 @@ export interface components {
             is_published: boolean;
             /** Manufacturer */
             manufacturer: string;
+            /**
+             * Name
+             * @description Название на языке запроса, с откатом на русский.
+             * @default
+             */
+            name: string;
             /** Name En */
             name_en: string;
             /** Name Ru */
@@ -3476,6 +3555,13 @@ export interface components {
             sku: string;
             /** Slug */
             slug: string;
+            /**
+             * Translations
+             * @description Все заведённые переводы. Языка нет в словаре — перевода нет.
+             */
+            translations?: {
+                [key: string]: components["schemas"]["ProductTextOut"];
+            };
         };
         /** ProductOptionOut */
         ProductOptionOut: {
@@ -3495,6 +3581,26 @@ export interface components {
             price: string | null;
             /** Sort */
             sort: number;
+        };
+        /** ProductTextIn */
+        ProductTextIn: {
+            /** Description */
+            description?: string | null;
+            /** Name */
+            name?: string | null;
+        };
+        /** ProductTextOut */
+        ProductTextOut: {
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
         };
         /** ProfileResponse */
         ProfileResponse: {
@@ -3885,6 +3991,10 @@ export interface components {
             slug?: string | null;
             /** Sort */
             sort?: number | null;
+            /** Translations */
+            translations?: {
+                [key: string]: components["schemas"]["CategoryTextIn"];
+            } | null;
         };
         /** UpdateOptionGroupRequest */
         UpdateOptionGroupRequest: {
@@ -3970,6 +4080,10 @@ export interface components {
             sku?: string | null;
             /** Slug */
             slug?: string | null;
+            /** Translations */
+            translations?: {
+                [key: string]: components["schemas"]["ProductTextIn"];
+            } | null;
             /** Video Url */
             video_url?: string | null;
         };
@@ -4143,8 +4257,13 @@ export type $defs = Record<string, never>;
 export interface operations {
     admin_list_categories_api_v1_admin_catalog_categories_get: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
+                lang?: string | null;
+            };
+            header?: {
+                "accept-language"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4471,8 +4590,12 @@ export interface operations {
                 is_published?: boolean | null;
                 cursor?: string | null;
                 limit?: number;
+                /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
+                lang?: string | null;
             };
-            header?: never;
+            header?: {
+                "accept-language"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4589,8 +4712,13 @@ export interface operations {
     };
     admin_get_product_api_v1_admin_catalog_products__product_id__get: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
+                lang?: string | null;
+            };
+            header?: {
+                "accept-language"?: string | null;
+            };
             path: {
                 product_id: string;
             };
@@ -8077,8 +8205,13 @@ export interface operations {
     };
     get_categories_api_v1_catalog_categories_get: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
+                lang?: string | null;
+            };
+            header?: {
+                "accept-language"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -8131,8 +8264,12 @@ export interface operations {
                 category_ids?: string[] | null;
                 cursor?: string | null;
                 limit?: number;
+                /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
+                lang?: string | null;
             };
-            header?: never;
+            header?: {
+                "accept-language"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -8166,8 +8303,13 @@ export interface operations {
     };
     get_product_api_v1_catalog_products__slug__get: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
+                lang?: string | null;
+            };
+            header?: {
+                "accept-language"?: string | null;
+            };
             path: {
                 slug: string;
             };

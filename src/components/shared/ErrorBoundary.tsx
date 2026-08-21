@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/LocaleProvider";
 
 type ErrorBoundaryProps = {
   children: ReactNode;
@@ -47,14 +48,15 @@ function ErrorFallback({
   error: Error | null;
   onReset: () => void;
 }) {
+  const t = useT();
   return (
     <div className="grid min-h-dvh place-items-center bg-background px-5">
       <div className="max-w-md text-center">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
-          Ошибка
+          {t("Ошибка")}
         </p>
         <h1 className="mt-2 font-display text-2xl font-bold">
-          Что-то пошло не так
+          {t("Что-то пошло не так")}
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Произошла непредвиденная ошибка. Попробуйте повторить или вернитесь на
@@ -67,13 +69,13 @@ function ErrorFallback({
         ) : null}
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button type="button" onClick={onReset}>
-            Повторить
+            {t("Повторить")}
           </Button>
           <Link
             to="/"
             className="inline-flex h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition hover:bg-secondary"
           >
-            На главную
+            {t("На главную")}
           </Link>
         </div>
       </div>

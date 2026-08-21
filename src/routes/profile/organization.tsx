@@ -9,8 +9,9 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/LocaleProvider";
 import {
-  CLIENT_TYPE_OPTIONS,
+  clientTypeOptions,
   verificationFieldsLabel,
 } from "@/features/profile/labels";
 
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/profile/organization")({
 });
 
 function ProfileOrganizationPage() {
+  const t = useT();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [organization, setOrganization] = useState("");
@@ -57,19 +59,21 @@ function ProfileOrganizationPage() {
         // Сервер не берёт профиль в проверку без этих полей — молча уводить
         // клиента на профиль значит повторить прежнюю немую заглушку.
         toast.warning(
-          `Сохранено. Для проверки не хватает: ${verificationFieldsLabel(stillMissing)}`,
+          t("Сохранено. Для проверки не хватает: {fields}", {
+            fields: verificationFieldsLabel(stillMissing, t),
+          }),
         );
         return;
       }
       if (saved.verification_status === "pending_verification") {
-        toast.success("Данные отправлены на проверку менеджеру");
+        toast.success(t("Данные отправлены на проверку менеджеру"));
       } else {
-        toast.success("Данные организации сохранены");
+        toast.success(t("Данные организации сохранены"));
       }
       await navigate({ to: "/profile" });
     },
     onError: (err) => {
-      toast.error(isAppError(err) ? err.message : "Не удалось сохранить");
+      toast.error(isAppError(err) ? err.message : t("Не удалось сохранить"));
     },
   });
 
@@ -79,16 +83,19 @@ function ProfileOrganizationPage() {
         to="/profile"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />К профилю
+        <ArrowLeft className="h-4 w-4" />{t("К профилю")}
       </Link>
-      <h1 className="mt-4 font-display text-2xl font-bold">Организация</h1>
+      <h1 className="mt-4 font-display text-2xl font-bold">{t("Организация")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Используются для верификации, счетов и договоров. Когда обязательные
-        поля заполнены, профиль уходит менеджеру на проверку.
+        {t(
+          "Используются для верификации, счетов и договоров. Когда обязательные поля заполнены, профиль уходит менеджеру на проверку.",
+        )}
       </p>
       {missing.length ? (
         <div className="mt-3 rounded-xl border border-warning/40 bg-warning-soft px-3 py-2 text-xs leading-5 text-warning-strong">
-          Для проверки не хватает: {verificationFieldsLabel(missing)}
+          {t("Для проверки не хватает: {fields}", {
+            fields: verificationFieldsLabel(missing, t),
+          })}
           {missing.includes("full_name") ? (
             // ФИО живёт на другой странице — иначе подсказка отправляет
             // искать поле, которого в этой форме нет.
@@ -98,7 +105,7 @@ function ProfileOrganizationPage() {
                 to="/profile/edit"
                 className="font-semibold underline underline-offset-2"
               >
-                ФИО указывается в личных данных →
+                {t("ФИО указывается в личных данных →")}
               </Link>
             </>
           ) : null}
@@ -120,13 +127,13 @@ function ProfileOrganizationPage() {
             }}
           >
             <label className="block">
-              <span className="text-sm font-semibold">Тип клиента</span>
+              <span className="text-sm font-semibold">{t("Тип клиента")}</span>
               <select
                 value={clientType}
                 onChange={(e) => setClientType(e.target.value)}
                 className="field-control mt-1.5"
               >
-                {CLIENT_TYPE_OPTIONS.map((opt) => (
+                {clientTypeOptions(t).map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
@@ -135,40 +142,40 @@ function ProfileOrganizationPage() {
             </label>
             <label className="block">
               <span className="text-sm font-semibold">
-                Название организации
+                {t("Название организации")}
                 {orgRequired ? <RequiredHint /> : null}
               </span>
               <input
                 value={organization}
                 onChange={(e) => setOrganization(e.target.value)}
                 className="field-control mt-1.5"
-                placeholder="Клиника «Авиценна»"
+                placeholder={t("Клиника «Авиценна»")}
                 autoComplete="organization"
               />
             </label>
             <label className="block">
               <span className="text-sm font-semibold">
-                Город
+                {t("Город")}
                 <RequiredHint />
               </span>
               <input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 className="field-control mt-1.5"
-                placeholder="Бишкек"
+                placeholder={t("Бишкек")}
                 autoComplete="address-level2"
               />
             </label>
             <label className="block">
               <span className="text-sm font-semibold">
-                Адрес
+                {t("Адрес")}
                 <RequiredHint />
               </span>
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="field-control mt-1.5 min-h-[88px] resize-y"
-                placeholder="ул. Чуй 154"
+                placeholder={t("ул. Чуй 154")}
                 autoComplete="street-address"
               />
             </label>
@@ -177,7 +184,7 @@ function ProfileOrganizationPage() {
               className="w-full"
               disabled={saveMutation.isPending}
             >
-              {saveMutation.isPending ? "Сохранение…" : "Сохранить"}
+              {saveMutation.isPending ? t("Сохранение…") : t("Сохранить")}
             </Button>
           </form>
         </StateBlock>
@@ -188,9 +195,10 @@ function ProfileOrganizationPage() {
 
 /** Поля, без которых менеджеру нечего проверять (п. 4.3 ТЗ). */
 function RequiredHint() {
+  const t = useT();
   return (
     <span className="ml-1 text-xs font-normal text-muted-foreground">
-      · нужно для проверки
+      {t("· нужно для проверки")}
     </span>
   );
 }

@@ -28,12 +28,16 @@ import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogCategoryIdRouteImport } from './routes/catalog/$categoryId'
 import { Route as EngineerIndexRouteImport } from './routes/engineer/index'
 import { Route as EngineerRequestIdRouteImport } from './routes/engineer/$requestId'
+import { Route as LegalAccountDeletionRouteImport } from './routes/legal/account-deletion'
+import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
+import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as NotificationsIndexRouteImport } from './routes/notifications/index'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders/$orderId'
 import { Route as PagesSlugRouteImport } from './routes/pages/$slug'
 import { Route as ProductSlugRouteImport } from './routes/product/$slug'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
+import { Route as ProfileDeleteRouteImport } from './routes/profile/delete'
 import { Route as ProfileEditRouteImport } from './routes/profile/edit'
 import { Route as ProfileOrganizationRouteImport } from './routes/profile/organization'
 import { Route as ProfileSecurityRouteImport } from './routes/profile/security'
@@ -170,6 +174,21 @@ const EngineerRequestIdRoute = EngineerRequestIdRouteImport.update({
   path: '/$requestId',
   getParentRoute: () => EngineerRouteRoute,
 } as any)
+const LegalAccountDeletionRoute = LegalAccountDeletionRouteImport.update({
+  id: '/legal/account-deletion',
+  path: '/legal/account-deletion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
+  id: '/legal/privacy',
+  path: '/legal/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalTermsRoute = LegalTermsRouteImport.update({
+  id: '/legal/terms',
+  path: '/legal/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NotificationsIndexRoute = NotificationsIndexRouteImport.update({
   id: '/notifications/',
   path: '/notifications/',
@@ -198,6 +217,11 @@ const ProductSlugRoute = ProductSlugRouteImport.update({
 const ProfileIndexRoute = ProfileIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => ProfileRouteRoute,
+} as any)
+const ProfileDeleteRoute = ProfileDeleteRouteImport.update({
+  id: '/delete',
+  path: '/delete',
   getParentRoute: () => ProfileRouteRoute,
 } as any)
 const ProfileEditRoute = ProfileEditRouteImport.update({
@@ -426,9 +450,13 @@ export interface FileRoutesByFullPath {
   '/cart/success': typeof CartSuccessRoute
   '/catalog/$categoryId': typeof CatalogCategoryIdRoute
   '/engineer/$requestId': typeof EngineerRequestIdRoute
+  '/legal/account-deletion': typeof LegalAccountDeletionRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/profile/delete': typeof ProfileDeleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/organization': typeof ProfileOrganizationRoute
   '/profile/security': typeof ProfileSecurityRoute
@@ -487,9 +515,13 @@ export interface FileRoutesByTo {
   '/cart/success': typeof CartSuccessRoute
   '/catalog/$categoryId': typeof CatalogCategoryIdRoute
   '/engineer/$requestId': typeof EngineerRequestIdRoute
+  '/legal/account-deletion': typeof LegalAccountDeletionRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/profile/delete': typeof ProfileDeleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/organization': typeof ProfileOrganizationRoute
   '/profile/security': typeof ProfileSecurityRoute
@@ -555,9 +587,13 @@ export interface FileRoutesById {
   '/cart/success': typeof CartSuccessRoute
   '/catalog/$categoryId': typeof CatalogCategoryIdRoute
   '/engineer/$requestId': typeof EngineerRequestIdRoute
+  '/legal/account-deletion': typeof LegalAccountDeletionRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/profile/delete': typeof ProfileDeleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/organization': typeof ProfileOrganizationRoute
   '/profile/security': typeof ProfileSecurityRoute
@@ -624,9 +660,13 @@ export interface FileRouteTypes {
     | '/cart/success'
     | '/catalog/$categoryId'
     | '/engineer/$requestId'
+    | '/legal/account-deletion'
+    | '/legal/privacy'
+    | '/legal/terms'
     | '/orders/$orderId'
     | '/pages/$slug'
     | '/product/$slug'
+    | '/profile/delete'
     | '/profile/edit'
     | '/profile/organization'
     | '/profile/security'
@@ -685,9 +725,13 @@ export interface FileRouteTypes {
     | '/cart/success'
     | '/catalog/$categoryId'
     | '/engineer/$requestId'
+    | '/legal/account-deletion'
+    | '/legal/privacy'
+    | '/legal/terms'
     | '/orders/$orderId'
     | '/pages/$slug'
     | '/product/$slug'
+    | '/profile/delete'
     | '/profile/edit'
     | '/profile/organization'
     | '/profile/security'
@@ -752,9 +796,13 @@ export interface FileRouteTypes {
     | '/cart/success'
     | '/catalog/$categoryId'
     | '/engineer/$requestId'
+    | '/legal/account-deletion'
+    | '/legal/privacy'
+    | '/legal/terms'
     | '/orders/$orderId'
     | '/pages/$slug'
     | '/product/$slug'
+    | '/profile/delete'
     | '/profile/edit'
     | '/profile/organization'
     | '/profile/security'
@@ -819,6 +867,9 @@ export interface RootRouteChildren {
   ServiceRequestsRouteRoute: typeof ServiceRequestsRouteRouteWithChildren
   CartSuccessRoute: typeof CartSuccessRoute
   CatalogCategoryIdRoute: typeof CatalogCategoryIdRoute
+  LegalAccountDeletionRoute: typeof LegalAccountDeletionRoute
+  LegalPrivacyRoute: typeof LegalPrivacyRoute
+  LegalTermsRoute: typeof LegalTermsRoute
   PagesSlugRoute: typeof PagesSlugRoute
   ProductSlugRoute: typeof ProductSlugRoute
   PromotionsSlugRoute: typeof PromotionsSlugRoute
@@ -965,6 +1016,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EngineerRequestIdRouteImport
       parentRoute: typeof EngineerRouteRoute
     }
+    '/legal/account-deletion': {
+      id: '/legal/account-deletion'
+      path: '/legal/account-deletion'
+      fullPath: '/legal/account-deletion'
+      preLoaderRoute: typeof LegalAccountDeletionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/privacy': {
+      id: '/legal/privacy'
+      path: '/legal/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof LegalPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/terms': {
+      id: '/legal/terms'
+      path: '/legal/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof LegalTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/notifications/': {
       id: '/notifications/'
       path: '/notifications'
@@ -1005,6 +1077,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/profile/'
       preLoaderRoute: typeof ProfileIndexRouteImport
+      parentRoute: typeof ProfileRouteRoute
+    }
+    '/profile/delete': {
+      id: '/profile/delete'
+      path: '/delete'
+      fullPath: '/profile/delete'
+      preLoaderRoute: typeof ProfileDeleteRouteImport
       parentRoute: typeof ProfileRouteRoute
     }
     '/profile/edit': {
@@ -1387,6 +1466,7 @@ const OrdersRouteRouteWithChildren = OrdersRouteRoute._addFileChildren(
 )
 
 interface ProfileRouteRouteChildren {
+  ProfileDeleteRoute: typeof ProfileDeleteRoute
   ProfileEditRoute: typeof ProfileEditRoute
   ProfileOrganizationRoute: typeof ProfileOrganizationRoute
   ProfileSecurityRoute: typeof ProfileSecurityRoute
@@ -1394,6 +1474,7 @@ interface ProfileRouteRouteChildren {
 }
 
 const ProfileRouteRouteChildren: ProfileRouteRouteChildren = {
+  ProfileDeleteRoute: ProfileDeleteRoute,
   ProfileEditRoute: ProfileEditRoute,
   ProfileOrganizationRoute: ProfileOrganizationRoute,
   ProfileSecurityRoute: ProfileSecurityRoute,
@@ -1447,6 +1528,9 @@ const rootRouteChildren: RootRouteChildren = {
   ServiceRequestsRouteRoute: ServiceRequestsRouteRouteWithChildren,
   CartSuccessRoute: CartSuccessRoute,
   CatalogCategoryIdRoute: CatalogCategoryIdRoute,
+  LegalAccountDeletionRoute: LegalAccountDeletionRoute,
+  LegalPrivacyRoute: LegalPrivacyRoute,
+  LegalTermsRoute: LegalTermsRoute,
   PagesSlugRoute: PagesSlugRoute,
   ProductSlugRoute: ProductSlugRoute,
   PromotionsSlugRoute: PromotionsSlugRoute,

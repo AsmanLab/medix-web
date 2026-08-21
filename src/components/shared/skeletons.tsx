@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 export function ListSkeleton({
   count = 4,
@@ -8,11 +9,12 @@ export function ListSkeleton({
   count?: number;
   className?: string;
 }) {
+  const t = useT();
   return (
     <ul
       className={cn("space-y-3", className)}
       aria-busy
-      aria-label="Загрузка списка"
+      aria-label={t("Загрузка списка")}
     >
       {Array.from({ length: count }, (_, i) => (
         <li key={i}>
@@ -34,6 +36,7 @@ export function CardGridSkeleton({
   variant?: CardGridSkeletonVariant;
   className?: string;
 }) {
+  const t = useT();
   if (variant === "product") {
     return (
       <ul
@@ -42,7 +45,7 @@ export function CardGridSkeleton({
           className,
         )}
         aria-busy
-        aria-label="Загрузка товаров"
+        aria-label={t("Загрузка товаров")}
       >
         {Array.from({ length: count }, (_, i) => (
           <li key={i} className="w-[260px] shrink-0 lg:w-auto">
@@ -63,7 +66,7 @@ export function CardGridSkeleton({
           className,
         )}
         aria-busy
-        aria-label="Загрузка каталога"
+        aria-label={t("Загрузка каталога")}
       >
         {Array.from({ length: count }, (_, i) => (
           <li key={i}>
@@ -92,7 +95,7 @@ export function CardGridSkeleton({
     <div
       className={cn("grid grid-cols-2 gap-3 lg:grid-cols-4", className)}
       aria-busy
-      aria-label="Загрузка категорий"
+      aria-label={t("Загрузка категорий")}
     >
       {Array.from({ length: count }, (_, i) => (
         <Skeleton key={i} className="min-h-[96px] rounded-2xl" />
@@ -102,11 +105,12 @@ export function CardGridSkeleton({
 }
 
 export function DetailSkeleton({ className }: { className?: string }) {
+  const t = useT();
   return (
     <div
       className={cn("space-y-6", className)}
       aria-busy
-      aria-label="Загрузка страницы"
+      aria-label={t("Загрузка страницы")}
     >
       <Skeleton className="h-4 w-28" />
       <div className="space-y-3">
@@ -121,6 +125,7 @@ export function DetailSkeleton({ className }: { className?: string }) {
 }
 
 export function BannerSkeleton({ className }: { className?: string }) {
+  const t = useT();
   return (
     <Skeleton
       className={cn(
@@ -128,7 +133,7 @@ export function BannerSkeleton({ className }: { className?: string }) {
         className,
       )}
       aria-busy
-      aria-label="Загрузка баннера"
+      aria-label={t("Загрузка баннера")}
     />
   );
 }

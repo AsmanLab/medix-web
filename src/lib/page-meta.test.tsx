@@ -1,4 +1,5 @@
-import { render, cleanup } from "@testing-library/react";
+import { cleanup } from "@testing-library/react";
+import { renderWithProviders as render } from "@/test/render";
 import { afterEach, describe, expect, it } from "vitest";
 import { usePageMeta, type PageMeta } from "@/lib/page-meta";
 

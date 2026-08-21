@@ -25,6 +25,7 @@ import {
   unpublishAdminProduct,
   updateAdminProduct,
   type ProductDetailOut,
+  type ProductTranslationsBody,
 } from "@/api/catalog";
 import {
   createOptionGroup,
@@ -51,10 +52,12 @@ import {
   parsePriceInput,
   productPriceAmount,
 } from "@/features/admin/product-price";
+import { LanguageTabs } from "@/features/admin/LanguageTabs";
 import {
   buildAdminCategoryTree,
   flattenCategoryTree,
 } from "@/features/catalog/map-category";
+import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/i18n/locales";
 import { slugifyCategoryName } from "@/features/catalog/slugify";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -64,6 +67,63 @@ type Tab = "main" | "price" | "images" | "documents" | "options";
 type ProductEditorProps = {
   productId?: string;
 };
+
+/** Тексты товара на одном языке. */
+type ProductText = { name: string; description: string };
+type ProductTexts = Record<Locale, ProductText>;
+
+function emptyProductTexts(): ProductTexts {
+  return Object.fromEntries(
+    LOCALES.map((locale) => [locale, { name: "", description: "" }]),
+  ) as ProductTexts;
+}
+
+/**
+ * Ответ API в состояние формы.
+ *
+ * Берём `translations`: в словаре есть языки, у которых плоского поля
+ * нет. На старом бэкенде словаря не будет — тогда работают `name_ru`
+ * и `description_ru`, и форма остаётся рабочей.
+ */
+function productTextsFromApi(product: ProductDetailOut): ProductTexts {
+  const result = emptyProductTexts();
+  for (const locale of LOCALES) {
+    const row = product.translations?.[locale];
+    if (row) {
+      result[locale] = {
+        name: row.name ?? "",
+        description: row.description ?? "",
+      };
+    }
+  }
+  if (!product.translations) {
+    result.ru = {
+      name: product.name_ru,
+      description: product.description_ru ?? "",
+    };
+    result.en = { ...result.en, name: product.name_en ?? "" };
+  }
+  return result;
+}
+
+/**
+ * Состояние формы в тело запроса.
+ *
+ * Отправляются **все** языки, включая опустевшие: пустой перевод — это
+ * команда «удалить», и сервер сам выбросит такую строку. Пропустить язык
+ * означало бы «не трогать», и стереть перевод стало бы нечем.
+ */
+function productTranslationsBody(texts: ProductTexts): ProductTranslationsBody {
+  return Object.fromEntries(
+    LOCALES.map((locale) => [
+      locale,
+      {
+        name: texts[locale].name.trim(),
+        description: texts[locale].description.trim(),
+      },
+    ]),
+  );
+}
 
 export function ProductEditor({ productId }: ProductEditorProps) {
   const navigate = useNavigate();
@@ -84,14 +144,18 @@ export function ProductEditor({ productId }: ProductEditorProps) {
 
   const existing = detailQuery.data ?? null;
 
-  const [nameRu, setNameRu] = useState("");
-  const [nameEn, setNameEn] = useState("");
+  /**
+   * Тексты по языкам — один объект вместо пары состояний на каждое поле.
+   * Иначе три языка × два поля дают шесть `useState`, и каждый новый язык
+   * добавлял бы ещё два.
+   */
+  const [texts, setTexts] = useState<ProductTexts>(emptyProductTexts);
+  const [lang, setLang] = useState<Locale>(DEFAULT_LOCALE);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [sku, setSku] = useState("");
   const [manufacturer, setManufacturer] = useState("");
   const [country, setCountry] = useState("");
-  const [descriptionRu, setDescriptionRu] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [availability, setAvailability] = useState("on_order");
@@ -102,14 +166,12 @@ export function ProductEditor({ productId }: ProductEditorProps) {
 
   useEffect(() => {
     if (!existing) return;
-    setNameRu(existing.name_ru);
-    setNameEn(existing.name_en ?? "");
+    setTexts(productTextsFromApi(existing));
     setSlug(existing.slug);
     setSlugTouched(true);
     setSku(existing.sku);
     setManufacturer(existing.manufacturer ?? "");
     setCountry(existing.country ?? "");
-    setDescriptionRu(existing.description_ru ?? "");
     setVideoUrl(existing.video_url ?? "");
     setCategoryIds(existing.category_ids ?? []);
     setAvailability(existing.availability || "on_order");
@@ -144,6 +206,17 @@ export function ProductEditor({ productId }: ProductEditorProps) {
   const categories = categoriesQuery.data ?? [];
 
   // Плоский список в порядке обхода дерева — с уровнем у каждой строки.
+  /** Языки, у которых хоть что-то введено, — для точек на вкладках. */
+  const filled = useMemo(
+    () =>
+      new Set(
+        LOCALES.filter((locale) =>
+          Object.values(texts[locale]).some((v) => v.trim()),
+        ),
+      ),
+    [texts],
+  );
+
   const categoryRows = useMemo(
     () => flattenCategoryTree(buildAdminCategoryTree(categories)),
     [categories],
@@ -164,13 +237,17 @@ export function ProductEditor({ productId }: ProductEditorProps) {
       }
       const body = {
         sku: sku.trim(),
-        name_ru: nameRu.trim(),
-        name_en: nameEn.trim(),
+        // Плоские поля — ради уже написанных клиентов (мобильное
+        // приложение читает `name_ru`/`name_en` с первого дня). Словарь
+        // `translations` несёт то же самое плюс языки без своих полей.
+        name_ru: texts.ru.name.trim(),
+        name_en: texts.en.name.trim(),
+        translations: productTranslationsBody(texts),
         slug: slug.trim(),
         category_ids: categoryIds,
         manufacturer: manufacturer.trim(),
         country: country.trim(),
-        description_ru: descriptionRu.trim(),
+        description_ru: texts.ru.description.trim(),
         video_url: videoUrl.trim(),
         availability,
         price_amount: parsedPrice,
@@ -345,9 +422,16 @@ export function ProductEditor({ productId }: ProductEditorProps) {
     },
   });
 
+  function setField(field: keyof ProductText, value: string) {
+    setTexts((prev) => ({ ...prev, [lang]: { ...prev[lang], [field]: value } }));
+  }
+
   function onNameChange(value: string) {
-    setNameRu(value);
-    if (!slugTouched) setSlug(slugifyCategoryName(value));
+    setField("name", value);
+    // Slug — только из русского названия: адрес товара один на все языки.
+    if (lang === DEFAULT_LOCALE && !slugTouched) {
+      setSlug(slugifyCategoryName(value));
+    }
   }
 
   function toggleCategory(id: string) {
@@ -382,7 +466,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-display text-2xl font-bold">
-              {isEdit ? nameRu || "Товар" : "Новый товар"}
+              {isEdit ? texts.ru.name || "Товар" : "Новый товар"}
             </h1>
             <span
               className={cn(
@@ -445,7 +529,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
           className="space-y-5 rounded-3xl border border-border bg-card p-5 sm:p-6"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!nameRu.trim() || !slug.trim() || !sku.trim()) {
+            if (!texts.ru.name.trim() || !slug.trim() || !sku.trim()) {
               toast.error("Укажите название, slug и SKU");
               return;
             }
@@ -454,23 +538,48 @@ export function ProductEditor({ productId }: ProductEditorProps) {
         >
           {tab === "main" ? (
             <div className="space-y-4">
-              <label className="block text-xs font-semibold">
-                Название (RU) *
-                <input
-                  required
-                  value={nameRu}
-                  onChange={(e) => onNameChange(e.target.value)}
-                  className="field-control mt-1.5"
-                />
-              </label>
-              <label className="block text-xs font-semibold">
-                Название (EN)
-                <input
-                  value={nameEn}
-                  onChange={(e) => setNameEn(e.target.value)}
-                  className="field-control mt-1.5"
-                />
-              </label>
+              {/*
+               * Название и описание — по языкам. Русский обязателен
+               * и служит откатом: непереведённый товар покажется
+               * на витрине по-русски, а не с пустым заголовком.
+               *
+               * Описание вместе с названием, а не отдельным полем внизу:
+               * переключив язык, человек должен видеть оба поля этого
+               * языка сразу, иначе половина перевода теряется из виду.
+               */}
+              <LanguageTabs active={lang} onChange={setLang} filled={filled}>
+                <label className="block text-xs font-semibold">
+                  {lang === DEFAULT_LOCALE ? "Название *" : "Название"}
+                  <input
+                    required={lang === DEFAULT_LOCALE}
+                    value={texts[lang].name}
+                    onChange={(e) => onNameChange(e.target.value)}
+                    placeholder={
+                      lang === DEFAULT_LOCALE ? undefined : texts.ru.name
+                    }
+                    className="field-control mt-1.5"
+                  />
+                  {lang !== DEFAULT_LOCALE ? (
+                    <span className="mt-1.5 block font-normal text-muted-foreground">
+                      Пусто — на витрине покажется русское название.
+                    </span>
+                  ) : null}
+                </label>
+
+                <label className="block text-xs font-semibold">
+                  Описание
+                  <textarea
+                    value={texts[lang].description}
+                    onChange={(e) => setField("description", e.target.value)}
+                    className="field-control mt-1.5 min-h-[220px] py-2 font-mono text-xs leading-6"
+                    placeholder={
+                      lang === DEFAULT_LOCALE ? DESCRIPTION_PLACEHOLDER : ""
+                    }
+                  />
+                </label>
+                <DescriptionFormatHint />
+                <DescriptionPreview text={texts[lang].description} />
+              </LanguageTabs>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs font-semibold">
                   Slug *
@@ -583,17 +692,6 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                 </span>
               </label>
 
-              <label className="block text-xs font-semibold">
-                Описание
-                <textarea
-                  value={descriptionRu}
-                  onChange={(e) => setDescriptionRu(e.target.value)}
-                  className="field-control mt-1.5 min-h-[220px] py-2 font-mono text-xs leading-6"
-                  placeholder={DESCRIPTION_PLACEHOLDER}
-                />
-              </label>
-              <DescriptionFormatHint />
-              <DescriptionPreview text={descriptionRu} />
             </div>
           ) : null}
 

@@ -1,3 +1,8 @@
+import { identityTranslate, type Translate } from "@/i18n/dictionaries";
+
+/** См. features/rfq/status.ts — тот же приём для меток статусов. */
+const identity = identityTranslate;
+
 export type OrderStatus =
   | "new"
   | "confirmed"
@@ -7,20 +12,20 @@ export type OrderStatus =
   | "cancelled"
   | string;
 
-export function orderStatusLabel(status: OrderStatus): string {
+export function orderStatusLabel(status: OrderStatus, t: Translate = identity): string {
   switch (status) {
     case "new":
-      return "Новый";
+      return t("Новый");
     case "confirmed":
-      return "Подтверждён";
+      return t("Подтверждён");
     case "processing":
-      return "В обработке";
+      return t("В обработке");
     case "shipped":
-      return "Отправлен";
+      return t("Отправлен");
     case "completed":
-      return "Завершён";
+      return t("Завершён");
     case "cancelled":
-      return "Отменён";
+      return t("Отменён");
     default:
       return status;
   }
@@ -52,24 +57,24 @@ export function orderStatusTone(
  * с русской подписью «Счёт» стояло английское «published» (medix-web#103
  * по бэкенду — Medix#88). Значения задаёт InvoiceStatus в домене.
  */
-export function invoiceStatusLabel(status: string): string {
+export function invoiceStatusLabel(status: string, t: Translate = identity): string {
   switch (status) {
     case "draft":
-      return "Черновик";
+      return t("Черновик");
     case "published":
-      return "Выставлен";
+      return t("Выставлен");
     default:
       return status;
   }
 }
 
-export function orderSourceLabel(source: string): string {
+export function orderSourceLabel(source: string, t: Translate = identity): string {
   switch (source) {
     case "from_rfq":
     case "rfq":
-      return "Из запроса КП";
+      return t("Из запроса КП");
     case "direct":
-      return "Прямой заказ";
+      return t("Прямой заказ");
     default:
       return source;
   }

@@ -1,5 +1,6 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState, type InputHTMLAttributes } from "react";
+import { useT } from "@/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 
 type PasswordInputProps = Omit<
@@ -30,6 +31,7 @@ export function PasswordInput({
   wrapperClassName,
   ...props
 }: PasswordInputProps) {
+  const t = useT();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -45,7 +47,7 @@ export function PasswordInput({
         // aria-pressed сообщает состояние тем, кто не видит иконку:
         // подпись меняется вместе с ним, поэтому дублирования нет.
         aria-pressed={visible}
-        aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
+        aria-label={visible ? t("Скрыть пароль") : t("Показать пароль")}
         className="absolute inset-y-0 end-0 grid w-11 place-items-center rounded-e-xl text-muted-foreground active:bg-secondary"
       >
         {visible ? (

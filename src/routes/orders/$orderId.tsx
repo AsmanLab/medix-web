@@ -30,12 +30,14 @@ import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
 import { orderLabel } from "@/features/orders/order-number";
 import { useRepeatOrder } from "@/features/orders/use-repeat-order";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/orders/$orderId")({
   component: OrderDetailPage,
 });
 
 function OrderDetailPage() {
+  const t = useT();
   const { orderId } = Route.useParams();
 
   const detailQuery = useQuery({
@@ -84,7 +86,7 @@ function OrderDetailPage() {
       window.open(res.download_url, "_blank", "noopener,noreferrer");
     } catch (err) {
       toast.error(
-        isAppError(err) ? err.message : "Счёт пока недоступен для скачивания",
+        isAppError(err) ? err.message : t("Счёт пока недоступен для скачивания"),
       );
     }
   }
@@ -95,7 +97,7 @@ function OrderDetailPage() {
         to="/orders"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />К заказам
+        <ArrowLeft className="h-4 w-4" />{t("К заказам")}
       </Link>
 
       <div className="mt-6">
@@ -111,7 +113,7 @@ function OrderDetailPage() {
               <header className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Заказ · {orderSourceLabel(order.source)}
+                    Заказ · {orderSourceLabel(order.source, t)}
                   </p>
                   <h1 className="mt-1 font-display text-2xl font-bold">
                     Заказ {orderLabel(order.id)}
@@ -123,12 +125,12 @@ function OrderDetailPage() {
                   </p>
                 </div>
                 <StatusPill tone={tone}>
-                  {orderStatusLabel(order.status)}
+                  {orderStatusLabel(order.status, t)}
                 </StatusPill>
               </header>
 
               <section className="rounded-2xl border border-border bg-card p-5">
-                <h2 className="font-semibold">Статус</h2>
+                <h2 className="font-semibold">{t("Статус")}</h2>
                 {history.length > 0 ? (
                   <ol className="mt-4 space-y-3">
                     {history.map((entry, index) => {
@@ -162,7 +164,7 @@ function OrderDetailPage() {
                                   : "text-foreground",
                               )}
                             >
-                              {orderStatusLabel(entry.status)}
+                              {orderStatusLabel(entry.status, t)}
                             </p>
                             <p className="mt-0.5 text-xs text-muted-foreground">
                               {formatRfqDate(entry.at)}
@@ -175,7 +177,7 @@ function OrderDetailPage() {
                 ) : (
                   <p className="mt-3 text-sm text-muted-foreground">
                     История статусов пока пуста. Текущий статус:{" "}
-                    {orderStatusLabel(order.status)}.
+                    {orderStatusLabel(order.status, t)}.
                   </p>
                 )}
               </section>
@@ -223,9 +225,9 @@ function OrderDetailPage() {
 
               {canDownloadInvoice ? (
                 <section className="rounded-2xl border border-border bg-card p-5">
-                  <h2 className="font-semibold">Документы</h2>
+                  <h2 className="font-semibold">{t("Документы")}</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Счёт · {invoiceStatusLabel(invoice?.status ?? "")}
+                    Счёт · {invoiceStatusLabel(invoice?.status ?? "", t)}
                   </p>
                   <Button
                     className="mt-4"
@@ -233,7 +235,7 @@ function OrderDetailPage() {
                     onClick={() => void onDownloadInvoice()}
                   >
                     <Download className="h-4 w-4" />
-                    Скачать счёт (PDF)
+                    {t("Скачать счёт (PDF)")}
                   </Button>
                 </section>
               ) : invoiceFailed ? (
@@ -250,7 +252,7 @@ function OrderDetailPage() {
                     size="sm"
                     onClick={() => void invoiceQuery.refetch()}
                   >
-                    Повторить
+                    {t("Повторить")}
                   </Button>
                 </section>
               ) : invoiceIsDraft ? (
@@ -265,12 +267,12 @@ function OrderDetailPage() {
                     size="sm"
                     onClick={() => void invoiceQuery.refetch()}
                   >
-                    Обновить
+                    {t("Обновить")}
                   </Button>
                 </section>
               ) : (
                 <section className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
-                  Счёт появится здесь после публикации менеджером.
+                  {t("Счёт появится здесь после публикации менеджером.")}
                 </section>
               )}
             </div>

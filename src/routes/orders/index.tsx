@@ -15,13 +15,15 @@ import {
 import { formatRfqDate } from "@/features/rfq/status";
 import { StatusPill } from "@/components/ui/status-pill";
 import { usePageMeta } from "@/lib/page-meta";
+import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/orders/")({
   component: OrdersListPage,
 });
 
 function OrdersListPage() {
-  usePageMeta({ title: "Мои заказы", description: null });
+  const t = useT();
+  usePageMeta({ title: t("Мои заказы"), description: null });
 
   const query = useQuery({
     queryKey: queryKeys.orders.list(),
@@ -37,9 +39,9 @@ function OrdersListPage() {
 
   return (
     <AppShell>
-      <h1 className="font-display text-3xl font-bold">Мои заказы</h1>
+      <h1 className="font-display text-3xl font-bold">{t("Мои заказы")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Статусы, позиции и счета после оформления
+        {t("Статусы, позиции и счета после оформления")}
       </p>
       <CommerceTabs active="orders" />
 
@@ -52,15 +54,15 @@ function OrdersListPage() {
           onRetry={() => void query.refetch()}
           loadingVariant="list"
           emptyIcon={Package}
-          emptyTitle="Заказов пока нет"
-          emptyDescription="После принятия КП заказ создаётся автоматически. Либо оформите прямой заказ из корзины, если организация подтверждена и у позиций есть цены."
+          emptyTitle={t("Заказов пока нет")}
+          emptyDescription={t("После принятия КП заказ создаётся автоматически. Либо оформите прямой заказ из корзины, если организация подтверждена и у позиций есть цены.")}
           emptyAction={
             <Link
               to="/catalog"
               search={{ q: undefined }}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
             >
-              В каталог <ArrowRight className="h-4 w-4" />
+              {t("В каталог")} <ArrowRight className="h-4 w-4" />
             </Link>
           }
         >
@@ -76,7 +78,7 @@ function OrdersListPage() {
                   >
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        Заказ · {orderSourceLabel(order.source)}
+                        Заказ · {orderSourceLabel(order.source, t)}
                       </p>
                       <p className="mt-0.5 font-mono text-sm font-semibold">
                         {orderLabel(order.id)}
@@ -87,7 +89,7 @@ function OrdersListPage() {
                       </p>
                     </div>
                     <StatusPill tone={tone}>
-                      {orderStatusLabel(order.status)}
+                      {orderStatusLabel(order.status, t)}
                     </StatusPill>
                   </Link>
                 </li>

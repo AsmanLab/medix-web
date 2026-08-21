@@ -10,6 +10,7 @@ import {
   type CardGridSkeletonVariant,
 } from "@/components/shared/skeletons";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/LocaleProvider";
 
 export type LoadingVariant = "list" | "card-grid" | "detail" | "banner";
 
@@ -42,6 +43,7 @@ function resolveLoadingFallback(
   count: number,
   cardGridVariant: CardGridSkeletonVariant,
   cardGridClassName: string | undefined,
+  t: ReturnType<typeof useT>,
 ): ReactNode {
   switch (variant) {
     case "list":
@@ -65,7 +67,7 @@ function resolveLoadingFallback(
           role="status"
           aria-live="polite"
         >
-          Загрузка…
+          {t("Загрузка…")}
         </div>
       );
   }
@@ -85,10 +87,11 @@ export function StateBlock({
   emptyFallback,
   emptyIcon,
   emptyAction,
-  emptyTitle = "Пока пусто",
-  emptyDescription = "Данные появятся после публикации.",
+  emptyTitle,
+  emptyDescription,
   children,
 }: StateBlockProps) {
+  const t = useT();
   if (isLoading) {
     return (
       <>
@@ -98,6 +101,7 @@ export function StateBlock({
             loadingCount,
             cardGridVariant,
             cardGridClassName,
+            t,
           )}
       </>
     );
@@ -106,7 +110,7 @@ export function StateBlock({
   if (isError) {
     const message = isAppError(error)
       ? error.message
-      : "Не удалось загрузить данные";
+      : t("Не удалось загрузить данные");
     const requestId = isAppError(error) ? error.requestId : undefined;
 
     return (
@@ -114,14 +118,14 @@ export function StateBlock({
         className="rounded-3xl border border-destructive/30 bg-card px-6 py-10 text-center"
         role="alert"
       >
-        <p className="font-semibold text-foreground">Ошибка загрузки</p>
+        <p className="font-semibold text-foreground">{t("Ошибка загрузки")}</p>
         <p className="mt-2 text-sm text-muted-foreground">{message}</p>
         {requestId ? (
           <p className="mt-1 text-xs text-muted-foreground">ID: {requestId}</p>
         ) : null}
         {onRetry ? (
           <Button className="mt-4" onClick={onRetry}>
-            Повторить
+            {t("Повторить")}
           </Button>
         ) : null}
       </div>
@@ -134,8 +138,8 @@ export function StateBlock({
         {emptyFallback ?? (
           <EmptyState
             icon={emptyIcon}
-            title={emptyTitle}
-            description={emptyDescription}
+            title={emptyTitle ?? t("Пока пусто")}
+            description={emptyDescription ?? t("Данные появятся после публикации.")}
             action={emptyAction}
           />
         )}

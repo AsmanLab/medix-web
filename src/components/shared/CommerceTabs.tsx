@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/LocaleProvider";
 
 type CommerceTabsProps = {
   active: "requests" | "orders";
@@ -7,11 +8,12 @@ type CommerceTabsProps = {
 
 /** Segmented control: My Requests / My Orders (#18/#19). */
 export function CommerceTabs({ active }: CommerceTabsProps) {
+  const t = useT();
   return (
     <div
       className="mt-5 grid grid-cols-2 rounded-xl border border-border bg-secondary/40 p-1"
       role="tablist"
-      aria-label="Заявки и заказы"
+      aria-label={t("Заявки и заказы")}
     >
       <Link
         to="/requests"
@@ -25,7 +27,7 @@ export function CommerceTabs({ active }: CommerceTabsProps) {
             : "text-muted-foreground hover:text-foreground",
         )}
       >
-        Заявки
+        {t("Заявки")}
       </Link>
       <Link
         to="/orders"
@@ -39,7 +41,7 @@ export function CommerceTabs({ active }: CommerceTabsProps) {
             : "text-muted-foreground hover:text-foreground",
         )}
       >
-        Заказы
+        {t("Заказы")}
       </Link>
     </div>
   );

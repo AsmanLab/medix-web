@@ -1,3 +1,5 @@
+import { identityTranslate, type Translate } from "@/i18n/dictionaries";
+
 /**
  * Наличие в тон статусной таблетки — по образцу `orderStatusTone` и соседей.
  *
@@ -17,14 +19,17 @@ export function availabilityTone(
   }
 }
 
-export function availabilityLabel(value: string): string {
+export function availabilityLabel(
+  value: string,
+  t: Translate = identityTranslate,
+): string {
   switch (value) {
     case "in_stock":
-      return "В наличии";
+      return t("В наличии");
     case "on_order":
-      return "Под заказ";
+      return t("Под заказ");
     case "out_of_stock":
-      return "Нет в наличии";
+      return t("Нет в наличии");
     default:
       return value;
   }

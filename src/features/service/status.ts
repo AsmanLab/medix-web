@@ -1,3 +1,8 @@
+import { identityTranslate, type Translate } from "@/i18n/dictionaries";
+
+/** См. features/rfq/status.ts — тот же приём для меток статусов. */
+const identity = identityTranslate;
+
 export type ServiceStatus =
   | "new"
   | "accepted"
@@ -9,24 +14,27 @@ export type ServiceStatus =
   | "cancelled"
   | string;
 
-export function serviceStatusLabel(status: ServiceStatus): string {
+export function serviceStatusLabel(
+  status: ServiceStatus,
+  t: Translate = identity,
+): string {
   switch (status) {
     case "new":
-      return "Новая";
+      return t("Новая");
     case "accepted":
-      return "Принята";
+      return t("Принята");
     case "assigned":
-      return "Назначен инженер";
+      return t("Назначен инженер");
     case "in_progress":
-      return "В работе";
+      return t("В работе");
     case "waiting_parts":
-      return "Ожидание запчастей";
+      return t("Ожидание запчастей");
     case "completed":
-      return "Выполнена";
+      return t("Выполнена");
     case "closed":
-      return "Закрыта";
+      return t("Закрыта");
     case "cancelled":
-      return "Отменена";
+      return t("Отменена");
     default:
       return status;
   }
@@ -60,11 +68,14 @@ export type TimelineStep = {
 };
 
 /** Synthetic timeline from current status (API has no history events). */
-export function buildServiceTimeline(status: ServiceStatus): TimelineStep[] {
+export function buildServiceTimeline(
+  status: ServiceStatus,
+  t: Translate = identity,
+): TimelineStep[] {
   if (status === "cancelled") {
     return [
-      { key: "new", label: "Новая", state: "done" },
-      { key: "cancelled", label: "Отменена", state: "active" },
+      { key: "new", label: t("Новая"), state: "done" },
+      { key: "cancelled", label: t("Отменена"), state: "active" },
     ];
   }
 
@@ -78,12 +89,12 @@ export function buildServiceTimeline(status: ServiceStatus): TimelineStep[] {
   ] as const;
 
   const labels: Record<(typeof flow)[number], string> = {
-    new: "Новая",
-    accepted: "Принята",
-    assigned: "Инженер назначен",
-    in_progress: "В работе",
-    completed: "Выполнена",
-    closed: "Закрыта",
+    new: t("Новая"),
+    accepted: t("Принята"),
+    assigned: t("Инженер назначен"),
+    in_progress: t("В работе"),
+    completed: t("Выполнена"),
+    closed: t("Закрыта"),
   };
 
   let mapped: (typeof flow)[number] | null =
@@ -109,7 +120,7 @@ export function buildServiceTimeline(status: ServiceStatus): TimelineStep[] {
     if (idx >= 0) {
       steps.splice(idx + 1, 0, {
         key: "waiting_parts",
-        label: "Ожидание запчастей",
+        label: t("Ожидание запчастей"),
         state: "active",
       });
       steps[idx] = { ...steps[idx], state: "done" };

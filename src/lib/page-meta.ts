@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useT } from "@/i18n/LocaleProvider";
 
 const SITE_NAME = "Medix International";
 
@@ -40,11 +41,12 @@ export type PageMeta = {
  * нужна другая архитектура — она за рамками договора.
  */
 export function usePageMeta({ title, description }: PageMeta) {
+  const t = useT();
   useEffect(() => {
     const previousTitle = document.title;
 
     document.title = title ? `${title} — ${SITE_NAME}` : SITE_NAME;
-    const text = description?.trim() || DEFAULT_DESCRIPTION;
+    const text = description?.trim() || t(DEFAULT_DESCRIPTION);
     setMeta("name", "description", text);
     setMeta("property", "og:title", document.title);
     setMeta("property", "og:description", text);
@@ -52,5 +54,5 @@ export function usePageMeta({ title, description }: PageMeta) {
     return () => {
       document.title = previousTitle;
     };
-  }, [title, description]);
+  }, [title, description, t]);
 }

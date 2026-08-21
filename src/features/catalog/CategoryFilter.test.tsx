@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { renderWithProviders as render } from "@/test/render";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CategoryFilter } from "@/features/catalog/CategoryFilter";
 import type { CatalogCategoryNode } from "@/features/catalog/map-category";
