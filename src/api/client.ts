@@ -67,7 +67,10 @@ async function singleFlightRefresh(): Promise<string | null> {
 function buildUrl(path: string, query?: ApiRequestOptions["query"]): string {
   const base = getApiBaseUrl().replace(/\/$/, "");
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const url = new URL(`${base}${normalizedPath}`);
+  // На проде base относительный ("/api/v1" — см. app/env.ts), поэтому URL
+  // резолвится относительно текущего origin; для абсолютного base (локальная
+  // разработка) переданный origin игнорируется — new URL так и работает.
+  const url = new URL(`${base}${normalizedPath}`, window.location.origin);
   // Язык — ко всем запросам без исключения, а не только к каталогу.
   // Ручки, которым он не нужен, лишний параметр игнорируют, а вот
   // перечислять «переводимые» руками означало бы забыть новую.
