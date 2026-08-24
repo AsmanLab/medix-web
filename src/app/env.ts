@@ -1,9 +1,15 @@
 import { z } from "zod";
 
 const envSchema = z.object({
+  // На проде витрина и API на одном домене (см. docker-compose.prod.yml),
+  // поэтому адрес задаётся относительным путём вида "/api/v1" — z.url()
+  // такое отклоняет, т.к. ждёт абсолютный URL с протоколом.
   VITE_PUBLIC_API_BASE_URL: z
     .string()
-    .url()
+    .refine(
+      (value) => value.startsWith("/") || z.url().safeParse(value).success,
+      { message: "Must be an absolute URL or a path starting with '/'" },
+    )
     .default("http://localhost:8000/api/v1"),
 });
 
