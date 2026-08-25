@@ -130,8 +130,13 @@ function BlockView({
       );
 
     case "text_image":
+      // items-center растягивал бы фото по высоте текста, если бы не aspect-video
+      // на BlockImage — с ним получалось наоборот: короткое фото своей высоты
+      // рядом с текстом произвольной длины. lg:items-stretch + lg:h-full убирают
+      // это рассогласование на десктопе; на мобильном (колонки друг под другом)
+      // возвращаем aspect-video, там конкурировать высоте не с чем.
       return (
-        <div className="grid items-center gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
           <div className={block.imageSide === "left" ? "lg:order-2" : ""}>
             <TextChunks text={block.text} />
           </div>
@@ -139,7 +144,10 @@ function BlockView({
             src={urls[block.key]}
             alt={block.alt}
             loading={imagesLoading}
-            className={cn("aspect-video", block.imageSide === "left" ? "lg:order-1" : "")}
+            className={cn(
+              "aspect-video lg:aspect-auto lg:h-full lg:min-h-64",
+              block.imageSide === "left" ? "lg:order-1" : "",
+            )}
           />
         </div>
       );
