@@ -37,7 +37,7 @@ function CmsSlugPage() {
   });
 
   return (
-    <AppShell>
+    <AppShell width="content">
       <StateBlock
         isLoading={query.isLoading}
         isError={query.isError && !notFound}

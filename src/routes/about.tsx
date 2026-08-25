@@ -34,7 +34,7 @@ function AboutPage() {
     query.isError && isAppError(query.error) && query.error.status === 404;
 
   return (
-    <AppShell>
+    <AppShell width="content">
       <StateBlock
         isLoading={query.isLoading}
         isError={query.isError && !notFound}
