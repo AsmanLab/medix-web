@@ -58,6 +58,18 @@ export async function fetchMediaDownloadUrl(
   }
 }
 
+/**
+ * Прямой URL картинки для `<img src>` внутри сохранённого HTML (см.
+ * `blocksToHtml`). Умышленно НЕ через `getApiBaseUrl()`: в dev он абсолютный
+ * (`http://localhost:8000/api/v1`) и такой адрес, сохранённый в БД со стенда
+ * разработчика, был бы битым на проде. Путь всегда относительный — на проде
+ * витрина и API на одном домене (nginx проксирует `/api`), в dev так же
+ * проксирует Vite (`vite.config.ts`).
+ */
+export function mediaRawUrl(key: string): string {
+  return `/api/v1/media/${encodeURI(key)}/raw`;
+}
+
 export function requestMediaUpload(input: {
   purpose: MediaUploadPurpose;
   filename: string;

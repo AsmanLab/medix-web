@@ -5,8 +5,11 @@ import { fetchCmsPage } from "@/api/cms";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
-import { CmsHtml } from "@/features/cms/CmsHtml";
+import { CmsPageBody } from "@/features/cms/CmsPageBody";
+import { findSitePage } from "@/features/cms/site-pages";
 import { usePageMeta } from "@/lib/page-meta";
+
+const ABOUT_SLUG = findSitePage("about")!.slug;
 import { useT } from "@/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/about")({
@@ -18,8 +21,8 @@ function AboutPage() {
   usePageMeta({ title: t("О компании"), description: null });
 
   const query = useQuery({
-    queryKey: queryKeys.cms.page("about"),
-    queryFn: ({ signal }) => fetchCmsPage("about", signal),
+    queryKey: queryKeys.cms.page(ABOUT_SLUG),
+    queryFn: ({ signal }) => fetchCmsPage(ABOUT_SLUG, signal),
     retry: (count, err: unknown) => {
       if (isAppError(err) && err.status === 404) return false;
       return count < 1;
@@ -67,7 +70,7 @@ function AboutPage() {
               {page.title || t("О компании")}
             </h1>
             <div className="mt-6 rounded-3xl border border-border bg-card p-5 sm:p-8">
-              <CmsHtml html={page.body_html} />
+              <CmsPageBody bodyHtml={page.body_html} contentJson={page.content_json} />
             </div>
           </article>
         ) : null}

@@ -5,7 +5,7 @@ import { fetchCmsPage } from "@/api/cms";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
-import { CmsHtml } from "@/features/cms/CmsHtml";
+import { CmsPageBody } from "@/features/cms/CmsPageBody";
 import { usePageMeta } from "@/lib/page-meta";
 import { useT } from "@/i18n/LocaleProvider";
 
@@ -61,7 +61,7 @@ function CmsSlugPage() {
           <article>
             <h1 className="font-display text-3xl font-bold">{page.title}</h1>
             <div className="mt-6 rounded-3xl border border-border bg-card p-5 sm:p-8">
-              <CmsHtml html={page.body_html} />
+              <CmsPageBody bodyHtml={page.body_html} contentJson={page.content_json} />
             </div>
           </article>
         ) : null}
