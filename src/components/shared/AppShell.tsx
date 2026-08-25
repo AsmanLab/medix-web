@@ -437,12 +437,18 @@ function NotificationsBell({
  *
  * `account` — узкие экраны кабинета (списки в одну колонку, формы).
  * `storefront` — витрина. `wide` — страницы, которым нужна вторая колонка,
- * но не вся ширина витрины: корзина с липким итогом.
+ * но не вся ширина витрины: корзина с липким итогом. `content` — длинный
+ * текст (CMS-страницы, юридические документы): на всей ширине storefront
+ * (1320px) абзац растягивается почти на всю строку, а блок «текст рядом
+ * с фото» из конструктора CMS даёт колонку фото ~630px против пары
+ * предложений текста — фото выглядит непропорционально большим, а вокруг
+ * короткого текста остаётся пустота.
  */
-type ContentWidth = "account" | "storefront" | "wide";
+type ContentWidth = "account" | "storefront" | "wide" | "content";
 
 const CONTENT_WIDTH: Record<ContentWidth, string> = {
   account: "max-w-[820px]",
+  content: "max-w-[880px]",
   wide: "max-w-[1100px]",
   storefront: "max-w-[1320px]",
 };
