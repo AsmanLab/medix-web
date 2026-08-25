@@ -22,7 +22,8 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { FormField } from "@/components/shared/FormField";
 import { Button } from "@/components/ui/button";
-import { CmsHtml } from "@/features/cms/CmsHtml";
+import { CmsPageBody, hasCmsContent } from "@/features/cms/CmsPageBody";
+import { findSitePage } from "@/features/cms/site-pages";
 import {
   createPhotoDraft,
   desiredDateToIso,
@@ -40,6 +41,8 @@ import { useT } from "@/i18n/LocaleProvider";
 export const Route = createFileRoute("/service/")({
   component: ServicePage,
 });
+
+const SERVICE_SLUG = findSitePage("service")!.slug;
 
 function serviceCards(t: ReturnType<typeof useT>) {
   return [
@@ -99,8 +102,8 @@ function ServicePage() {
   });
 
   const cmsQuery = useQuery({
-    queryKey: queryKeys.cms.page("service"),
-    queryFn: ({ signal }) => fetchCmsPage("service", signal),
+    queryKey: queryKeys.cms.page(SERVICE_SLUG),
+    queryFn: ({ signal }) => fetchCmsPage(SERVICE_SLUG, signal),
     retry: (count, err: unknown) => {
       if (isAppError(err) && err.status === 404) return false;
       return count < 1;
@@ -254,13 +257,16 @@ function ServicePage() {
         </div>
       </section>
 
-      {cmsQuery.data?.body_html ? (
+      {hasCmsContent(cmsQuery.data) ? (
         <section className="mt-8 rounded-3xl border border-border bg-card p-5 sm:p-7">
           <h2 className="font-display text-xl font-bold">
-            {cmsQuery.data.title || t("О сервисе")}
+            {cmsQuery.data?.title || t("О сервисе")}
           </h2>
           <div className="mt-4">
-            <CmsHtml html={cmsQuery.data.body_html} />
+            <CmsPageBody
+              bodyHtml={cmsQuery.data?.body_html ?? ""}
+              contentJson={cmsQuery.data?.content_json}
+            />
           </div>
         </section>
       ) : null}

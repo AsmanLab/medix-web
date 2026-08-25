@@ -1,6 +1,19 @@
 {
   "components": {
     "schemas": {
+      "AccountDeleteRequest": {
+        "properties": {
+          "password": {
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "AccountDeleteRequest",
+        "type": "object"
+      },
       "AddCartItemRequest": {
         "description": "Сконфигурированный товар целиком: сам товар, количество и выбранные опции.\n\nСвязи между позициями клиент не строит — сервер сам создаёт базовую строку,\nстроки опций и проставляет им parent_line_id.",
         "examples": [
@@ -214,6 +227,21 @@
           "body_html": {
             "title": "Body Html",
             "type": "string"
+          },
+          "content_json": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Json"
           },
           "seo_description": {
             "title": "Seo Description",
@@ -818,6 +846,21 @@
             "title": "Body Html",
             "type": "string"
           },
+          "content_json": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Json"
+          },
           "seo_description": {
             "title": "Seo Description",
             "type": "string"
@@ -1108,6 +1151,21 @@
             "default": "",
             "title": "Body Html",
             "type": "string"
+          },
+          "content_json": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Json"
           },
           "seo_description": {
             "default": "",
@@ -4503,7 +4561,7 @@
         "type": "object"
       },
       "UpdatePageBody": {
-        "description": "Частичное обновление. Раньше сюда принимался сырой dict и любое совпавшее\nпо имени поле писалось в ORM-модель через setattr — включая те, которые\nменять не полагается.\n\nexclude_unset в обработчике отличает «поле не прислали» от «прислали пустую\nстроку», поэтому очистить текст по-прежнему можно.",
+        "description": "Частичное обновление. Раньше сюда принимался сырой dict и любое совпавшее\nпо имени поле писалось в ORM-модель через setattr — включая те, которые\nменять не полагается.\n\nexclude_unset в обработчике отличает «поле не прислали» от «прислали пустую\nстроку», поэтому очистить текст по-прежнему можно. content_json — плоское\nполе (list[dict], не вложенная модель), так что exclude_unset не рекурсирует\nв него и не теряет часть содержимого блоков.",
         "properties": {
           "body_html": {
             "anyOf": [
@@ -4515,6 +4573,21 @@
               }
             ],
             "title": "Body Html"
+          },
+          "content_json": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Json"
           },
           "seo_description": {
             "anyOf": [
@@ -17138,6 +17211,52 @@
         ]
       }
     },
+    "/api/v1/media/{key}/raw": {
+      "get": {
+        "description": "Отдаёт байты напрямую через редирект на presigned-ссылку.\n\n`/download` возвращает JSON — им ничего не отрисовать в `<img src>`\nнапрямую. Нужен, когда HTML собирается один раз и сохраняется (CMS-блоки\n→ `body_html`): presigned-ссылка живёт час, а сохранённый HTML должен\nоткрываться и через месяц. 307, а не 301/302 — ссылка каждый раз новая\nи не должна кэшироваться прокси как постоянный редирект.",
+        "operationId": "redirect_to_media_api_v1_media__key__raw_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Редирект на объект — для <img src>",
+        "tags": [
+          "media"
+        ]
+      }
+    },
     "/api/v1/notifications": {
       "get": {
         "description": "Центр уведомлений (Б14). Возвращает последние 50 с badge (unread_count).",
@@ -18156,6 +18275,127 @@
       }
     },
     "/api/v1/profile": {
+      "delete": {
+        "description": "Самоудаление аккаунта клиентом (App Store 5.1.1(v) / Play Data safety).\n\nОбезличивает пользователя, а не удаляет строку физически — заказы и\nсчета обязаны пережить аккаунт (бухгалтерский учёт). Подробности —\nв `delete_own_account_use_case`.",
+        "operationId": "delete_account_api_v1_profile_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Удалить свой аккаунт",
+        "tags": [
+          "customers"
+        ]
+      },
       "get": {
         "description": "Возвращает профиль текущего авторизованного клиента.",
         "operationId": "get_profile_api_v1_profile_get",

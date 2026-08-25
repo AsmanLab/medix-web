@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Plus } from "lucide-react";
-import { listAdminCmsPages } from "@/api/cms-admin";
+import { listAdminCmsPages, type AdminCmsPageListItem } from "@/api/cms-admin";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
+import { SITE_PAGES } from "@/features/cms/site-pages";
 import { requireStaffPanel } from "@/session/guards";
 import { cn } from "@/lib/utils";
 
@@ -13,11 +14,73 @@ export const Route = createFileRoute("/admin/cms/pages/")({
   component: CmsPagesListPage,
 });
 
+function statusPill(status: string) {
+  return (
+    <span
+      className={cn(
+        "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase",
+        status === "published"
+          ? "bg-success-soft text-success-strong"
+          : "bg-warning-soft text-warning-strong",
+      )}
+    >
+      {status === "published" ? "Published" : "Draft"}
+    </span>
+  );
+}
+
+function SitePagesSection({ pages }: { pages: AdminCmsPageListItem[] }) {
+  return (
+    <section className="space-y-3">
+      <h2 className="text-sm font-bold text-muted-foreground">Страницы сайта</h2>
+      <ul className="divide-y divide-border rounded-3xl border border-border bg-card">
+        {SITE_PAGES.map((site) => {
+          const existing = pages.find((p) => p.slug === site.slug);
+          return (
+            <li
+              key={site.slug}
+              className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+            >
+              <div>
+                <div className="font-semibold">{site.title}</div>
+                <div className="text-xs text-muted-foreground">{site.hint}</div>
+              </div>
+              <div className="flex items-center gap-3">
+                {existing ? statusPill(existing.status) : null}
+                {existing ? (
+                  <Link
+                    to="/admin/cms/pages/$slug"
+                    params={{ slug: site.slug }}
+                    className="text-sm font-semibold text-primary"
+                  >
+                    Редактировать
+                  </Link>
+                ) : (
+                  <Link
+                    to="/admin/cms/pages/new"
+                    search={{ slug: site.slug }}
+                    className="text-sm font-semibold text-primary"
+                  >
+                    Заполнить
+                  </Link>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function CmsPagesListPage() {
   const listQuery = useQuery({
     queryKey: queryKeys.cms.adminPages(),
     queryFn: ({ signal }) => listAdminCmsPages(signal),
   });
+
+  const knownSlugs = new Set(SITE_PAGES.map((p) => p.slug));
+  const otherPages = (listQuery.data ?? []).filter((p) => !knownSlugs.has(p.slug));
 
   return (
     <div className="space-y-6">
@@ -32,7 +95,7 @@ function CmsPagesListPage() {
               <Link to="/admin/cms" className="text-primary">
                 CMS
               </Link>{" "}
-              · редактирование HTML и SEO
+              · содержимое и SEO
             </p>
           </div>
         </div>
@@ -49,37 +112,35 @@ function CmsPagesListPage() {
         isError={listQuery.isError}
         error={listQuery.error}
         onRetry={() => void listQuery.refetch()}
-        isEmpty={listQuery.isSuccess && (listQuery.data?.length ?? 0) === 0}
-        emptyTitle="Нет страниц"
       >
-        <ul className="divide-y divide-border rounded-3xl border border-border bg-card">
-          {(listQuery.data ?? []).map((page) => (
-            <li key={page.slug}>
-              <Link
-                to="/admin/cms/pages/$slug"
-                params={{ slug: page.slug }}
-                className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-secondary/40"
-              >
-                <div>
-                  <div className="font-semibold">{page.title}</div>
-                  <div className="font-mono text-xs text-muted-foreground">
-                    /{page.slug}
-                  </div>
-                </div>
-                <span
-                  className={cn(
-                    "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase",
-                    page.status === "published"
-                      ? "bg-success-soft text-success-strong"
-                      : "bg-warning-soft text-warning-strong",
-                  )}
-                >
-                  {page.status === "published" ? "Published" : "Draft"}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="space-y-6">
+          <SitePagesSection pages={listQuery.data ?? []} />
+
+          {otherPages.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="text-sm font-bold text-muted-foreground">Другие страницы</h2>
+              <ul className="divide-y divide-border rounded-3xl border border-border bg-card">
+                {otherPages.map((page) => (
+                  <li key={page.slug}>
+                    <Link
+                      to="/admin/cms/pages/$slug"
+                      params={{ slug: page.slug }}
+                      className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-secondary/40"
+                    >
+                      <div>
+                        <div className="font-semibold">{page.title}</div>
+                        <div className="font-mono text-xs text-muted-foreground">
+                          /{page.slug}
+                        </div>
+                      </div>
+                      {statusPill(page.status)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </div>
       </StateBlock>
     </div>
   );

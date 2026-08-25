@@ -12,6 +12,7 @@ export type AdminCmsPage = {
   slug: string;
   title: string;
   body_html: string;
+  content_json: unknown;
   seo_title: string;
   seo_description: string;
   status: string;
@@ -36,6 +37,7 @@ export type CreatePageInput = {
   slug: string;
   title: string;
   body_html?: string;
+  content_json?: unknown;
   seo_title?: string;
   seo_description?: string;
   status?: string;
@@ -44,6 +46,7 @@ export type CreatePageInput = {
 export type UpdatePageInput = {
   title?: string;
   body_html?: string;
+  content_json?: unknown;
   seo_title?: string;
   seo_description?: string;
   status?: string;
@@ -107,6 +110,7 @@ export function createAdminCmsPage(body: CreatePageInput) {
       slug: body.slug,
       title: body.title,
       body_html: body.body_html ?? "",
+      content_json: body.content_json ?? null,
       seo_title: body.seo_title ?? "",
       seo_description: body.seo_description ?? "",
       status: body.status ?? "draft",

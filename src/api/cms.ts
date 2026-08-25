@@ -14,6 +14,7 @@ export type CmsPageOut = {
   slug: string;
   title: string;
   body_html: string;
+  content_json: unknown;
   seo_title: string;
   seo_description: string;
 };
