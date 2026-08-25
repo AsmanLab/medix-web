@@ -1,9 +1,5 @@
 import { getApiBaseUrl } from "@/app/env";
-import {
-  normalizeResponseError,
-  toAppError,
-  type AppError,
-} from "@/api/errors";
+import { normalizeResponseError, type AppError } from "@/api/errors";
 import { translate } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/locale-store";
 
@@ -35,7 +31,19 @@ export type ApiRequestOptions = {
    * CSV-отчёта — их отдаёт не JSON, и обычный путь вернул бы undefined.
    */
   responseType?: "json" | "blob";
+  /** Мс до принудительной отмены запроса. По умолчанию — `DEFAULT_TIMEOUT_MS`. */
+  timeoutMs?: number;
 };
+
+/**
+ * `fetch` без `signal` может зависнуть навсегда, если TCP-соединение
+ * тихо оборвалось (например nginx на проде держит upstream по устаревшему
+ * IP контейнера) — сервер не отвечает ни успехом, ни ошибкой. Без таймаута
+ * это выглядело как «кнопка навсегда заблокирована, помогает только
+ * перезагрузка страницы»: мутация, ждущая такой запрос, никогда не
+ * переходит из pending в error.
+ */
+const DEFAULT_TIMEOUT_MS = 20_000;
 
 type RefreshHandler = () => Promise<string | null>;
 type AccessTokenGetter = () => string | null;
@@ -106,7 +114,23 @@ export async function apiRequest<T>(options: ApiRequestOptions): Promise<T> {
     accessToken,
     retryOnUnauthorized = true,
     responseType = "json",
+    timeoutMs = DEFAULT_TIMEOUT_MS,
   } = options;
+
+  // Один контроллер на весь вызов (включая повтор после 401) — не по
+  // одному таймеру на попытку, иначе первая попытка могла бы отъедать
+  // весь бюджет и на повтор с новым токеном времени бы не осталось.
+  const controller = new AbortController();
+  const onExternalAbort = () => controller.abort(signal?.reason);
+  if (signal) {
+    if (signal.aborted) controller.abort(signal.reason);
+    else signal.addEventListener("abort", onExternalAbort);
+  }
+  const timeoutError = new DOMException(
+    t("Превышено время ожидания ответа сервера"),
+    "TimeoutError",
+  );
+  const timer = setTimeout(() => controller.abort(timeoutError), timeoutMs);
 
   const run = async (token: string | null | undefined): Promise<Response> => {
     const hdrs = new Headers(headers);
@@ -127,7 +151,7 @@ export async function apiRequest<T>(options: ApiRequestOptions): Promise<T> {
       method,
       headers: hdrs,
       body: requestBody,
-      signal,
+      signal: controller.signal,
       credentials: "include",
     });
   };
@@ -164,9 +188,32 @@ export async function apiRequest<T>(options: ApiRequestOptions): Promise<T> {
     return (await response.json()) as T;
   } catch (error) {
     if ((error as AppError)?.status) throw error;
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw toAppError(error, t("Запрос отменён"));
+    // Не через toAppError(): у DOMException/TypeError есть строковое
+    // `.message`, поэтому isAppError() внутри toAppError принимает их за
+    // уже нормализованную ошибку и возвращает как есть — сырое сообщение
+    // браузера вместо перевода ниже.
+    //
+    // Проверка по `.name`, а не `instanceof DOMException`: у abort-ошибки,
+    // которую бросает нативный AbortController, и у класса `DOMException`
+    // в текущей глобальной области могут быть разные реализации (это не
+    // гипотетика — именно так и выходит под jsdom в тестах), и `instanceof`
+    // между ними тихо не совпадает.
+    const name = (error as { name?: unknown } | null)?.name;
+    if (name === "TimeoutError") {
+      throw {
+        message: t("Превышено время ожидания ответа сервера"),
+        cause: error,
+      } satisfies AppError;
     }
-    throw toAppError(error, t("Не удалось выполнить запрос"));
+    if (name === "AbortError") {
+      throw { message: t("Запрос отменён"), cause: error } satisfies AppError;
+    }
+    // Тот же обход toAppError: сетевой сбой обычно приходит как TypeError
+    // ("Failed to fetch"), а у него тоже есть строковое `.message` —
+    // без обхода пользователь увидел бы этот сырой текст вместо перевода.
+    throw { message: t("Не удалось выполнить запрос"), cause: error } satisfies AppError;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", onExternalAbort);
   }
 }

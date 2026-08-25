@@ -1,5 +1,5 @@
 import { apiRequest } from "@/api/client";
-import { toAppError } from "@/api/errors";
+import { toAppError, type AppError } from "@/api/errors";
 import { translate } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/locale-store";
 
@@ -100,13 +100,20 @@ export async function uploadFileToPresignedUrl(
       body: file,
     });
   } catch (error) {
-    throw toAppError(error, t("Не удалось загрузить файл"));
+    // Не через toAppError(): у нативных Error/TypeError есть строковое
+    // `.message`, из-за чего isAppError() внутри toAppError принимает их
+    // за уже нормализованную ошибку и возвращает как есть — пользователь
+    // увидел бы сырое "Failed to fetch" вместо перевода (см. api/client.ts).
+    throw {
+      message: t("Не удалось загрузить файл"),
+      cause: error,
+    } satisfies AppError;
   }
   if (!response.ok) {
-    throw toAppError(
-      new Error(`Upload failed: ${response.status}`),
-      t("Не удалось загрузить файл в хранилище"),
-    );
+    throw {
+      message: t("Не удалось загрузить файл в хранилище"),
+      status: response.status,
+    } satisfies AppError;
   }
 }
 

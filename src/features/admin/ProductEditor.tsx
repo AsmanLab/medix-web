@@ -413,7 +413,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
   const reorderImageMutation = useMutation({
     mutationFn: (imageIds: string[]) =>
       reorderAdminProductImages(productId!, imageIds),
-    onSuccess: async (updated) => {
+    onSuccess: (updated) => {
       if (productId) {
         queryClient.setQueryData(
           queryKeys.catalog.adminProduct(productId),
@@ -421,7 +421,11 @@ export function ProductEditor({ productId }: ProductEditorProps) {
         );
       }
       setPendingImageOrder(null);
-      await invalidateAll();
+      // Без await: `isPending` (и обе стрелки, которые на него завязаны)
+      // не должны висеть заблокированными, пока идёт фоновая инвалидация
+      // смежных списков — карточка товара уже обновлена строкой выше,
+      // остальное можно перезапросить в фоне.
+      void invalidateAll();
     },
     onError: (err) => {
       setPendingImageOrder(null);

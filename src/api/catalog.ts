@@ -329,5 +329,8 @@ export function importCatalogFile(file: File) {
     method: "POST",
     path: "/admin/catalog/import",
     rawBody: form,
+    // Прайс-лист поставщика — сотни/тысячи строк, обрабатывается на сервере
+    // синхронно. Общий таймаут клиента (20с, см. api/client.ts) для него мал.
+    timeoutMs: 120_000,
   });
 }
