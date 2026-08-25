@@ -283,6 +283,18 @@ export function setAdminProductPrimaryImage(productId: string, imageId: string) 
   });
 }
 
+/**
+ * Порядок изображений товара. `imageIds` — id всех картинок товара, ни
+ * больше ни меньше, в желаемом порядке; сервер отклонит неполный список.
+ */
+export function reorderAdminProductImages(productId: string, imageIds: string[]) {
+  return apiRequest<ProductDetailOut>({
+    method: "POST",
+    path: `/admin/catalog/products/${encodeURIComponent(productId)}/images/reorder`,
+    body: { image_ids: imageIds },
+  });
+}
+
 export function attachAdminProductDocument(
   productId: string,
   body: { name: string; s3_key: string },

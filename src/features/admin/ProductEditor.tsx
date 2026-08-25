@@ -2,8 +2,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   FileText,
   ImagePlus,
+  Loader2,
   Plus,
   Save,
   Trash2,
@@ -21,6 +24,7 @@ import {
   fetchAdminCategories,
   fetchAdminProduct,
   publishAdminProduct,
+  reorderAdminProductImages,
   setAdminProductPrimaryImage,
   unpublishAdminProduct,
   updateAdminProduct,
@@ -123,6 +127,21 @@ function productTranslationsBody(texts: ProductTexts): ProductTranslationsBody {
       },
     ]),
   );
+}
+
+/** Тот же приём, что `moveBlock` у блоков CMS-страницы (см. BlockListEditor). */
+function moveImageId(
+  ids: string[],
+  id: string,
+  direction: "left" | "right",
+): string[] {
+  const index = ids.indexOf(id);
+  if (index === -1) return ids;
+  const target = direction === "left" ? index - 1 : index + 1;
+  if (target < 0 || target >= ids.length) return ids;
+  const next = [...ids];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
 }
 
 export function ProductEditor({ productId }: ProductEditorProps) {
@@ -312,32 +331,115 @@ export function ProductEditor({ productId }: ProductEditorProps) {
   const imageMutation = useMutation({
     mutationFn: async (files: File[]) => {
       if (!productId) throw new Error("save first");
-      let existingCount = existing?.images?.length ?? 0;
+      // Единственный кандидат в обложку — самый первый файл, если у товара
+      // ещё нет ни одного изображения. Дальше `attach` сам кладёт фото в
+      // конец списка (сортировку по `sort` больше не назначаем с клиента).
+      const isFirstImageEver = (existing?.images?.length ?? 0) === 0;
+      let uploaded = 0;
+      const failures: string[] = [];
       for (const file of files) {
-        const key = await uploadMediaFile("products", file);
-        await attachAdminProductImage(productId, {
-          s3_key: key,
-          is_primary: existingCount === 0,
-        });
-        existingCount += 1;
+        try {
+          // Один молчаливый повтор: транзиентная сетевая ошибка на одном
+          // файле из пачки иначе рвёт всю загрузку и остальные файлы вообще
+          // не пробуются — именно так выглядела «ошибка, а через несколько
+          // секунд всё равно всё загрузилось» (часть файлов долетала со
+          // второй попытки, но интерфейс уже показал общий провал).
+          let key: string;
+          try {
+            key = await uploadMediaFile("products", file);
+          } catch {
+            key = await uploadMediaFile("products", file);
+          }
+          await attachAdminProductImage(productId, {
+            s3_key: key,
+            is_primary: isFirstImageEver && uploaded === 0,
+          });
+          uploaded += 1;
+          // Обновляем список сразу после каждого файла — иначе при ошибке
+          // на одном из следующих файлов уже загруженные соседние не
+          // появлялись бы в галерее, пока страницу не перезагрузят руками.
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.catalog.adminProduct(productId),
+          });
+        } catch (err) {
+          failures.push(
+            `${file.name}: ${isAppError(err) ? err.message : "не удалось загрузить"}`,
+          );
+        }
       }
-      return files.length;
+      return { uploaded, failures };
     },
-    onSuccess: async (count) => {
+    onSuccess: async ({ uploaded, failures }) => {
       await invalidateAll();
-      if (productId) {
-        await queryClient.invalidateQueries({
-          queryKey: queryKeys.catalog.adminProduct(productId),
-        });
+      if (uploaded > 0) {
+        toast.success(
+          uploaded === 1 ? "Изображение добавлено" : `Добавлено фото: ${uploaded}`,
+        );
       }
-      toast.success(
-        count === 1 ? "Изображение добавлено" : `Добавлено фото: ${count}`,
-      );
+      if (failures.length > 0) {
+        toast.error(
+          `Не удалось загрузить (${failures.length}): ${failures.join("; ")}`,
+        );
+      }
     },
     onError: (err) => {
       toast.error(isAppError(err) ? err.message : "Не удалось загрузить фото");
     },
   });
+
+  /**
+   * Порядок фото — стрелками, как у блоков CMS-страницы (`BlockListEditor`).
+   * Список переставляется на экране сразу же, не дожидаясь ответа сервера:
+   * иначе каждый клик стрелкой ждал бы circle-trip и выглядел залипшим.
+   * `pendingImageOrder` держит этот черновой порядок, пока мутация летит.
+   */
+  const [pendingImageOrder, setPendingImageOrder] = useState<string[] | null>(
+    null,
+  );
+
+  // Если набор картинок изменился помимо перестановки (загрузили новое фото
+  // или удалили старое, пока черновой порядок ещё не сброшен) — черновик
+  // устарел и годится только запутать: список для reorder должен содержать
+  // ровно текущие изображения, иначе сервер его отклонит.
+  useEffect(() => {
+    if (!pendingImageOrder) return;
+    const currentIds = (existing?.images ?? []).map((img) => img.id);
+    const stillMatches =
+      currentIds.length === pendingImageOrder.length &&
+      currentIds.every((id) => pendingImageOrder.includes(id));
+    if (!stillMatches) setPendingImageOrder(null);
+  }, [existing, pendingImageOrder]);
+
+  const reorderImageMutation = useMutation({
+    mutationFn: (imageIds: string[]) =>
+      reorderAdminProductImages(productId!, imageIds),
+    onSuccess: async (updated) => {
+      if (productId) {
+        queryClient.setQueryData(
+          queryKeys.catalog.adminProduct(productId),
+          updated,
+        );
+      }
+      setPendingImageOrder(null);
+      await invalidateAll();
+    },
+    onError: (err) => {
+      setPendingImageOrder(null);
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось изменить порядок фото",
+      );
+    },
+  });
+
+  function moveImage(id: string, direction: "left" | "right") {
+    if (!productId) return;
+    const currentOrder =
+      pendingImageOrder ?? (existing?.images ?? []).map((img) => img.id);
+    const nextOrder = moveImageId(currentOrder, id, direction);
+    if (nextOrder === currentOrder) return;
+    setPendingImageOrder(nextOrder);
+    reorderImageMutation.mutate(nextOrder);
+  }
 
   const deleteImageMutation = useMutation({
     mutationFn: (imageId: string) =>
@@ -759,10 +861,14 @@ export function ProductEditor({ productId }: ProductEditorProps) {
               imageUrls={imageUrls}
               locked={mediaLocked}
               uploading={imageMutation.isPending}
+              uploadingCount={imageMutation.variables?.length ?? 0}
               onUpload={(files) => imageMutation.mutate(files)}
               onDelete={(id) => deleteImageMutation.mutate(id)}
               onMakePrimary={(id) => primaryImageMutation.mutate(id)}
               primaryPending={primaryImageMutation.isPending}
+              order={pendingImageOrder}
+              onMove={moveImage}
+              reorderPending={reorderImageMutation.isPending}
             />
           ) : null}
 
@@ -1179,21 +1285,39 @@ function ImagesPanel({
   imageUrls,
   locked,
   uploading,
+  uploadingCount,
   onUpload,
   onDelete,
   onMakePrimary,
   primaryPending,
+  order,
+  onMove,
+  reorderPending,
 }: {
   product: ProductDetailOut | null;
   imageUrls: Record<string, string>;
   locked: boolean;
   uploading: boolean;
+  /** Сколько файлов в текущей пачке — для плейсхолдеров со спиннером. */
+  uploadingCount: number;
   onUpload: (files: File[]) => void;
   onDelete: (id: string) => void;
   onMakePrimary: (id: string) => void;
   primaryPending: boolean;
+  /** Черновой порядок id во время перестановки — см. `pendingImageOrder`. */
+  order: string[] | null;
+  onMove: (id: string, direction: "left" | "right") => void;
+  reorderPending: boolean;
 }) {
   const images = product?.images ?? [];
+  // Пока летит перестановка, на экране — черновой порядок, а не то, что
+  // прислал сервер последним ответом: иначе клик стрелкой откатывался бы
+  // назад на долю секунды и потом снова прыгал вперёд.
+  const orderedImages = order
+    ? order
+        .map((id) => images.find((img) => img.id === id))
+        .filter((img): img is (typeof images)[number] => Boolean(img))
+    : images;
   return (
     <div className="space-y-4">
       {locked ? (
@@ -1201,8 +1325,17 @@ function ImagesPanel({
           Сохраните товар, чтобы загружать изображения.
         </p>
       ) : (
-        <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold">
-          <Upload className="h-4 w-4" aria-hidden />
+        <label
+          className={cn(
+            "inline-flex h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold",
+            uploading ? "cursor-wait opacity-80" : "cursor-pointer",
+          )}
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <Upload className="h-4 w-4" aria-hidden />
+          )}
           {uploading ? "Загрузка…" : "Загрузить фото"}
           <input
             type="file"
@@ -1219,7 +1352,7 @@ function ImagesPanel({
         </label>
       )}
       <div className="grid gap-3 sm:grid-cols-3">
-        {images.map((img) => (
+        {orderedImages.map((img, index) => (
           <div
             key={img.id}
             className="relative overflow-hidden rounded-2xl border border-border bg-muted"
@@ -1235,41 +1368,87 @@ function ImagesPanel({
                 <ImagePlus className="h-8 w-8 text-muted-foreground" />
               </div>
             )}
-            <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-[10px]">
+            <div className="flex items-center justify-between gap-1 px-2 py-1.5 text-[10px]">
               {/* Было «Primary» / «sort 2» — английские служебные подписи
                   в русской админке, которой пользуются сотрудники заказчика.
                   Тот же дефект, что «Pub»/«Draft» в списке товаров. */}
               <span
-                className={img.is_primary ? "font-semibold text-primary" : ""}
+                className={cn(
+                  "shrink-0",
+                  img.is_primary && "font-semibold text-primary",
+                )}
               >
-                {img.is_primary ? "Главное" : `Порядок ${img.sort}`}
+                {img.is_primary ? "Главное" : `${index + 1} из ${orderedImages.length}`}
               </span>
-              <span className="flex items-center gap-2">
-                {/* У главного изображения кнопки нет: нажимать её незачем,
-                    а её присутствие заставляло бы сверять подпись слева. */}
-                {!locked && !img.is_primary ? (
-                  <button
-                    type="button"
-                    className="font-semibold text-primary disabled:opacity-60"
-                    disabled={primaryPending}
-                    onClick={() => onMakePrimary(img.id)}
-                  >
-                    Сделать главным
-                  </button>
+              <span className="flex shrink-0 items-center gap-1.5">
+                {!locked ? (
+                  <>
+                    <button
+                      type="button"
+                      className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground disabled:opacity-30"
+                      disabled={reorderPending || index === 0}
+                      onClick={() => onMove(img.id, "left")}
+                      aria-label="Переместить раньше"
+                      title="Переместить раньше"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground disabled:opacity-30"
+                      disabled={reorderPending || index === orderedImages.length - 1}
+                      onClick={() => onMove(img.id, "right")}
+                      aria-label="Переместить позже"
+                      title="Переместить позже"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                  </>
                 ) : null}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 px-2 pb-1.5 text-[10px]">
+              {/* У главного изображения кнопки нет: нажимать её незачем,
+                  а её присутствие заставляло бы сверять подпись слева. */}
+              {!locked && !img.is_primary ? (
                 <button
                   type="button"
-                  className="font-semibold text-destructive"
-                  onClick={() => onDelete(img.id)}
+                  className="font-semibold text-primary disabled:opacity-60"
+                  disabled={primaryPending}
+                  onClick={() => onMakePrimary(img.id)}
                 >
-                  Удалить
+                  Сделать главным
                 </button>
-              </span>
+              ) : (
+                <span />
+              )}
+              <button
+                type="button"
+                className="font-semibold text-destructive"
+                onClick={() => onDelete(img.id)}
+              >
+                Удалить
+              </button>
             </div>
           </div>
         ))}
+        {/* Плейсхолдеры на время загрузки: без них решётка молчит, пока идёт
+            пачка из нескольких файлов, и не отличить загрузку от зависания. */}
+        {uploading
+          ? Array.from({ length: uploadingCount || 1 }).map((_, i) => (
+              <div
+                key={`uploading-${i}`}
+                className="grid aspect-square place-items-center rounded-2xl border border-dashed border-border bg-muted/40"
+              >
+                <Loader2
+                  className="h-6 w-6 animate-spin text-muted-foreground"
+                  aria-hidden
+                />
+              </div>
+            ))
+          : null}
       </div>
-      {!locked && images.length === 0 ? (
+      {!locked && images.length === 0 && !uploading ? (
         <p className="text-sm text-muted-foreground">Пока нет изображений.</p>
       ) : null}
     </div>
