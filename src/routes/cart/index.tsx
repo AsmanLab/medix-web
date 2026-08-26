@@ -14,6 +14,7 @@ import {
   checkoutCart,
   fetchCart,
   groupCartItems,
+  groupLineTotal,
   removeCartItem,
   setCartItemQty,
   type CartOut,
@@ -357,7 +358,10 @@ function CartPage() {
                       </ul>
                     ) : null}
                     <p className="mt-2 text-sm font-semibold text-primary">
-                      {formatMoney(base.line_total, t("Цена по запросу"))}
+                      {formatMoney(
+                        groupLineTotal({ base, options }),
+                        t("Цена по запросу"),
+                      )}
                     </p>
                   </div>
                   {/* 44px — минимальный тач-таргет из MASTER.md; кнопки

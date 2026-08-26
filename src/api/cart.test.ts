@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { groupCartItems } from "@/api/cart";
+import { groupCartItems, groupLineTotal } from "@/api/cart";
 import type { CartItemOut, CartOut } from "@/api/generated/schemas";
 
 function item(over: Partial<CartItemOut>): CartItemOut {
@@ -67,4 +67,42 @@ test("две комплектации одного товара не смеши�
 test("пустая корзина и отсутствие данных дают пустой список", () => {
   expect(groupCartItems(undefined)).toEqual([]);
   expect(groupCartItems(cart([]))).toEqual([]);
+});
+
+test("сумма позиции складывает товар и все его опции, а не только базовую строку", () => {
+  // Баг: при увеличении количества строка под товаром показывала только
+  // base.line_total, будто комплектация в сумму не входит, хотя опции
+  // (см. set_cart_item_qty на сервере) едут за количеством базового товара.
+  const [group] = groupCartItems(
+    cart([
+      item({ id: "base-1", qty: 2, unit_price: "1000.00 KGS", line_total: "2000.00 KGS" }),
+      item({
+        id: "opt-1",
+        option_type: "addon",
+        parent_line_id: "base-1",
+        qty: 2,
+        unit_price: "300.00 KGS",
+        line_total: "600.00 KGS",
+      }),
+    ]),
+  );
+
+  expect(groupLineTotal(group!)).toBe("2600.00 KGS");
+});
+
+test("сумма позиции — «по запросу», если хоть одна её часть без цены", () => {
+  const [group] = groupCartItems(
+    cart([
+      item({ id: "base-1" }),
+      item({
+        id: "opt-1",
+        option_type: "addon",
+        parent_line_id: "base-1",
+        unit_price: null,
+        line_total: null,
+      }),
+    ]),
+  );
+
+  expect(groupLineTotal(group!)).toBeNull();
 });
