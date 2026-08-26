@@ -50,7 +50,12 @@ export function createOptionGroup(
   return apiRequest<ProductDetailOut>({
     method: "POST",
     path: groupPath(productId),
-    body: { name_ru: body.name_ru, sort: body.sort ?? 0 },
+    // sort не задан — не подменяем на 0: сервер сам ставит группу в конец
+    // списка (см. SqlProductRepository.add_option_group). Раньше `?? 0`
+    // отправлял явный 0 всегда, и сервер честно клал в 0 каждую группу —
+    // порядок на карточке товара решала не очередность создания в админке,
+    // а нестабильная сортировка на выдаче.
+    body: { name_ru: body.name_ru, sort: body.sort },
   });
 }
 
@@ -97,7 +102,9 @@ export function createProductOption(
       option_type: body.option_type,
       price_amount: body.price_amount ?? null,
       is_required: body.is_required ?? false,
-      sort: body.sort ?? 0,
+      // Тот же приём, что в createOptionGroup: не задан — не 0, сервер сам
+      // ставит опцию в конец группы.
+      sort: body.sort,
     },
   });
 }
