@@ -4,6 +4,7 @@ import type {
   PlaceOrderResponse,
 } from "@/api/generated/schemas";
 import { apiRequest } from "@/api/client";
+import { parseMoney } from "@/lib/money";
 
 export type { CartOut, CartItemOut };
 
@@ -85,4 +86,23 @@ export function groupCartItems(cart: CartOut | undefined): CartGroup[] {
     base,
     options: cart.items.filter((i) => i.parent_line_id === base.id),
   }));
+}
+
+/**
+ * Сумма позиции целиком: товар + все его опции, а не только `base.line_total`.
+ *
+ * Опции едут за количеством базового товара (см. `set_cart_item_qty` на
+ * сервере), поэтому их вклад в сумму так же растёт с количеством — но
+ * `base.line_total` этого не показывает, он считает только сам товар.
+ * Без сложения строка под позицией в корзине выглядела так, будто
+ * количество меняет сумму только по цене товара, а комплектация в неё
+ * не входит, хотя в общем «Итого» корзины (`cart.total`) опции уже учтены.
+ */
+export function groupLineTotal(group: CartGroup): string | null {
+  const lines = [group.base, ...group.options];
+  const parsed = lines.map((l) => parseMoney(l.line_total));
+  if (parsed.some((p) => p === null)) return null;
+  const currency = parsed[0]?.currency || "KGS";
+  const amount = parsed.reduce((sum, p) => sum + (p?.amount ?? 0), 0);
+  return `${amount.toFixed(2)} ${currency}`;
 }
