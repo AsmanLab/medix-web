@@ -15,6 +15,7 @@ import {
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { isAppError } from "@/api/errors";
+import { fetchCategories } from "@/api/catalog";
 import { fetchCmsPage } from "@/api/cms";
 import { listOrders } from "@/api/orders";
 import { fetchProfile } from "@/api/profile";
@@ -27,7 +28,7 @@ import { findSitePage } from "@/features/cms/site-pages";
 import {
   createPhotoDraft,
   desiredDateToIso,
-  equipmentTypeOptions,
+  equipmentTypeOptionsFrom,
   MAX_SERVICE_PHOTOS,
   revokePhotoDraft,
   submitServiceRequestWithPhotos,
@@ -116,6 +117,20 @@ function ServicePage() {
     enabled: authenticated,
     staleTime: 30_000,
   });
+
+  // «Тип оборудования» — корневые категории каталога, не мок-список.
+  const categoriesQuery = useQuery({
+    queryKey: queryKeys.catalog.categories(),
+    queryFn: ({ signal }) => fetchCategories(signal),
+    staleTime: 60_000,
+  });
+  const rootCategoryCount = (categoriesQuery.data ?? []).filter(
+    (c) => c.is_active && !c.parent_id,
+  ).length;
+  // Категории не загрузились или в каталоге нет корневых разделов — заявку
+  // всё равно нужно отправить, поэтому вместо select даём просто ввести текст.
+  const equipmentTypeFallback = categoriesQuery.isError || rootCategoryCount === 0;
+  const equipmentTypeOptions = equipmentTypeOptionsFrom(categoriesQuery.data ?? [], t);
 
   useEffect(() => {
     const p = profileQuery.data;
@@ -331,19 +346,33 @@ function ServicePage() {
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label={t("Тип оборудования *")}>
-              <select
-                required
-                className="field-control"
-                value={equipmentType}
-                onChange={(e) => setEquipmentType(e.target.value)}
-              >
-                <option value="">{t("Выберите тип")}</option>
-                {equipmentTypeOptions(t).map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              {categoriesQuery.isLoading ? (
+                <select disabled className="field-control" value="">
+                  <option value="">{t("Загрузка…")}</option>
+                </select>
+              ) : equipmentTypeFallback ? (
+                <input
+                  required
+                  className="field-control"
+                  placeholder={t("Например, лабораторный анализатор")}
+                  value={equipmentType}
+                  onChange={(e) => setEquipmentType(e.target.value)}
+                />
+              ) : (
+                <select
+                  required
+                  className="field-control"
+                  value={equipmentType}
+                  onChange={(e) => setEquipmentType(e.target.value)}
+                >
+                  <option value="">{t("Выберите тип")}</option>
+                  {equipmentTypeOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              )}
             </FormField>
             <FormField label={t("Модель или артикул")}>
               <input

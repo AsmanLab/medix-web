@@ -1,5 +1,5 @@
 import { SlidersHorizontal, X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -296,8 +296,17 @@ function Level({
   level: number;
 }) {
   const t = useT();
-  const branches = nodes.filter((node) => node.children.length > 0);
-  const leaves = nodes.filter((node) => node.children.length === 0);
+  // useMemo, а не пересчёт на каждый рендер: массив нужен со стабильной
+  // ссылкой, иначе ниже нельзя отличить «список категорий правда изменился»
+  // от «просто был ещё один рендер» (см. комментарий у prevSelectedId).
+  const branches = useMemo(
+    () => nodes.filter((node) => node.children.length > 0),
+    [nodes],
+  );
+  const leaves = useMemo(
+    () => nodes.filter((node) => node.children.length === 0),
+    [nodes],
+  );
 
   // Раскрытой держим ветку с текущим выбором — на своём уровне. Значение
   // управляемое, а не начальное: выбор меняется и снаружи, из адресной
@@ -306,10 +315,19 @@ function Level({
     () => branchIdFor(branches, selectedId) ?? "",
   );
 
-  useEffect(() => {
+  // «Подгонка состояния под смену пропа» по рецепту React, а не эффект:
+  // эффект с `branches`/`selectedId` в зависимостях запускался ПОСЛЕ
+  // КАЖДОГО рендера (у `branches` без useMemo раньше на каждом рендере была
+  // новая ссылка), и его тело затирало ветку, которую пользователь только
+  // что раскрыл кликом — аккордеон открывался и тут же схлопывался обратно.
+  // Здесь тело выполняется только когда `selectedId` действительно
+  // изменился между рендерами, а не при каждом собственном ре-рендере.
+  const [prevSelectedId, setPrevSelectedId] = useState(selectedId);
+  if (selectedId !== prevSelectedId) {
+    setPrevSelectedId(selectedId);
     const next = branchIdFor(branches, selectedId);
     if (next) setOpenId(next);
-  }, [branches, selectedId]);
+  }
 
   return (
     <>

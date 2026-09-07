@@ -1,10 +1,29 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { parseDescription } from "@/features/catalog/product-description";
+import {
+  parseDescription,
+  type DescriptionBlock,
+} from "@/features/catalog/product-description";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/LocaleProvider";
 
-const COLLAPSED_BLOCKS = 6;
+// Число блоков — плохая мера длины: одна строка характеристики и таблица
+// на 20 строк раньше весили одинаково (по одному блоку каждая), потому что
+// пустые строки дробили таблицы на однострочные блоки. Теперь блоки не
+// дробятся, так что считаем "вес" — строки таблицы и пункты списка, а не
+// сами блоки.
+const COLLAPSED_ROWS = 12;
+
+function blockWeight(block: DescriptionBlock): number {
+  switch (block.kind) {
+    case "specs":
+      return block.rows.length;
+    case "list":
+      return block.items.length;
+    default:
+      return 1;
+  }
+}
 
 /**
  * Описание товара с разметкой вместо сплошного текста.
@@ -33,8 +52,21 @@ export function ProductDescription({
 
   if (blocks.length === 0) return null;
 
-  const collapsible = !bare && blocks.length > COLLAPSED_BLOCKS;
-  const visible = expanded || !collapsible ? blocks : blocks.slice(0, COLLAPSED_BLOCKS);
+  // Блок никогда не режется пополам: как только накопленный вес достиг
+  // порога, следующий блок целиком уходит в "показать полностью".
+  const collapsedBlocks = useMemo(() => {
+    let weight = 0;
+    const out: DescriptionBlock[] = [];
+    for (const block of blocks) {
+      if (out.length > 0 && weight >= COLLAPSED_ROWS) break;
+      out.push(block);
+      weight += blockWeight(block);
+    }
+    return out;
+  }, [blocks]);
+
+  const collapsible = !bare && collapsedBlocks.length < blocks.length;
+  const visible = expanded || !collapsible ? blocks : collapsedBlocks;
 
   const Wrapper = bare ? "div" : "section";
 

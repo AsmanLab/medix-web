@@ -1,4 +1,6 @@
+import type { CategoryOut } from "@/api/catalog";
 import type { Translate } from "@/i18n/dictionaries";
+import { contentText } from "@/i18n/content";
 import { uploadMediaFile } from "@/api/media";
 import {
   addServiceRequestPhoto,
@@ -10,20 +12,35 @@ export const MAX_SERVICE_PHOTOS = 5;
 export const MAX_SERVICE_PHOTO_BYTES = 5 * 1024 * 1024;
 
 /**
- * Тип оборудования в заявке на сервис.
+ * Тип оборудования в заявке на сервис — корневые категории каталога плюс
+ * «Другое». Раньше здесь стоял захардкоженный список из четырёх строк,
+ * никак не связанный с настоящими категориями каталога и никогда с ними
+ * не сверявшийся.
  *
- * `value` уходит в бэкенд свободным текстом (CreateServiceRequestInput)
- * и должен оставаться на русском вне зависимости от языка интерфейса:
- * это данные заявки, а не подпись на кнопке. `label` — то, что видит
- * человек, и оно уже переводимо.
+ * `value` уходит в бэкенд свободным текстом (CreateServiceRequestInput) и
+ * должен оставаться на русском вне зависимости от языка интерфейса — это
+ * данные заявки, а не подпись на кнопке (тот же контракт, что был у
+ * старого списка). `label` — то, что видит человек, и оно локализовано:
+ * для категорий это уже переведённое `name` из API, для «Другое» — `t()`.
  */
-export function equipmentTypeOptions(
+export function equipmentTypeOptionsFrom(
+  categories: CategoryOut[],
   t: Translate = (s) => s,
 ): { value: string; label: string }[] {
+  const roots = categories
+    .filter((c) => c.is_active && !c.parent_id)
+    .slice()
+    .sort(
+      (a, b) =>
+        a.sort - b.sort ||
+        contentText(a.name, a.name_ru).localeCompare(contentText(b.name, b.name_ru)),
+    );
+
   return [
-    { value: "Диагностическое оборудование", label: t("Диагностическое оборудование") },
-    { value: "Лабораторное оборудование", label: t("Лабораторное оборудование") },
-    { value: "Хирургическое оборудование", label: t("Хирургическое оборудование") },
+    ...roots.map((c) => ({
+      value: c.name_ru || c.name,
+      label: contentText(c.name, c.name_ru),
+    })),
     { value: "Другое", label: t("Другое") },
   ];
 }
