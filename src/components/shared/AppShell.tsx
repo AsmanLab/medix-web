@@ -5,7 +5,6 @@ import {
   Bell,
   ChevronDown,
   ChevronRight,
-  HeartPulse,
   LayoutGrid,
   LogIn,
   MapPin,
@@ -77,49 +76,21 @@ const mobileTabs: Tab[] = [
   },
 ];
 
-function Logo({
-  compact = false,
-  inverted = false,
-}: {
-  compact?: boolean;
-  inverted?: boolean;
-}) {
+function Logo({ compact = false }: { compact?: boolean }) {
   const t = useT();
   return (
     <Link
       to="/"
-      // min-h-11: в компактном виде значок 36px, и ссылка была ниже нормы
+      // min-h-11: в компактном виде картинка 28px, и ссылка была ниже нормы
       // тач-таргета. Высота шапки 56px, поэтому 44 помещаются без правок.
-      className="inline-flex min-h-11 shrink-0 items-center gap-3"
+      className="inline-flex min-h-11 shrink-0 items-center"
       aria-label={t("Medix — на главную")}
     >
-      <span
-        className={cn(
-          "relative grid place-items-center rounded-[14px] bg-primary text-white shadow-[0_8px_22px_-8px_rgba(15,139,190,.6)]",
-          compact ? "h-9 w-9" : "h-11 w-11",
-        )}
-      >
-        <HeartPulse
-          className={compact ? "h-5 w-5" : "h-6 w-6"}
-          strokeWidth={2.3}
-        />
-      </span>
-      <span className="leading-none">
-        <span
-          className={cn(
-            "block font-display font-extrabold tracking-[-0.04em]",
-            compact ? "text-lg" : "text-[22px]",
-            inverted ? "text-white" : "text-foreground",
-          )}
-        >
-          medix
-        </span>
-        {!compact ? (
-          <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            international
-          </span>
-        ) : null}
-      </span>
+      <img
+        src="/logo.png"
+        alt=""
+        className={compact ? "h-7 w-auto" : "h-9 w-auto"}
+      />
     </Link>
   );
 }
@@ -231,8 +202,14 @@ function CatalogMegaMenu({
         hidden={!open}
         className="absolute top-full left-1/2 z-50 w-[min(900px,calc(100vw-2rem))] max-w-[900px] -translate-x-1/2 pt-[19px] xl:left-[-175px] xl:w-[900px] xl:translate-x-0"
       >
-        <div className="grid overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_26px_70px_-28px_rgba(15,51,80,.45)] lg:grid-cols-[240px_1fr] xl:grid-cols-[280px_1fr]">
-          <div className="border-r border-border bg-background/70 p-3">
+        <div
+          // max-h + min-h-0 на колонках ниже: подкатегорий у раздела может
+          // быть больше, чем влезает до низа экрана (например, «Лаборатории»),
+          // и без ограничения высоты панель просто продолжалась за нижним
+          // краем viewport — прокрутить её было нечем.
+          className="grid max-h-[calc(100dvh-7rem)] overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_26px_70px_-28px_rgba(15,51,80,.45)] lg:grid-cols-[240px_1fr] xl:grid-cols-[280px_1fr]"
+        >
+          <div className="min-h-0 overflow-y-auto overscroll-contain border-r border-border bg-background/70 p-3">
             <div className="px-3 pt-1 pb-2 text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
               {t("Категории")}
             </div>
@@ -277,7 +254,7 @@ function CatalogMegaMenu({
             </Link>
           </div>
 
-          <div className="p-6">
+          <div className="min-h-0 overflow-y-auto overscroll-contain p-6">
             {menuCategory ? (
               <>
                 <div className="flex items-start justify-between gap-5">
@@ -346,16 +323,17 @@ function CatalogMegaMenu({
                                       subcategory: undefined,
                                       q: undefined,
                                     }}
-                                    className="block truncate rounded-lg px-3 py-1.5 text-[13px] text-muted-foreground transition hover:bg-background hover:text-primary"
+                                    className="block rounded-lg px-3 py-1.5 text-[13px] leading-snug break-words text-muted-foreground transition hover:bg-background hover:text-primary"
                                   >
                                     {leaf.name}
                                   </Link>
                                 </li>
                               ))}
-                            {/* Меню — не каталог: длинный список в нём
-                                пришлось бы прокручивать, а прокрутка
-                                внутри выпадающего меню закрывает его
-                                мышью. Остаток открывается страницей. */}
+                            {/* Меню — не каталог: список 3-го уровня режем
+                                и открываем остаток страницей, чтобы под
+                                разделом не оказывалось по двадцать строк.
+                                Сама панель при этом прокручивается — колонки
+                                выше держат overflow-y-auto. */}
                             {subcategory.children.length >
                             MEGA_MENU_LEAVES ? (
                               <li>

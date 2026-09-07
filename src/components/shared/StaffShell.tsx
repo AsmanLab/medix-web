@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { HeartPulse, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { getAppQueryClient } from "@/app/providers";
 import { logoutSession } from "@/session/store";
@@ -30,11 +30,12 @@ export function StaffShell({
     <div className="min-h-dvh bg-surface text-foreground">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-5">
-          <Link to={homeTo} className="inline-flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-white">
-              <HeartPulse className="h-4 w-4" />
-            </span>
-            <span className="font-display text-lg font-bold">Medix</span>
+          <Link
+            to={homeTo}
+            className="inline-flex items-center"
+            aria-label="Medix — на главную"
+          >
+            <img src="/logo.png" alt="" className="h-6 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
             <p className="text-sm font-semibold text-muted-foreground">{title}</p>

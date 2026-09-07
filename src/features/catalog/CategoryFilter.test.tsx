@@ -105,6 +105,23 @@ describe("CategoryFilter", () => {
     expect(screen.getAllByRole("button", { name: "Коагулометры" })[0]).toBeTruthy();
   });
 
+  it("клик по другой ветке раскрывает её, даже если где-то уже выбран узел", () => {
+    // Баг: аккордеон открывался и тут же схлопывался сам собой — но только
+    // после того, как в дереве уже стоял выбор (реальный сценарий: человек
+    // открыл категорию, выбрал товар, вернулся и раскрывает другую).
+    renderFilter("coag");
+
+    const other = screen.getAllByRole("button", { name: "Ветеринария" })[0];
+    expect(other.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.click(other);
+
+    expect(other.getAttribute("aria-expanded")).toBe("true");
+    expect(
+      screen.getAllByRole("button", { name: "Гематологические анализаторы" })[0],
+    ).toBeTruthy();
+  });
+
   it("раздел без подкатегорий остаётся обычной строкой выбора", () => {
     const { onSelect } = renderFilter(null);
 

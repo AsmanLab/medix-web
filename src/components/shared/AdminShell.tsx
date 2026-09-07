@@ -5,7 +5,6 @@ import {
   Boxes,
   Building2,
   FileUp,
-  HeartPulse,
   LayoutDashboard,
   LogOut,
   Megaphone,
@@ -49,11 +48,7 @@ type AdminNavItem = {
 };
 
 function Logo() {
-  return (
-    <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-white">
-      <HeartPulse className="h-4 w-4" />
-    </span>
-  );
+  return <img src="/logo.png" alt="" className="h-6 w-auto" />;
 }
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -246,7 +241,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
               onClick={() => setOpen(false)}
             >
               <Logo />
-              <span className="font-display text-sm font-bold">Medix</span>
             </Link>
             <button
               type="button"
