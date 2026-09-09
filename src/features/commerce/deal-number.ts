@@ -10,16 +10,34 @@
  * счета и PDF. Пока берём первые 8 знаков UUID: они и так уникальны
  * в пределах базы заказчика, а менеджер находит сделку по тому же
  * фрагменту — админка ищет по началу идентификатора.
+ *
+ * Обслуживает и заказы, и коммерческие предложения (КП/RFQ) — отсюда
+ * общий модуль `commerce`, а не `orders`.
  */
 
 /** `550e8400-…` → `550E-8400`. */
-export function orderNumber(id: string): string {
+export function dealNumber(id: string): string {
   const hex = id.replace(/-/g, "").slice(0, 8).toUpperCase();
   if (hex.length < 8) return id.toUpperCase();
   return `${hex.slice(0, 4)}-${hex.slice(4)}`;
 }
 
-/** `№ 550E-8400` — для заголовков и списков. */
+/** `№ 550E-8400` — для заголовков и списков заказов. */
 export function orderLabel(id: string): string {
-  return `№ ${orderNumber(id)}`;
+  return `№ ${dealNumber(id)}`;
+}
+
+/** `КП № F7C5-9FDB` — для заголовков и списков коммерческих предложений. */
+export function quoteLabel(id: string): string {
+  return `КП № ${dealNumber(id)}`;
+}
+
+/**
+ * Нормализует текст для сравнения с номером сделки: нижний регистр,
+ * без `№`, пробелов и дефисов. Применяется и к тому, что ввёл менеджер
+ * в поиск, и к `id` записи — так `35A6-3258`, скопированный с экрана,
+ * находит сделку с `id` `…35a63258…`.
+ */
+export function dealSearchKey(text: string): string {
+  return text.replace(/№/g, "").replace(/[\s-]/g, "").toLowerCase();
 }

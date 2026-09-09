@@ -145,6 +145,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/catalog/products/{product_id}/images/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Изменить порядок изображений товара */
+        post: operations["admin_reorder_images_api_v1_admin_catalog_products__product_id__images_reorder_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/catalog/products/{product_id}/images/{image_id}": {
         parameters: {
             query?: never;
@@ -1066,6 +1083,31 @@ export interface paths {
          * @description Список профилей клиентов с опциональной фильтрацией по статусу верификации.
          */
         get: operations["list_customers_api_v1_manager_customers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/manager/customers/{customer_id}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * История заказов клиента (менеджер)
+         * @description Полная история заказов клиента и агрегаты по ней.
+         *
+         *     Намеренно не переиспользует `SqlOrderRepository.list_for_manager` — тот
+         *     подмешивает `manager_id == me OR manager_id IS NULL` для роли manager, и
+         *     менеджер увидел бы заниженную сумму покупок клиента без единого признака,
+         *     что это не вся история.
+         */
+        get: operations["get_customer_orders_api_v1_manager_customers__customer_id__orders_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2373,11 +2415,8 @@ export interface components {
             is_primary: boolean;
             /** S3 Key */
             s3_key: string;
-            /**
-             * Sort
-             * @default 0
-             */
-            sort: number;
+            /** Sort */
+            sort?: number | null;
         };
         /** BannerOut */
         BannerOut: {
@@ -2695,11 +2734,8 @@ export interface components {
         CreateOptionGroupRequest: {
             /** Name Ru */
             name_ru: string;
-            /**
-             * Sort
-             * @default 0
-             */
-            sort: number;
+            /** Sort */
+            sort?: number | null;
         };
         /** CreatePageBody */
         CreatePageBody: {
@@ -2751,11 +2787,8 @@ export interface components {
             option_type: string;
             /** Price Amount */
             price_amount?: number | string | null;
-            /**
-             * Sort
-             * @default 0
-             */
-            sort: number;
+            /** Sort */
+            sort?: number | null;
         };
         /** CreateProductRequest */
         CreateProductRequest: {
@@ -2899,6 +2932,38 @@ export interface components {
             phone: string;
             /** Role */
             role: string;
+        };
+        /** CustomerOrderOut */
+        CustomerOrderOut: {
+            /** Created At */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Items Count */
+            items_count: number;
+            /** Source */
+            source: string;
+            /** Status */
+            status: string;
+            /** Total */
+            total: string | null;
+        };
+        /** CustomerOrdersResponse */
+        CustomerOrdersResponse: {
+            /** Orders */
+            orders: components["schemas"]["CustomerOrderOut"][];
+            summary: components["schemas"]["CustomerOrdersSummaryOut"];
+        };
+        /** CustomerOrdersSummaryOut */
+        CustomerOrdersSummaryOut: {
+            /** Items Count */
+            items_count: number;
+            /** Last Order At */
+            last_order_at: string | null;
+            /** Orders Count */
+            orders_count: number;
+            /** Total Amount */
+            total_amount: string | null;
         };
         /** DeactivateStaffResponse */
         DeactivateStaffResponse: {
@@ -3177,6 +3242,16 @@ export interface components {
         ManagerOrderDetailResponse: {
             /** Client Id */
             client_id: string;
+            /**
+             * Client Name
+             * @default
+             */
+            client_name: string;
+            /**
+             * Client Organization
+             * @default
+             */
+            client_organization: string;
             /** Created At */
             created_at: string;
             /** Id */
@@ -3200,6 +3275,16 @@ export interface components {
         ManagerOrderOut: {
             /** Client Id */
             client_id: string;
+            /**
+             * Client Name
+             * @default
+             */
+            client_name: string;
+            /**
+             * Client Organization
+             * @default
+             */
+            client_organization: string;
             /** Created At */
             created_at: string;
             /** Id */
@@ -3243,6 +3328,36 @@ export interface components {
             rfq_count: number;
             /** Total Amount */
             total_amount: string;
+        };
+        /**
+         * ManagerRfqOut
+         * @description Очередь RFQ для менеджера/админа: добавляет имя и организацию клиента,
+         *     которых нет в клиентском `RfqOut`/`RfqSummaryOut` — их эти два поля
+         *     обслуживают и напрямую (`GET /rfq`), расширять нельзя.
+         */
+        ManagerRfqOut: {
+            /** Client Id */
+            client_id: string;
+            /**
+             * Client Name
+             * @default
+             */
+            client_name: string;
+            /**
+             * Client Organization
+             * @default
+             */
+            client_organization: string;
+            /** Created At */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Items Count */
+            items_count: number;
+            /** Manager Id */
+            manager_id: string | null;
+            /** Status */
+            status: string;
         };
         /** ManagersReportResponse */
         ManagersReportResponse: {
@@ -3796,6 +3911,14 @@ export interface components {
         RejectRequest: {
             /** Reason */
             reason: string;
+        };
+        /**
+         * ReorderImagesRequest
+         * @description Полный порядок изображений товара — id всех картинок, ни больше ни меньше.
+         */
+        ReorderImagesRequest: {
+            /** Image Ids */
+            image_ids: string[];
         };
         /** RfqDetailOut */
         RfqDetailOut: {
@@ -5144,6 +5267,80 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetailOut"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    admin_reorder_images_api_v1_admin_catalog_products__product_id__images_reorder_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderImagesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8950,6 +9147,76 @@ export interface operations {
             };
         };
     };
+    get_customer_orders_api_v1_manager_customers__customer_id__orders_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerOrdersResponse"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
     reject_customer_api_v1_manager_customers__customer_id__reject_post: {
         parameters: {
             query?: never;
@@ -9916,7 +10183,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RfqOut"][];
+                    "application/json": components["schemas"]["ManagerRfqOut"][];
                 };
             };
             /** @description Требуется аутентификация */

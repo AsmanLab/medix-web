@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { listManagerRfqs } from "@/api/manager-rfq";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { dealSearchKey, quoteLabel } from "@/features/commerce/deal-number";
 import {
   formatRfqDate,
   rfqStatusLabel,
@@ -96,11 +97,14 @@ function ManagerRfqQueuePage() {
 
     const needle = (qFromUrl ?? "").trim().toLocaleLowerCase("ru");
     if (needle) {
-      rows = rows.filter((r) =>
-        [r.id, r.client_id, r.status]
-          .join(" ")
-          .toLocaleLowerCase("ru")
-          .includes(needle),
+      const needleKey = dealSearchKey(needle);
+      rows = rows.filter(
+        (r) =>
+          dealSearchKey(r.id).includes(needleKey) ||
+          [r.client_id, r.status, r.client_name, r.client_organization]
+            .join(" ")
+            .toLocaleLowerCase("ru")
+            .includes(needle),
       );
     }
 
@@ -215,8 +219,9 @@ function ManagerRfqQueuePage() {
         emptyDescription="Новые запросы появятся здесь после отправки клиентом."
       >
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
-          <div className="hidden grid-cols-[1fr_110px_100px_140px] border-b border-border bg-muted/40 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
-            <span>RFQ</span>
+          <div className="hidden grid-cols-[170px_minmax(0,1fr)_100px_110px_130px] border-b border-border bg-muted/40 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
+            <span>КП</span>
+            <span>Клиент</span>
             <span>Позиций</span>
             <span>Статус</span>
             <span>Дата</span>
@@ -228,20 +233,29 @@ function ManagerRfqQueuePage() {
                 key={rfq.id}
                 to="/admin/commerce/$rfqId"
                 params={{ rfqId: rfq.id }}
-                className="grid gap-1 border-b border-border px-4 py-3 last:border-0 hover:bg-muted/30 sm:grid-cols-[1fr_110px_100px_140px] sm:items-center"
+                className="grid gap-1 border-b border-border px-4 py-3 last:border-0 hover:bg-muted/30 sm:grid-cols-[170px_minmax(0,1fr)_100px_110px_130px] sm:items-start"
               >
                 <div className="min-w-0">
                   <div className="truncate font-mono text-xs font-semibold">
-                    {rfq.id.slice(0, 8)}…
+                    {quoteLabel(rfq.id)}
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
                     {rfq.manager_id
                       ? rfq.manager_id === user?.userId
                         ? "Назначен вам"
                         : "Назначен"
-                      : "Свободный"}{" "}
-                    · клиент {rfq.client_id.slice(0, 8)}…
+                      : "Свободный"}
                   </div>
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold">
+                    {rfq.client_name || "Без имени"}
+                  </div>
+                  {rfq.client_organization && (
+                    <div className="break-words text-xs text-muted-foreground">
+                      {rfq.client_organization}
+                    </div>
+                  )}
                 </div>
                 <span className="text-sm">{rfq.items_count}</span>
                 <StatusPill tone={tone} size="compact">

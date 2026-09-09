@@ -6,7 +6,7 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { CommerceTabs } from "@/components/shared/CommerceTabs";
 import { StateBlock } from "@/components/shared/StateBlock";
-import { orderLabel } from "@/features/orders/order-number";
+import { orderLabel } from "@/features/commerce/deal-number";
 import {
   orderSourceLabel,
   orderStatusLabel,

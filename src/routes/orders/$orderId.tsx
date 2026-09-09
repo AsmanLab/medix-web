@@ -28,7 +28,7 @@ import { formatRfqDate } from "@/features/rfq/status";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
-import { orderLabel } from "@/features/orders/order-number";
+import { orderLabel } from "@/features/commerce/deal-number";
 import { useRepeatOrder } from "@/features/orders/use-repeat-order";
 import { useT } from "@/i18n/LocaleProvider";
 

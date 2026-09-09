@@ -119,5 +119,7 @@ export const queryKeys = {
       [...queryKeys.adminCustomers.all, "list", status ?? "all"] as const,
     audit: (customerId: string) =>
       [...queryKeys.adminCustomers.all, "audit", customerId] as const,
+    orders: (customerId: string) =>
+      [...queryKeys.adminCustomers.all, "orders", customerId] as const,
   },
 } as const;

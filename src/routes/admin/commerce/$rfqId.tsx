@@ -20,6 +20,7 @@ import {
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
+import { orderLabel, quoteLabel } from "@/features/commerce/deal-number";
 import {
   formatRfqDate,
   rfqStatusLabel,
@@ -161,7 +162,7 @@ function ManagerRfqDetailPage() {
   const convertMutation = useMutation({
     mutationFn: () => convertManagerRfq(rfqId),
     onSuccess: async (res) => {
-      toast.success(`Создан заказ ${res.order_id.slice(0, 8)}…`);
+      toast.success(`Создан заказ ${orderLabel(res.order_id)}`);
       await invalidate();
       await navigate({ to: "/admin/commerce" });
     },
@@ -280,7 +281,7 @@ function ManagerRfqDetailPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="font-display text-2xl font-bold">
-                    RFQ {rfq.id.slice(0, 8)}…
+                    {quoteLabel(rfq.id)}
                   </h1>
                   <StatusPill tone={tone} size="compact">
                     {rfqStatusLabel(rfq.status)}

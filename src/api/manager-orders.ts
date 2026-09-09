@@ -10,6 +10,8 @@ export type ManagerOrderSummary = {
   created_at: string;
   manager_id: string | null;
   total: string | null;
+  client_name: string;
+  client_organization: string;
 };
 
 export type ManagerOrderLineItem = {

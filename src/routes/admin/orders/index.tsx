@@ -16,7 +16,7 @@ import { useSession } from "@/session/store";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
-import { orderLabel } from "@/features/orders/order-number";
+import { dealSearchKey, orderLabel } from "@/features/commerce/deal-number";
 
 const STATUS_FILTERS = [
   "new",
@@ -73,11 +73,14 @@ function ManagerOrdersPage() {
 
     const needle = (qFromUrl ?? "").trim().toLocaleLowerCase("ru");
     if (needle) {
-      rows = rows.filter((o) =>
-        [o.id, o.client_id, o.status]
-          .join(" ")
-          .toLocaleLowerCase("ru")
-          .includes(needle),
+      const needleKey = dealSearchKey(needle);
+      rows = rows.filter(
+        (o) =>
+          dealSearchKey(o.id).includes(needleKey) ||
+          [o.client_id, o.status, o.client_name, o.client_organization]
+            .join(" ")
+            .toLocaleLowerCase("ru")
+            .includes(needle),
       );
     }
 
@@ -190,8 +193,9 @@ function ManagerOrdersPage() {
         emptyDescription="Заказы появляются после прямого оформления клиентом или конвертации запроса КП."
       >
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
-          <div className="hidden grid-cols-[1fr_120px_110px_110px_140px] border-b border-border bg-muted/40 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
+          <div className="hidden grid-cols-[170px_minmax(0,1fr)_120px_100px_110px_130px] border-b border-border bg-muted/40 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
             <span>Заказ</span>
+            <span>Клиент</span>
             <span>Сумма</span>
             <span>Позиций</span>
             <span>Статус</span>
@@ -204,16 +208,25 @@ function ManagerOrdersPage() {
                 key={order.id}
                 to="/admin/orders/$orderId"
                 params={{ orderId: order.id }}
-                className="grid gap-1 border-b border-border px-4 py-3 last:border-0 hover:bg-muted/30 sm:grid-cols-[1fr_120px_110px_110px_140px] sm:items-center"
+                className="grid gap-1 border-b border-border px-4 py-3 last:border-0 hover:bg-muted/30 sm:grid-cols-[170px_minmax(0,1fr)_120px_100px_110px_130px] sm:items-start"
               >
                 <div className="min-w-0">
                   <div className="truncate font-mono text-xs font-semibold">
                     {orderLabel(order.id)}
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
-                    {orderSourceLabel(order.source)} · клиент{" "}
-                    {order.client_id.slice(0, 8)}…
+                    {orderSourceLabel(order.source)}
                   </div>
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold">
+                    {order.client_name || "Без имени"}
+                  </div>
+                  {order.client_organization && (
+                    <div className="break-words text-xs text-muted-foreground">
+                      {order.client_organization}
+                    </div>
+                  )}
                 </div>
                 <span className="text-sm">{formatMoney(order.total, "—")}</span>
                 <span className="text-sm">{order.items_count}</span>

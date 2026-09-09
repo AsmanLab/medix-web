@@ -26,7 +26,7 @@ import { formatRfqDate } from "@/features/rfq/status";
 import { requireStaffPanel } from "@/session/guards";
 import { formatMoney } from "@/lib/money";
 import { StatusPill } from "@/components/ui/status-pill";
-import { orderLabel } from "@/features/orders/order-number";
+import { orderLabel } from "@/features/commerce/deal-number";
 
 export const Route = createFileRoute("/admin/orders/$orderId")({
   beforeLoad: () => requireStaffPanel({ roles: ["admin", "manager"] }),
@@ -150,10 +150,17 @@ function ManagerOrderDetailPage() {
                     Заказ {orderLabel(order.id)}
                   </h1>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {orderSourceLabel(order.source)} · клиент{" "}
-                    {order.client_id.slice(0, 8)}… ·{" "}
+                    {orderSourceLabel(order.source)} ·{" "}
                     {formatRfqDate(order.created_at)}
                   </p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {order.client_name || "Без имени"}
+                  </p>
+                  {order.client_organization && (
+                    <p className="break-words text-xs text-muted-foreground">
+                      {order.client_organization}
+                    </p>
+                  )}
                 </div>
               </div>
               <StatusPill tone={tone} size="compact">
