@@ -6,6 +6,7 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { CommerceTabs } from "@/components/shared/CommerceTabs";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { quoteLabel } from "@/features/commerce/deal-number";
 import {
   formatRfqDate,
   rfqStatusLabel,
@@ -76,11 +77,8 @@ function RequestsListPage() {
                     className="flex items-start justify-between gap-3 rounded-2xl border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]"
                   >
                     <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        RFQ
-                      </p>
                       <p className="mt-0.5 truncate font-mono text-sm font-semibold">
-                        {rfq.id}
+                        {quoteLabel(rfq.id)}
                       </p>
                       <p className="mt-2 text-xs text-muted-foreground">
                         {formatRfqDate(rfq.created_at)} · {rfq.items_count} поз.

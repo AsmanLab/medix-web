@@ -28,6 +28,27 @@ export type CustomerStatusFilter =
   | "verified"
   | "rejected";
 
+export type CustomerOrder = {
+  id: string;
+  status: string;
+  source: string;
+  items_count: number;
+  total: string | null;
+  created_at: string;
+};
+
+export type CustomerOrdersSummary = {
+  orders_count: number;
+  items_count: number;
+  total_amount: string | null;
+  last_order_at: string | null;
+};
+
+export type CustomerOrdersResponse = {
+  orders: CustomerOrder[];
+  summary: CustomerOrdersSummary;
+};
+
 export function listManagerCustomers(
   status?: CustomerStatusFilter | null,
   signal?: AbortSignal,
@@ -69,6 +90,13 @@ export function fetchCustomerVerificationAudit(
 ) {
   return apiRequest<VerificationAudit[]>({
     path: `/manager/customers/${encodeURIComponent(customerId)}/verification-audit`,
+    signal,
+  });
+}
+
+export function fetchCustomerOrders(customerId: string, signal?: AbortSignal) {
+  return apiRequest<CustomerOrdersResponse>({
+    path: `/manager/customers/${encodeURIComponent(customerId)}/orders`,
     signal,
   });
 }

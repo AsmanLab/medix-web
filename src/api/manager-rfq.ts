@@ -3,6 +3,12 @@ import type { RfqDetail, RfqLineItem, RfqSummary } from "@/api/rfq";
 
 export type { RfqDetail, RfqLineItem, RfqSummary };
 
+/** Очередь RFQ менеджера — то же, что клиентский `RfqSummary`, плюс имя клиента. */
+export type ManagerRfqSummary = RfqSummary & {
+  client_name: string;
+  client_organization: string;
+};
+
 export type PublishQuoteItemInput = {
   product_id: string;
   sku: string;
@@ -30,7 +36,7 @@ export type ConvertRfqResult = {
 };
 
 export function listManagerRfqs(signal?: AbortSignal) {
-  return apiRequest<RfqSummary[]>({
+  return apiRequest<ManagerRfqSummary[]>({
     path: "/manager/rfq",
     signal,
   });

@@ -1,9 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle2, HelpCircle, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  HelpCircle,
+  Package,
+  XCircle,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  fetchCustomerOrders,
   fetchCustomerVerificationAudit,
   listManagerCustomers,
   rejectCustomer,
@@ -14,7 +21,11 @@ import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
+import { orderLabel } from "@/features/commerce/deal-number";
+import { orderStatusLabel, orderStatusTone } from "@/features/orders/status";
 import { clientTypeLabel, verificationLabel } from "@/features/profile/labels";
+import { formatRfqDate } from "@/features/rfq/status";
+import { formatMoney } from "@/lib/money";
 import { requireStaffPanel } from "@/session/guards";
 import { StatusPill } from "@/components/ui/status-pill";
 
@@ -63,6 +74,11 @@ function CustomerDetailPage() {
   const auditQuery = useQuery({
     queryKey: queryKeys.adminCustomers.audit(customerId),
     queryFn: ({ signal }) => fetchCustomerVerificationAudit(customerId, signal),
+  });
+
+  const ordersQuery = useQuery({
+    queryKey: queryKeys.adminCustomers.orders(customerId),
+    queryFn: ({ signal }) => fetchCustomerOrders(customerId, signal),
   });
 
   const audits = useMemo(
@@ -206,6 +222,93 @@ function CustomerDetailPage() {
                   </dd>
                 </div>
               </dl>
+            </section>
+
+            <section className="rounded-3xl border border-border bg-card p-5">
+              <h2 className="font-semibold">Покупки</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-4">
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground">Заказов</p>
+                  <p className="mt-1 font-display text-2xl font-bold">
+                    {ordersQuery.data?.summary.orders_count ?? "—"}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground">
+                    Позиций заказано
+                  </p>
+                  <p className="mt-1 font-display text-2xl font-bold">
+                    {ordersQuery.data?.summary.items_count ?? "—"}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground">На сумму</p>
+                  <p className="mt-1 font-display text-2xl font-bold">
+                    {formatMoney(ordersQuery.data?.summary.total_amount, "—")}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground">
+                    Последний заказ
+                  </p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {ordersQuery.data?.summary.last_order_at
+                      ? formatRfqDate(ordersQuery.data.summary.last_order_at)
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <StateBlock
+                  isLoading={ordersQuery.isLoading}
+                  isError={ordersQuery.isError}
+                  error={ordersQuery.error}
+                  onRetry={() => void ordersQuery.refetch()}
+                  isEmpty={
+                    ordersQuery.isSuccess &&
+                    (ordersQuery.data?.orders.length ?? 0) === 0
+                  }
+                  loadingVariant="list"
+                  loadingCount={3}
+                  emptyIcon={Package}
+                  emptyTitle="Заказов пока нет"
+                  emptyDescription="Появятся здесь после первого оформленного заказа."
+                >
+                  <ol className="space-y-2">
+                    {ordersQuery.data?.orders.map((order) => (
+                      <li key={order.id}>
+                        <Link
+                          to="/admin/orders/$orderId"
+                          params={{ orderId: order.id }}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-background px-4 py-3 transition hover:border-primary/40"
+                        >
+                          <div>
+                            <p className="font-mono text-sm font-semibold">
+                              {orderLabel(order.id)}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {formatRfqDate(order.created_at)} ·{" "}
+                              {order.items_count} поз.
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-semibold">
+                              {formatMoney(order.total, "—")}
+                            </span>
+                            <StatusPill
+                              tone={orderStatusTone(order.status)}
+                              size="compact"
+                            >
+                              {orderStatusLabel(order.status)}
+                            </StatusPill>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ol>
+                </StateBlock>
+              </div>
             </section>
 
             <section className="space-y-4 rounded-3xl border border-border bg-card p-5">
