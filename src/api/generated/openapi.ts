@@ -145,6 +145,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/catalog/products/{product_id}/images/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Изменить порядок изображений товара */
+        post: operations["admin_reorder_images_api_v1_admin_catalog_products__product_id__images_reorder_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/catalog/products/{product_id}/images/{image_id}": {
         parameters: {
             query?: never;
@@ -580,7 +597,7 @@ export interface paths {
         put?: never;
         /**
          * Выход из системы
-         * @description Отзывает refresh-токен текущей сессии.
+         * @description Отзывает refresh-токен текущей сессии (тело — мобильный клиент, cookie — веб).
          */
         post: operations["logout_api_v1_auth_logout_post"];
         delete?: never;
@@ -622,6 +639,9 @@ export interface paths {
         /**
          * Обновление пары токенов
          * @description Обмен refresh_token на новую пару access/refresh токенов.
+         *
+         *     Мобильный клиент шлёт токен в теле; веб — не шлёт тело вовсе, токен берётся
+         *     из HttpOnly-cookie.
          */
         post: operations["refresh_tokens_api_v1_auth_refresh_post"];
         delete?: never;
@@ -2373,11 +2393,8 @@ export interface components {
             is_primary: boolean;
             /** S3 Key */
             s3_key: string;
-            /**
-             * Sort
-             * @default 0
-             */
-            sort: number;
+            /** Sort */
+            sort?: number | null;
         };
         /** BannerOut */
         BannerOut: {
@@ -2695,11 +2712,8 @@ export interface components {
         CreateOptionGroupRequest: {
             /** Name Ru */
             name_ru: string;
-            /**
-             * Sort
-             * @default 0
-             */
-            sort: number;
+            /** Sort */
+            sort?: number | null;
         };
         /** CreatePageBody */
         CreatePageBody: {
@@ -2751,11 +2765,8 @@ export interface components {
             option_type: string;
             /** Price Amount */
             price_amount?: number | string | null;
-            /**
-             * Sort
-             * @default 0
-             */
-            sort: number;
+            /** Sort */
+            sort?: number | null;
         };
         /** CreateProductRequest */
         CreateProductRequest: {
@@ -3171,7 +3182,7 @@ export interface components {
         /** LogoutRequest */
         LogoutRequest: {
             /** Refresh Token */
-            refresh_token: string;
+            refresh_token?: string | null;
         };
         /** ManagerOrderDetailResponse */
         ManagerOrderDetailResponse: {
@@ -3760,10 +3771,14 @@ export interface components {
             /** Status */
             status: string;
         };
-        /** RefreshRequest */
+        /**
+         * RefreshRequest
+         * @description Мобильный клиент шлёт refresh_token в теле; веб — через HttpOnly-cookie,
+         *     тело тогда необязательно (см. presentation/cookies.py).
+         */
         RefreshRequest: {
             /** Refresh Token */
-            refresh_token: string;
+            refresh_token?: string | null;
         };
         /**
          * RegisterRequest
@@ -3796,6 +3811,14 @@ export interface components {
         RejectRequest: {
             /** Reason */
             reason: string;
+        };
+        /**
+         * ReorderImagesRequest
+         * @description Полный порядок изображений товара — id всех картинок, ни больше ни меньше.
+         */
+        ReorderImagesRequest: {
+            /** Image Ids */
+            image_ids: string[];
         };
         /** RfqDetailOut */
         RfqDetailOut: {
@@ -5144,6 +5167,80 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetailOut"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    admin_reorder_images_api_v1_admin_catalog_products__product_id__images_reorder_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderImagesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7426,9 +7523,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["LogoutRequest"];
+                "application/json": components["schemas"]["LogoutRequest"] | null;
             };
         };
         responses: {
@@ -7566,9 +7663,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["RefreshRequest"];
+                "application/json": components["schemas"]["RefreshRequest"] | null;
             };
         };
         responses: {

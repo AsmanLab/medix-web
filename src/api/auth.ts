@@ -61,20 +61,19 @@ export function login(phone: string, password: string) {
   });
 }
 
-export function refresh(refreshToken: string) {
+/** Тело не шлём: refresh_token веб-клиент больше не хранит — он едет в HttpOnly-cookie. */
+export function refresh() {
   return apiRequest<TokenResponse>({
     method: "POST",
     path: "/auth/refresh",
-    body: { refresh_token: refreshToken },
     retryOnUnauthorized: false,
   });
 }
 
-export function logout(refreshToken: string) {
+export function logout() {
   return apiRequest<void>({
     method: "POST",
     path: "/auth/logout",
-    body: { refresh_token: refreshToken },
     retryOnUnauthorized: false,
   });
 }

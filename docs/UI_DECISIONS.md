@@ -1,13 +1,12 @@
 # UI Decisions
 
-## Session tokens (temporary)
-
-Until medix-core supports HttpOnly cookie refresh:
+## Session tokens
 
 - **access_token** — in-memory only
-- **refresh_token** — `sessionStorage` key `medix.refresh_token.v1`
+- **refresh_token** — HttpOnly; Secure; SameSite=Lax cookie, set/read server-side (frontend
+  never touches it)
 
-See ADR-002. **Post-launch review date:** 2026-08-31 (migrate to HttpOnly or renew exception).
+See ADR-002 (superseded 2026-09-10 — migrated off the earlier `sessionStorage` exception).
 
 ## Favorites
 

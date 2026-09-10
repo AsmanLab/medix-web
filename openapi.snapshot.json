@@ -418,9 +418,15 @@
             "type": "string"
           },
           "sort": {
-            "default": 0,
-            "title": "Sort",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort"
           }
         },
         "required": [
@@ -1134,9 +1140,15 @@
             "type": "string"
           },
           "sort": {
-            "default": 0,
-            "title": "Sort",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort"
           }
         },
         "required": [
@@ -1239,9 +1251,15 @@
             "title": "Price Amount"
           },
           "sort": {
-            "default": 0,
-            "title": "Sort",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort"
           }
         },
         "required": [
@@ -2125,13 +2143,17 @@
       "LogoutRequest": {
         "properties": {
           "refresh_token": {
-            "title": "Refresh Token",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Token"
           }
         },
-        "required": [
-          "refresh_token"
-        ],
         "title": "LogoutRequest",
         "type": "object"
       },
@@ -3745,15 +3767,20 @@
         "type": "object"
       },
       "RefreshRequest": {
+        "description": "Мобильный клиент шлёт refresh_token в теле; веб — через HttpOnly-cookie,\nтело тогда необязательно (см. presentation/cookies.py).",
         "properties": {
           "refresh_token": {
-            "title": "Refresh Token",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Token"
           }
         },
-        "required": [
-          "refresh_token"
-        ],
         "title": "RefreshRequest",
         "type": "object"
       },
@@ -3810,6 +3837,25 @@
           "reason"
         ],
         "title": "RejectRequest",
+        "type": "object"
+      },
+      "ReorderImagesRequest": {
+        "description": "Полный порядок изображений товара — id всех картинок, ни больше ни меньше.",
+        "properties": {
+          "image_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Image Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "image_ids"
+        ],
+        "title": "ReorderImagesRequest",
         "type": "object"
       },
       "RfqDetailOut": {
@@ -7086,6 +7132,147 @@
           }
         ],
         "summary": "Привязать изображение к товару",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/admin/catalog/products/{product_id}/images/reorder": {
+      "post": {
+        "operationId": "admin_reorder_images_api_v1_admin_catalog_products__product_id__images_reorder_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Product Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderImagesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Изменить порядок изображений товара",
         "tags": [
           "catalog"
         ]
@@ -11267,17 +11454,24 @@
     },
     "/api/v1/auth/logout": {
       "post": {
-        "description": "Отзывает refresh-токен текущей сессии.",
+        "description": "Отзывает refresh-токен текущей сессии (тело — мобильный клиент, cookie — веб).",
         "operationId": "logout_api_v1_auth_logout_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LogoutRequest"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LogoutRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "204": {
@@ -11503,17 +11697,24 @@
     },
     "/api/v1/auth/refresh": {
       "post": {
-        "description": "Обмен refresh_token на новую пару access/refresh токенов.",
+        "description": "Обмен refresh_token на новую пару access/refresh токенов.\n\nМобильный клиент шлёт токен в теле; веб — не шлёт тело вовсе, токен берётся\nиз HttpOnly-cookie.",
         "operationId": "refresh_tokens_api_v1_auth_refresh_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RefreshRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
