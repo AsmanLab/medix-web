@@ -2250,13 +2250,17 @@
       "LogoutRequest": {
         "properties": {
           "refresh_token": {
-            "title": "Refresh Token",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Token"
           }
         },
-        "required": [
-          "refresh_token"
-        ],
         "title": "LogoutRequest",
         "type": "object"
       },
@@ -3946,15 +3950,20 @@
         "type": "object"
       },
       "RefreshRequest": {
+        "description": "Мобильный клиент шлёт refresh_token в теле; веб — через HttpOnly-cookie,\nтело тогда необязательно (см. presentation/cookies.py).",
         "properties": {
           "refresh_token": {
-            "title": "Refresh Token",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Token"
           }
         },
-        "required": [
-          "refresh_token"
-        ],
         "title": "RefreshRequest",
         "type": "object"
       },
@@ -11628,17 +11637,24 @@
     },
     "/api/v1/auth/logout": {
       "post": {
-        "description": "Отзывает refresh-токен текущей сессии.",
+        "description": "Отзывает refresh-токен текущей сессии (тело — мобильный клиент, cookie — веб).",
         "operationId": "logout_api_v1_auth_logout_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LogoutRequest"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LogoutRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "204": {
@@ -11864,17 +11880,24 @@
     },
     "/api/v1/auth/refresh": {
       "post": {
-        "description": "Обмен refresh_token на новую пару access/refresh токенов.",
+        "description": "Обмен refresh_token на новую пару access/refresh токенов.\n\nМобильный клиент шлёт токен в теле; веб — не шлёт тело вовсе, токен берётся\nиз HttpOnly-cookie.",
         "operationId": "refresh_tokens_api_v1_auth_refresh_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RefreshRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

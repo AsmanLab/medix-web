@@ -597,7 +597,7 @@ export interface paths {
         put?: never;
         /**
          * Выход из системы
-         * @description Отзывает refresh-токен текущей сессии.
+         * @description Отзывает refresh-токен текущей сессии (тело — мобильный клиент, cookie — веб).
          */
         post: operations["logout_api_v1_auth_logout_post"];
         delete?: never;
@@ -639,6 +639,9 @@ export interface paths {
         /**
          * Обновление пары токенов
          * @description Обмен refresh_token на новую пару access/refresh токенов.
+         *
+         *     Мобильный клиент шлёт токен в теле; веб — не шлёт тело вовсе, токен берётся
+         *     из HttpOnly-cookie.
          */
         post: operations["refresh_tokens_api_v1_auth_refresh_post"];
         delete?: never;
@@ -3236,7 +3239,7 @@ export interface components {
         /** LogoutRequest */
         LogoutRequest: {
             /** Refresh Token */
-            refresh_token: string;
+            refresh_token?: string | null;
         };
         /** ManagerOrderDetailResponse */
         ManagerOrderDetailResponse: {
@@ -3875,10 +3878,14 @@ export interface components {
             /** Status */
             status: string;
         };
-        /** RefreshRequest */
+        /**
+         * RefreshRequest
+         * @description Мобильный клиент шлёт refresh_token в теле; веб — через HttpOnly-cookie,
+         *     тело тогда необязательно (см. presentation/cookies.py).
+         */
         RefreshRequest: {
             /** Refresh Token */
-            refresh_token: string;
+            refresh_token?: string | null;
         };
         /**
          * RegisterRequest
@@ -7623,9 +7630,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["LogoutRequest"];
+                "application/json": components["schemas"]["LogoutRequest"] | null;
             };
         };
         responses: {
@@ -7763,9 +7770,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["RefreshRequest"];
+                "application/json": components["schemas"]["RefreshRequest"] | null;
             };
         };
         responses: {

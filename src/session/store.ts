@@ -1,10 +1,12 @@
 /**
  * Session contract + store.
  *
- * Security note (temporary exception until HttpOnly cookie auth):
- * - access_token: in-memory only
- * - refresh_token: sessionStorage (XSS-accessible; not "secure storage")
- * Documented in docs/UI_DECISIONS.md — remove when backend supports cookies.
+ * Security note (ADR-002, реализовано):
+ * - access_token: только в памяти;
+ * - refresh_token: HttpOnly; Secure; SameSite=Lax cookie — фронту недоступен
+ *   даже через XSS, сервер сам ставит/снимает её на /auth/*.
+ * Не-HttpOnly cookie-метка `medix_session` (см. `hasSessionMarker`) нужна
+ * только чтобы не дёргать /auth/refresh у анонимного посетителя витрины.
  */
 
 import { useSyncExternalStore } from "react";
@@ -13,6 +15,7 @@ import {
   setAccessTokenGetter,
   setAccessTokenRefreshHandler,
 } from "@/api/client";
+import { isAppError } from "@/api/errors";
 import { writeLastPhone } from "@/features/profile/labels";
 import { decodeAccessToken } from "@/lib/jwt";
 import {
@@ -29,13 +32,24 @@ export {
   type UserRole,
 } from "@/session/roles";
 
-const REFRESH_KEY = "medix.refresh_token.v1";
+/** Устаревший ключ sessionStorage (до перехода на HttpOnly-cookie, ADR-002).
+ * Оставлен только для одноразовой чистки у уже установленных PWA. */
+const LEGACY_REFRESH_KEY = "medix.refresh_token.v1";
 
 type Listener = () => void;
 
 let state: SessionState = { ...initialSessionState, status: "bootstrapping" };
 const listeners = new Set<Listener>();
-let bootstrapPromise: Promise<SessionState> | null = null;
+
+/**
+ * Единственный promise на обновление токена — общий для bootstrap и для
+ * повтора после 401 из api/client.ts. Раньше это были два независимых
+ * single-flight'а (`bootstrapPromise` здесь и `refreshPromise` в client.ts),
+ * и на холодном старте PWA они параллельно обменивали один и тот же
+ * refresh-токен: один запрос успевал первым и получал новую пару, второй
+ * бил по уже провёрнутому токену и разлогинивал победителя гонки.
+ */
+let refreshPromise: Promise<SessionState> | null = null;
 
 function emit() {
   for (const listener of listeners) listener();
@@ -46,33 +60,30 @@ function setState(patch: Partial<SessionState>) {
   emit();
 }
 
-function readRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.sessionStorage.getItem(REFRESH_KEY);
-  } catch {
-    return null;
-  }
+/** Не-HttpOnly метка, которую ставит сервер вместе с refresh-cookie. Сама
+ * cookie фронту не видна — только по этому флагу и решаем, стоит ли вообще
+ * пытаться /auth/refresh. */
+function hasSessionMarker(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie.includes("medix_session=1");
 }
 
-function writeRefreshToken(token: string | null) {
+function cleanupLegacyRefreshToken() {
   if (typeof window === "undefined") return;
   try {
-    if (token) window.sessionStorage.setItem(REFRESH_KEY, token);
-    else window.sessionStorage.removeItem(REFRESH_KEY);
+    window.sessionStorage.removeItem(LEGACY_REFRESH_KEY);
   } catch {
     // ignore quota / private mode
   }
 }
 
-function applyTokens(accessToken: string, refreshToken: string) {
+function applyTokens(accessToken: string) {
   const claims = decodeAccessToken(accessToken);
   if (!claims) {
     clearSessionLocal();
     return;
   }
   const wasAnonymous = state.status !== "authenticated";
-  writeRefreshToken(refreshToken);
   setState({
     status: "authenticated",
     accessToken,
@@ -101,12 +112,20 @@ async function resumePush() {
 }
 
 function clearSessionLocal() {
-  writeRefreshToken(null);
+  cleanupLegacyRefreshToken();
   setState({
     status: "anonymous",
     accessToken: null,
     user: null,
   });
+}
+
+/** 401/403 — сервер явно сказал, что сессии нет: чистим локально.
+ * Всё остальное (сетевой сбой, таймаут, 429, 5xx) — не повод разлогинивать:
+ * cookie на сервере жива, следующая попытка (фокус на вкладку) дособерёт
+ * сессию сама. */
+function isDefiniteSessionLoss(error: unknown): boolean {
+  return isAppError(error) && (error.status === 401 || error.status === 403);
 }
 
 export function getSessionSnapshot(): SessionState {
@@ -131,34 +150,43 @@ export function useSession(): SessionState {
   }));
 }
 
-export async function bootstrapSession(): Promise<SessionState> {
-  if (state.status === "authenticated") return state;
-  if (bootstrapPromise) return bootstrapPromise;
+/** Общий single-flight обмена refresh-токена: и холодный старт (bootstrap),
+ * и повтор после 401 из api/client.ts идут через один и тот же promise. */
+function runRefresh(): Promise<SessionState> {
+  if (refreshPromise) return refreshPromise;
 
-  bootstrapPromise = (async () => {
-    const stored = readRefreshToken();
-    if (!stored) {
-      setState({ status: "anonymous", accessToken: null, user: null });
-      return state;
-    }
-
+  refreshPromise = (async () => {
     try {
-      const tokens = await authApi.refresh(stored);
-      applyTokens(tokens.access_token, tokens.refresh_token);
-    } catch {
-      clearSessionLocal();
+      const tokens = await authApi.refresh();
+      applyTokens(tokens.access_token);
+    } catch (error) {
+      if (isDefiniteSessionLoss(error)) {
+        clearSessionLocal();
+      }
+      // сетевой сбой/таймаут/5xx/429 — состояние не трогаем
     }
     return state;
   })().finally(() => {
-    bootstrapPromise = null;
+    refreshPromise = null;
   });
 
-  return bootstrapPromise;
+  return refreshPromise;
+}
+
+export async function bootstrapSession(): Promise<SessionState> {
+  if (state.status === "authenticated") return state;
+
+  if (!hasSessionMarker()) {
+    setState({ status: "anonymous", accessToken: null, user: null });
+    return state;
+  }
+
+  return runRefresh();
 }
 
 export async function loginWithPassword(phone: string, password: string) {
   const tokens = await authApi.login(phone, password);
-  applyTokens(tokens.access_token, tokens.refresh_token);
+  applyTokens(tokens.access_token);
   writeLastPhone(phone);
   return getSessionSnapshot();
 }
@@ -173,14 +201,12 @@ export async function registerWithTicket(input: {
 }) {
   const { phone, ...body } = input;
   const tokens = await authApi.register(body);
-  applyTokens(tokens.access_token, tokens.refresh_token);
+  applyTokens(tokens.access_token);
   writeLastPhone(phone);
   return getSessionSnapshot();
 }
 
 export async function logoutSession(queryClient?: { clear?: () => void }) {
-  const refreshToken = readRefreshToken();
-
   // Подписку на push снимаем до выхода, пока токен доступа ещё жив:
   // токен браузера один на всех, кто им пользуется, а получателя определяет
   // привязка на сервере — без этого на общем компьютере уведомления
@@ -193,7 +219,7 @@ export async function logoutSession(queryClient?: { clear?: () => void }) {
   }
 
   try {
-    if (refreshToken) await authApi.logout(refreshToken);
+    await authApi.logout();
   } catch {
     // still clear local session
   }
@@ -202,19 +228,8 @@ export async function logoutSession(queryClient?: { clear?: () => void }) {
 }
 
 async function refreshAccessToken(): Promise<string | null> {
-  const stored = readRefreshToken();
-  if (!stored) {
-    clearSessionLocal();
-    return null;
-  }
-  try {
-    const tokens = await authApi.refresh(stored);
-    applyTokens(tokens.access_token, tokens.refresh_token);
-    return tokens.access_token;
-  } catch {
-    clearSessionLocal();
-    return null;
-  }
+  const next = await runRefresh();
+  return next.status === "authenticated" ? next.accessToken : null;
 }
 
 /** Wire API client token getter + single-flight refresh. Safe to call multiple times. */
