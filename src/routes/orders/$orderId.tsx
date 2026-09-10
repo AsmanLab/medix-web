@@ -43,6 +43,8 @@ function OrderDetailPage() {
   const detailQuery = useQuery({
     queryKey: queryKeys.orders.detail(orderId),
     queryFn: ({ signal }) => fetchOrder(orderId, signal),
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
     retry: (count, err: unknown) => {
       if (isAppError(err) && err.status === 404) return false;
       return count < 1;

@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { AppProviders } from "@/app/providers";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { PullToRefresh } from "@/components/shared/PullToRefresh";
 import { PushForegroundBridge } from "@/features/notifications/PushForegroundBridge";
 import { useT } from "@/i18n/LocaleProvider";
 
@@ -19,6 +20,7 @@ function RootComponent() {
         <Outlet />
         {/* Уведомления при открытой вкладке: браузер их не показывает сам. */}
         <PushForegroundBridge />
+        <PullToRefresh />
         <Toaster richColors position="top-center" closeButton />
       </AppProviders>
     </ErrorBoundary>

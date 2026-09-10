@@ -13,7 +13,7 @@ export function createAppQueryClient() {
           }
           return failureCount < 2;
         },
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
       },
       mutations: {
         retry: false,
