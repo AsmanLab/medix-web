@@ -6,8 +6,8 @@ import { invoiceStatusLabel } from "@/features/orders/status";
  * «published» — выводился сырой статус из API.
  */
 describe("invoiceStatusLabel", () => {
-  it("переводит статусы счёта", () => {
-    expect(invoiceStatusLabel("published")).toBe("Выставлен");
+  it("переводит статусы КП", () => {
+    expect(invoiceStatusLabel("published")).toBe("Отправлено");
     expect(invoiceStatusLabel("draft")).toBe("Черновик");
   });
 

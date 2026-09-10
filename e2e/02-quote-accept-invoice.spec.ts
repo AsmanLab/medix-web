@@ -122,18 +122,18 @@ test.describe("E2E #34 — quote accept + invoice", () => {
       page.getByText(/заказ|order|new|Новый/i).first(),
     ).toBeVisible({ timeout: 20_000 });
 
+    // КП уходит клиенту сразу вместе с публикацией котировки — без
+    // отдельного ручного шага "Опубликовать КП" (см. Medix план
+    // «Замена документа Счёт на КП»).
     const invRes = await request.get(
       `${E2E.apiBase}/manager/rfq/${rfqId}/invoice`,
       { headers },
     );
     expect(invRes.ok(), `invoice: ${invRes.status()}`).toBeTruthy();
     const invoice = (await invRes.json()) as { id: string; status: string };
-    if (invoice.status !== "published") {
-      const pub = await request.post(
-        `${E2E.apiBase}/manager/invoices/${invoice.id}/publish`,
-        { headers },
-      );
-      expect([200, 204].includes(pub.status())).toBeTruthy();
-    }
+    expect(
+      invoice.status,
+      "КП должно быть уже отправлено без ручной публикации",
+    ).toBe("published");
   });
 });

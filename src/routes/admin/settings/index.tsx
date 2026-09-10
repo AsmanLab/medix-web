@@ -40,7 +40,7 @@ const FIELDS: [keyof InvoiceSettingsInput, string, string][] = [
   ["bik", "БИК", "124001"],
 ];
 
-/** Реквизиты организации для счёта — договор п. 5.2, ТЗ п. 10.1 «Настройки». */
+/** Реквизиты организации для КП — договор п. 5.2, ТЗ п. 10.1 «Настройки». */
 function SettingsAdminPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<InvoiceSettingsInput>(EMPTY);
@@ -100,9 +100,9 @@ function SettingsAdminPage() {
           }}
         >
           <div className="rounded-2xl bg-muted/40 p-4 text-xs leading-5 text-muted-foreground">
-            Реквизиты подставляются в счёт в момент его создания и сохраняются
-            в нём копией. Правка здесь меняет только новые счета — уже
-            выставленные остаются с прежними реквизитами.
+            Реквизиты подставляются в КП в момент его создания и сохраняются
+            в нём копией. Правка здесь меняет только новые КП — уже
+            отправленные остаются с прежними реквизитами.
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -131,14 +131,14 @@ function SettingsAdminPage() {
 
           {settingsQuery.data?.preview ? (
             <div>
-              <p className="text-xs font-semibold">Как это выглядит в счёте</p>
+              <p className="text-xs font-semibold">Как это выглядит в КП</p>
               <pre className="mt-1.5 whitespace-pre-line rounded-xl border border-border bg-muted/30 p-3 font-sans text-xs">
                 {settingsQuery.data.preview}
               </pre>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Пока реквизиты не заполнены, счёт выставляется без этого блока.
+              Пока реквизиты не заполнены, КП формируется без этого блока.
             </p>
           )}
 

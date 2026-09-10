@@ -51,7 +51,9 @@ export function orderStatusTone(
 
 /** Значения приходят из Order.source: "direct" | "from_rfq". */
 /**
- * Подпись статуса счёта.
+ * Подпись статуса КП (документ на бэкенде по-прежнему называется Invoice —
+ * см. Medix план «Замена документа Счёт на КП»: механизм не переименовываем,
+ * меняются только тексты для людей).
  *
  * До этого в карточке заказа выводилось сырое `invoice.status`, и рядом
  * с русской подписью «Счёт» стояло английское «published» (medix-web#103
@@ -62,7 +64,7 @@ export function invoiceStatusLabel(status: string, t: Translate = identity): str
     case "draft":
       return t("Черновик");
     case "published":
-      return t("Выставлен");
+      return t("Отправлено");
     default:
       return status;
   }

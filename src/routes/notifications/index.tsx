@@ -91,7 +91,7 @@ function NotificationsPage() {
           isEmpty={listQuery.isSuccess && items.length === 0}
           emptyIcon={Bell}
           emptyTitle={t("Пока нет уведомлений")}
-          emptyDescription={t("Когда менеджер отправит КП, опубликует счёт или обновит сервис — сообщение появится здесь.")}
+          emptyDescription={t("Когда менеджер отправит КП, обновит статус заказа или обновит сервис — сообщение появится здесь.")}
         >
           <ul className="divide-y divide-border rounded-3xl border border-border bg-card">
             {items.map((n) => (

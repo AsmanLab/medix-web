@@ -23,6 +23,7 @@ import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import { quoteLabel } from "@/features/commerce/deal-number";
+import { invoiceStatusLabel } from "@/features/orders/status";
 import {
   buildRfqTimeline,
   formatRfqDate,
@@ -113,7 +114,7 @@ function RequestDetailPage() {
       window.open(res.download_url, "_blank", "noopener,noreferrer");
     } catch (err) {
       toast.error(
-        isAppError(err) ? err.message : t("Счёт пока недоступен для скачивания"),
+        isAppError(err) ? err.message : t("КП пока недоступно для скачивания"),
       );
     }
   }
@@ -284,9 +285,11 @@ function RequestDetailPage() {
 
               {invoicePublished ? (
                 <section className="rounded-2xl border border-border bg-card p-5">
-                  <h2 className="font-semibold">{t("Счёт")}</h2>
+                  <h2 className="font-semibold">
+                    {t("Коммерческое предложение (КП)")}
+                  </h2>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Статус: {invoice?.status}
+                    Статус: {invoiceStatusLabel(invoice?.status ?? "", t)}
                   </p>
                   {invoicePdfPending ? (
                     <p className="mt-4 text-sm text-muted-foreground">
@@ -299,7 +302,7 @@ function RequestDetailPage() {
                       onClick={() => void onDownloadInvoice()}
                     >
                       <Download className="h-4 w-4" />
-                      {t("Скачать счёт")}
+                      {t("Скачать КП (PDF)")}
                     </Button>
                   )}
                 </section>
