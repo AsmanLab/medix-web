@@ -176,12 +176,12 @@ function ManagerRfqDetailPage() {
   const publishInvoiceMutation = useMutation({
     mutationFn: (invoiceId: string) => publishManagerInvoice(invoiceId),
     onSuccess: async () => {
-      toast.success("Счёт опубликован для клиента");
+      toast.success("КП отправлено клиенту");
       await invalidate();
     },
     onError: (err) => {
       toast.error(
-        isAppError(err) ? err.message : "Не удалось опубликовать счёт",
+        isAppError(err) ? err.message : "Не удалось отправить КП",
       );
     },
   });
@@ -191,7 +191,7 @@ function ManagerRfqDetailPage() {
   const canTake = rfq && !rfq.manager_id && rfq.status === "submitted";
   // Только in_review: из quoted сервер второй раз КП не примет — переход
   // quoted → quoted запрещён и вернёт 422. Пока сюда входил и quoted, кнопка
-  // «Отправить КП клиенту» оставалась активной рядом с «Опубликовать счёт»
+  // «Отправить КП клиенту» оставалась активной рядом с «Опубликовать КП»
   // и вела в ошибку. Секция ниже продолжает показываться и на quoted/accepted,
   // но уже только на чтение.
   const canQuote =
@@ -219,7 +219,7 @@ function ManagerRfqDetailPage() {
       toast.error(
         isAppError(err)
           ? err.message
-          : "PDF ещё не готов — опубликуйте счёт и подождите генерацию",
+          : "PDF ещё не готов — подождите генерацию (до минуты) или опубликуйте КП вручную",
       );
     }
   }
@@ -534,7 +534,7 @@ function ManagerRfqDetailPage() {
             invoiceQuery.isFetching ? (
               <section className="space-y-4 rounded-3xl border border-border bg-card p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="text-sm font-bold">Счёт</h2>
+                  <h2 className="text-sm font-bold">КП</h2>
                   {invoice ? (
                     <span
                       className={cn(
@@ -545,7 +545,7 @@ function ManagerRfqDetailPage() {
                       )}
                     >
                       {invoice.status === "published"
-                        ? "Опубликован"
+                        ? "Отправлено"
                         : "Черновик"}
                     </span>
                   ) : null}
@@ -553,12 +553,12 @@ function ManagerRfqDetailPage() {
 
                 {invoiceQuery.isLoading ? (
                   <p className="text-sm text-muted-foreground">
-                    Загрузка счёта…
+                    Загрузка КП…
                   </p>
                 ) : !invoice ? (
                   <p className="text-sm text-muted-foreground">
-                    Счёт появится после отправки КП (черновик создаётся
-                    автоматически).
+                    Документ КП формируется автоматически в течение минуты
+                    после отправки КП клиенту.
                   </p>
                 ) : (
                   <>
@@ -616,8 +616,8 @@ function ManagerRfqDetailPage() {
                           }
                         >
                           {publishInvoiceMutation.isPending
-                            ? "Публикация…"
-                            : "Опубликовать счёт"}
+                            ? "Отправка…"
+                            : "Опубликовать КП"}
                         </Button>
                       ) : null}
                       {canDownloadInvoice ? (
@@ -626,7 +626,7 @@ function ManagerRfqDetailPage() {
                           onClick={() => void onDownloadInvoice()}
                         >
                           <Download className="mr-1.5 h-4 w-4" aria-hidden />
-                          Скачать PDF
+                          Скачать КП (PDF)
                         </Button>
                       ) : null}
                     </div>

@@ -71,8 +71,8 @@ function OrderDetailPage() {
   const canDownloadInvoice =
     !!invoice &&
     (invoice.status === "published" || !!invoice.pdf_key || !!invoice.pdf_url);
-  // Три разных состояния, которые раньше сливались в одну плашку «счёт появится
-  // после публикации»: запрос упал, счёт ещё черновик, счёта вообще нет.
+  // Три разных состояния, которые раньше сливались в одну плашку «КП появится
+  // после публикации»: запрос упал, КП ещё черновик, КП вообще нет.
   const invoiceFailed = invoiceQuery.isError;
   const invoiceIsDraft = !!invoice && !canDownloadInvoice;
 
@@ -86,7 +86,7 @@ function OrderDetailPage() {
       window.open(res.download_url, "_blank", "noopener,noreferrer");
     } catch (err) {
       toast.error(
-        isAppError(err) ? err.message : t("Счёт пока недоступен для скачивания"),
+        isAppError(err) ? err.message : t("КП пока недоступно для скачивания"),
       );
     }
   }
@@ -227,7 +227,8 @@ function OrderDetailPage() {
                 <section className="rounded-2xl border border-border bg-card p-5">
                   <h2 className="font-semibold">{t("Документы")}</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Счёт · {invoiceStatusLabel(invoice?.status ?? "", t)}
+                    Коммерческое предложение (КП) ·{" "}
+                    {invoiceStatusLabel(invoice?.status ?? "", t)}
                   </p>
                   <Button
                     className="mt-4"
@@ -235,13 +236,13 @@ function OrderDetailPage() {
                     onClick={() => void onDownloadInvoice()}
                   >
                     <Download className="h-4 w-4" />
-                    {t("Скачать счёт (PDF)")}
+                    {t("Скачать КП (PDF)")}
                   </Button>
                 </section>
               ) : invoiceFailed ? (
                 <section className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm">
                   <p className="text-muted-foreground">
-                    Не удалось загрузить счёт
+                    Не удалось загрузить КП
                     {isAppError(invoiceQuery.error)
                       ? `: ${invoiceQuery.error.message}`
                       : "."}
@@ -258,8 +259,8 @@ function OrderDetailPage() {
               ) : invoiceIsDraft ? (
                 <section className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm">
                   <p className="text-muted-foreground">
-                    Счёт готовится. PDF появляется в течение минуты после
-                    публикации менеджером.
+                    КП готовится. PDF появляется в течение минуты после
+                    отправки менеджером.
                   </p>
                   <Button
                     className="mt-3"
@@ -272,7 +273,7 @@ function OrderDetailPage() {
                 </section>
               ) : (
                 <section className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
-                  {t("Счёт появится здесь после публикации менеджером.")}
+                  {t("КП появится здесь после отправки менеджером.")}
                 </section>
               )}
             </div>

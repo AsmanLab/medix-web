@@ -86,18 +86,18 @@ function ManagerOrderDetailPage() {
 
   const publishMutation = useMutation({
     mutationFn: () => {
-      if (!invoice) throw new Error("Счёт не найден");
+      if (!invoice) throw new Error("КП не найдено");
       return publishManagerInvoice(invoice.id);
     },
     onSuccess: async () => {
-      toast.success("Счёт опубликован. PDF появится примерно через минуту.");
+      toast.success("КП отправлено. PDF появится примерно через минуту.");
       await queryClient.invalidateQueries({
         queryKey: queryKeys.managerOrders.invoice(orderId),
       });
     },
     onError: (err) => {
       toast.error(
-        isAppError(err) ? err.message : "Не удалось опубликовать счёт",
+        isAppError(err) ? err.message : "Не удалось отправить КП",
       );
     },
   });
@@ -115,7 +115,7 @@ function ManagerOrderDetailPage() {
       toast.error(
         isAppError(err)
           ? err.message
-          : "PDF ещё не готов — подождите генерацию после публикации",
+          : "PDF ещё не готов — подождите генерацию после отправки КП",
       );
     }
   }
@@ -245,11 +245,11 @@ function ManagerOrderDetailPage() {
             </section>
 
             <section className="space-y-3 rounded-3xl border border-border bg-card p-5">
-              <h2 className="font-semibold">Счёт</h2>
+              <h2 className="font-semibold">КП</h2>
               {invoiceQuery.isError ? (
                 <>
                   <p className="text-sm text-muted-foreground">
-                    Не удалось загрузить счёт
+                    Не удалось загрузить КП
                     {isAppError(invoiceQuery.error)
                       ? `: ${invoiceQuery.error.message}`
                       : "."}
@@ -264,7 +264,7 @@ function ManagerOrderDetailPage() {
                 </>
               ) : !invoice ? (
                 <p className="text-sm text-muted-foreground">
-                  Счёта по этому заказу нет.
+                  КП по этому заказу нет.
                 </p>
               ) : (
                 <>
@@ -272,7 +272,7 @@ function ManagerOrderDetailPage() {
                     <FileText className="mr-1 inline h-4 w-4" aria-hidden />
                     {invoice.id.slice(0, 8)}… ·{" "}
                     {invoice.status === "published"
-                      ? "опубликован"
+                      ? "отправлено"
                       : "черновик"}{" "}
                     · {formatMoney(invoice.total, "—")}
                   </p>
@@ -284,8 +284,8 @@ function ManagerOrderDetailPage() {
                         onClick={() => publishMutation.mutate()}
                       >
                         {publishMutation.isPending
-                          ? "Публикуем…"
-                          : "Опубликовать счёт"}
+                          ? "Отправляем…"
+                          : "Опубликовать КП"}
                       </Button>
                     ) : null}
                     {canDownloadInvoice ? (
@@ -295,7 +295,7 @@ function ManagerOrderDetailPage() {
                         onClick={() => void onDownloadInvoice()}
                       >
                         <Download className="h-4 w-4" aria-hidden />
-                        Скачать PDF
+                        Скачать КП (PDF)
                       </Button>
                     ) : null}
                   </div>

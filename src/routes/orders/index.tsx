@@ -41,7 +41,7 @@ function OrdersListPage() {
     <AppShell>
       <h1 className="font-display text-3xl font-bold">{t("Мои заказы")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {t("Статусы, позиции и счета после оформления")}
+        {t("Статусы, позиции и КП после оформления")}
       </p>
       <CommerceTabs active="orders" />
 
