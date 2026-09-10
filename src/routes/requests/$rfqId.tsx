@@ -48,6 +48,8 @@ function RequestDetailPage() {
   const detailQuery = useQuery({
     queryKey: queryKeys.rfq.detail(rfqId),
     queryFn: ({ signal }) => fetchRfq(rfqId, signal),
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
     retry: (count, err: unknown) => {
       if (isAppError(err) && err.status === 404) return false;
       return count < 1;

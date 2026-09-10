@@ -3,11 +3,45 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { queryKeys } from "@/api/query-keys";
+import { parseDeepLink } from "@/features/notifications/deep-link";
 import { openDeepLink } from "@/features/notifications/open-deep-link";
 import { playNotificationSound } from "@/lib/notification-sound";
 import type { ForegroundPush } from "@/lib/push";
 import { useSession } from "@/session/store";
 import { useT } from "@/i18n/LocaleProvider";
+
+/**
+ * Кэш какого домена устарел из-за события с этим deep_link.
+ *
+ * Уведомление говорит "что-то изменилось у сущности X" — инвалидируем корень
+ * её ключа целиком (detail + invoice + list одним вызовом), а не пытаемся
+ * угадывать, какая именно страница сейчас открыта.
+ */
+function invalidatedKeyFor(deepLink: string | null) {
+  const target = parseDeepLink(deepLink);
+  if (!target) return null;
+
+  switch (target.kind) {
+    case "order":
+      return queryKeys.orders.all;
+    case "rfq":
+      return queryKeys.rfq.all;
+    case "service":
+      return queryKeys.service.all;
+    case "admin-order":
+      return queryKeys.managerOrders.all;
+    case "admin-rfq":
+      return queryKeys.managerRfq.all;
+    case "admin-service":
+      return queryKeys.service.all;
+    case "admin-customer":
+      return queryKeys.adminCustomers.all;
+    case "profile":
+      return queryKeys.profile.all;
+    default:
+      return null;
+  }
+}
 
 /**
  * Показывает системное уведомление, когда вкладка открыта, но не видна.
@@ -77,6 +111,9 @@ export function PushForegroundBridge() {
             void queryClient.invalidateQueries({
               queryKey: queryKeys.notifications.all,
             });
+
+            const staleKey = invalidatedKeyFor(message.deepLink);
+            if (staleKey) void queryClient.invalidateQueries({ queryKey: staleKey });
 
             if (document.visibilityState !== "visible") {
               void showSystemNotification(message);

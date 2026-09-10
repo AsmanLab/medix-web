@@ -115,6 +115,9 @@
 
   html,
   body {
+    /* Наш pull-to-refresh (PullToRefresh.tsx) не должен дублироваться
+       нативным жестом Chrome/Android — тот всплывает поверх страницы. */
+    overscroll-behavior-y: contain;
     background-color: var(--color-background);
     background-image:
       radial-gradient(

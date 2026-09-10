@@ -229,8 +229,13 @@ export async function onForegroundPush(
   const app = getApps()[0] ?? initializeApp(config);
 
   return onMessage(getMessaging(app), (payload) => {
-    const title = payload.notification?.title ?? identityTranslate("Новое уведомление");
-    const body = payload.notification?.body ?? "";
+    // Веб получает data-only push (см. fcm_client.py::build_push_message —
+    // блок `notification` для веба намеренно не шлётся, иначе уведомление
+    // показывалось бы дважды), поэтому `data` проверяем первым — так же,
+    // как это уже делает firebase-messaging-sw.js для фонового push.
+    const title =
+      payload.data?.title ?? payload.notification?.title ?? identityTranslate("Новое уведомление");
+    const body = payload.data?.body ?? payload.notification?.body ?? "";
     const deepLink =
       (payload.data?.deep_link as string | undefined)?.trim() || null;
     handler({ title, body, deepLink });

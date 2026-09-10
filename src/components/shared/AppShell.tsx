@@ -203,13 +203,17 @@ function CatalogMegaMenu({
         className="absolute top-full left-1/2 z-50 w-[min(900px,calc(100vw-2rem))] max-w-[900px] -translate-x-1/2 pt-[19px] xl:left-[-175px] xl:w-[900px] xl:translate-x-0"
       >
         <div
-          // max-h + min-h-0 на колонках ниже: подкатегорий у раздела может
-          // быть больше, чем влезает до низа экрана (например, «Лаборатории»),
-          // и без ограничения высоты панель просто продолжалась за нижним
-          // краем viewport — прокрутить её было нечем.
-          className="grid max-h-[calc(100dvh-7rem)] overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_26px_70px_-28px_rgba(15,51,80,.45)] lg:grid-cols-[240px_1fr] xl:grid-cols-[280px_1fr]"
+          // max-h — на каждой колонке ниже, не здесь: обе колонки лежат в
+          // одной auto-строке грида, а auto-строка сайзится по контенту и
+          // max-height контейнера не уважает — grid её просто обрежет своим
+          // overflow-hidden, и внутренний overflow-y-auto колонок никогда
+          // не включится. Подкатегорий у раздела может быть больше, чем
+          // влезает до низа экрана (например, «Лаборатории»), и без
+          // ограничения высоты именно на колонках панель продолжалась за
+          // нижним краем viewport — прокрутить её было нечем.
+          className="grid overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_26px_70px_-28px_rgba(15,51,80,.45)] lg:grid-cols-[240px_1fr] xl:grid-cols-[280px_1fr]"
         >
-          <div className="min-h-0 overflow-y-auto overscroll-contain border-r border-border bg-background/70 p-3">
+          <div className="max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain border-r border-border bg-background/70 p-3">
             <div className="px-3 pt-1 pb-2 text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
               {t("Категории")}
             </div>
@@ -254,7 +258,7 @@ function CatalogMegaMenu({
             </Link>
           </div>
 
-          <div className="min-h-0 overflow-y-auto overscroll-contain p-6">
+          <div className="max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain p-6">
             {menuCategory ? (
               <>
                 <div className="flex items-start justify-between gap-5">
