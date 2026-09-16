@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://medix-beryl.vercel.app/sitemap.xml
+Sitemap: https://medix.kg/sitemap.xml
