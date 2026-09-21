@@ -128,10 +128,10 @@ export function BannerSlider({ banners }: BannerSliderProps) {
                 loading={i === 0 ? "eager" : "lazy"}
                 fetchPriority={i === 0 ? "high" : "auto"}
                 decoding="async"
-                className="h-full w-full object-cover opacity-55"
+                className="absolute inset-0 h-full w-full object-cover opacity-55"
               />
             ) : (
-              <div className="h-full w-full bg-[radial-gradient(circle_at_20%_20%,rgba(61,183,217,0.45),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(116,219,190,0.25),transparent_30%)]" />
+              <div className="absolute inset-0 h-full w-full bg-[radial-gradient(circle_at_20%_20%,rgba(61,183,217,0.45),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(116,219,190,0.25),transparent_30%)]" />
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.22_0.05_230)] via-[oklch(0.22_0.05_230)/0.75] to-transparent" />
 
