@@ -6,15 +6,17 @@ import { isSafeInternalPath } from "@/lib/redirect";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/LocaleProvider";
 
+const FALLBACK_DURATION_MS = 7000;
+
 type BannerSliderProps = {
   banners: BannerOut[];
-  imageById: Record<string, string | null>;
 };
 
-export function BannerSlider({ banners, imageById }: BannerSliderProps) {
+export function BannerSlider({ banners }: BannerSliderProps) {
   const t = useT();
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const count = banners.length;
@@ -42,23 +44,24 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
 
   useEffect(() => {
     if (paused || reducedMotion || count <= 1) return;
-    // 3 секунды не хватало, чтобы прочитать заголовок с подзаголовком —
-    // баннер уезжал на середине фразы.
+    // Время показа настраивается в админке на слайд; 7000 — фолбэк для
+    // баннеров без него (заведённых до этого поля) и для fallback-баннера.
+    const durationMs = current?.duration_ms || FALLBACK_DURATION_MS;
     const timer = window.setTimeout(() => {
-      setIndex((i) => (i + 1) % count);
-    }, 7000);
+      go(index + 1);
+    }, durationMs);
     return () => window.clearTimeout(timer);
-  }, [count, index, paused, reducedMotion]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count, index, paused, reducedMotion, current?.duration_ms]);
 
   if (!current) return null;
 
   function go(next: number) {
     if (count <= 0) return;
+    setDirection(next >= index ? 1 : -1);
     setIndex(((next % count) + count) % count);
   }
 
-  const imageUrl = imageById[current.id];
-  const cta = current.cta_text?.trim() || t("Смотреть каталог");
   const href = current.link_url?.trim() || "/catalog";
 
   function onCta() {
@@ -76,7 +79,7 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
       role="region"
       aria-roledescription={t("слайдер")}
       aria-label={t("Баннеры Medix")}
-      className="relative overflow-hidden rounded-3xl bg-[oklch(0.28_0.05_230)] text-white shadow-[0_22px_70px_-34px_rgba(11,68,99,0.55)]"
+      className="relative aspect-[21/9] min-h-[280px] max-h-[520px] overflow-hidden rounded-3xl bg-[oklch(0.28_0.05_230)] text-white shadow-[0_22px_70px_-34px_rgba(11,68,99,0.55)]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -96,43 +99,67 @@ export function BannerSlider({ banners, imageById }: BannerSliderProps) {
         go(delta < 0 ? index + 1 : index - 1);
       }}
     >
-      <div className="absolute inset-0">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt=""
-            fetchPriority="high"
-            decoding="async"
-            className="h-full w-full object-cover opacity-55"
-          />
-        ) : (
-          <div className="h-full w-full bg-[radial-gradient(circle_at_20%_20%,rgba(61,183,217,0.45),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(116,219,190,0.25),transparent_30%)]" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.22_0.05_230)] via-[oklch(0.22_0.05_230)/0.75] to-transparent" />
-      </div>
-
-      <div className="relative z-10 flex min-h-[360px] flex-col justify-center px-6 py-12 sm:min-h-[420px] sm:px-10 lg:px-14">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
-          Medix International
-        </p>
-        <h1 className="mt-3 max-w-xl font-display text-3xl font-bold leading-tight sm:text-5xl">
-          {current.title || t("Медицинское оборудование для клиник")}
-        </h1>
-        {current.subtitle ? (
-          <p className="mt-4 max-w-lg text-sm text-white/80 sm:text-base">
-            {current.subtitle}
-          </p>
-        ) : null}
-        <div className="mt-8">
-          <button
-            type="button"
-            onClick={onCta}
-            className="inline-flex h-11 items-center rounded-xl bg-white px-5 text-sm font-semibold text-[oklch(0.28_0.05_230)]"
+      {banners.map((banner, i) => {
+        const isCurrent = i === index;
+        // Неактивный слайд сдвинут в сторону, откуда листаем — при переходе
+        // он въезжает/уезжает вместе с fade, а не просто подменяется.
+        const inactiveOffsetPercent = direction * 8;
+        return (
+          <div
+            key={banner.id}
+            aria-hidden={!isCurrent}
+            className={cn(
+              "absolute inset-0",
+              reducedMotion ? undefined : "transition-[transform,opacity] duration-700 ease-out",
+              isCurrent ? "opacity-100" : "pointer-events-none opacity-0",
+            )}
+            style={{
+              transform: reducedMotion
+                ? undefined
+                : `translateX(${isCurrent ? 0 : inactiveOffsetPercent}%)`,
+            }}
           >
-            {cta}
-          </button>
-        </div>
-      </div>
+            {banner.image_url ? (
+              <img
+                src={banner.image_url}
+                alt=""
+                width={1260}
+                height={540}
+                loading={i === 0 ? "eager" : "lazy"}
+                fetchPriority={i === 0 ? "high" : "auto"}
+                decoding="async"
+                className="h-full w-full object-cover opacity-55"
+              />
+            ) : (
+              <div className="h-full w-full bg-[radial-gradient(circle_at_20%_20%,rgba(61,183,217,0.45),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(116,219,190,0.25),transparent_30%)]" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.22_0.05_230)] via-[oklch(0.22_0.05_230)/0.75] to-transparent" />
+
+            <div className="relative z-10 flex h-full flex-col justify-center overflow-hidden px-6 py-8 sm:px-10 lg:px-14">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
+                Medix International
+              </p>
+              <h1 className="mt-3 line-clamp-2 max-w-xl font-display text-3xl font-bold leading-tight sm:text-5xl">
+                {banner.title || t("Медицинское оборудование для клиник")}
+              </h1>
+              {banner.subtitle ? (
+                <p className="mt-4 line-clamp-3 max-w-lg text-sm text-white/80 sm:text-base">
+                  {banner.subtitle}
+                </p>
+              ) : null}
+              <div className="mt-8">
+                <button
+                  type="button"
+                  onClick={onCta}
+                  className="inline-flex h-11 items-center rounded-xl bg-white px-5 text-sm font-semibold text-[oklch(0.28_0.05_230)]"
+                >
+                  {banner.cta_text?.trim() || t("Смотреть каталог")}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
 
       {count > 1 ? (
         <>

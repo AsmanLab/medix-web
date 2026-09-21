@@ -7,10 +7,9 @@ import {
   PackageCheck,
   Wrench,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { fetchCategories, fetchProducts } from "@/api/catalog";
 import { fetchBanners, type BannerOut } from "@/api/cms";
-import { fetchMediaDownloadUrl } from "@/api/media";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
@@ -25,11 +24,13 @@ function fallbackBanner(t: ReturnType<typeof useT>): BannerOut {
   return {
     id: "fallback",
     image_key: "",
+    image_url: "",
     title: t("Медицинское оборудование для клиник Кыргызстана"),
     subtitle: t("Каталог, запросы цены (RFQ), заказы и сервис — в одном кабинете."),
     cta_text: t("Смотреть каталог"),
     link_url: "/catalog",
     deep_link: "",
+    duration_ms: 7000,
   };
 }
 
@@ -75,24 +76,18 @@ function HomePage() {
     return list.length > 0 ? list : [fallbackBanner(t)];
   }, [bannersQuery.data, bannersQuery.isLoading, t]);
 
-  const imageKeys = useMemo(
-    () => banners.map((b) => b.image_key).filter(Boolean),
-    [banners],
-  );
-
-  const imagesQuery = useQuery({
-    queryKey: queryKeys.cms.bannerImages(imageKeys),
-    queryFn: async ({ signal }) => {
-      const entries = await Promise.all(
-        banners.map(async (banner) => {
-          const url = await fetchMediaDownloadUrl(banner.image_key, signal);
-          return [banner.id, url] as const;
-        }),
-      );
-      return Object.fromEntries(entries) as Record<string, string | null>;
-    },
-    enabled: !bannersQuery.isLoading && imageKeys.length > 0,
-  });
+  useEffect(() => {
+    const firstImageUrl = banners[0]?.image_url;
+    if (!firstImageUrl) return;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = firstImageUrl;
+    document.head.appendChild(link);
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, [banners]);
 
   const categoriesQuery = useQuery({
     queryKey: queryKeys.catalog.categories(),
@@ -117,7 +112,7 @@ function HomePage() {
         {bannersQuery.isLoading ? (
           <BannerSkeleton />
         ) : (
-          <BannerSlider banners={banners} imageById={imagesQuery.data ?? {}} />
+          <BannerSlider banners={banners} />
         )}
 
         <section>

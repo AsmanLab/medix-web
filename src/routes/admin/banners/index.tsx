@@ -32,7 +32,10 @@ type FormState = {
   deep_link: string;
   sort: number;
   is_enabled: boolean;
+  duration_sec: number;
 };
+
+const DEFAULT_DURATION_SEC = 7;
 
 const emptyForm = (): FormState => ({
   image_key: "",
@@ -43,6 +46,7 @@ const emptyForm = (): FormState => ({
   deep_link: "",
   sort: 0,
   is_enabled: true,
+  duration_sec: DEFAULT_DURATION_SEC,
 });
 
 function BannersAdminPage() {
@@ -85,6 +89,7 @@ function BannersAdminPage() {
       deep_link: banner.deep_link,
       sort: banner.sort,
       is_enabled: banner.is_enabled,
+      duration_sec: Math.round(banner.duration_ms / 1000),
     });
   }
 
@@ -93,10 +98,12 @@ function BannersAdminPage() {
       if (!form.image_key.trim()) {
         throw new Error("Загрузите изображение баннера");
       }
+      const { duration_sec, ...rest } = form;
+      const body = { ...rest, duration_ms: duration_sec * 1000 };
       if (editingId) {
-        return updateAdminBanner(editingId, form);
+        return updateAdminBanner(editingId, body);
       }
-      return createAdminBanner(form);
+      return createAdminBanner(body);
     },
     onSuccess: async () => {
       toast.success(editingId ? "Баннер обновлён" : "Баннер создан");
@@ -259,6 +266,26 @@ function BannersAdminPage() {
               />
             </label>
           </div>
+
+          <label className="block text-xs font-semibold">
+            Время показа, сек
+            <input
+              type="number"
+              min={2}
+              max={30}
+              value={form.duration_sec}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  duration_sec: Math.min(
+                    30,
+                    Math.max(2, Number(e.target.value) || DEFAULT_DURATION_SEC),
+                  ),
+                }))
+              }
+              className="field-control mt-1.5"
+            />
+          </label>
 
           <label className="block text-xs font-semibold">
             Link URL
