@@ -8,6 +8,7 @@ import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import { CatalogSearch } from "@/features/catalog/CatalogSearch";
+import { useCatalogReturnRestore } from "@/features/catalog/catalog-return";
 import { CategoryFilter } from "@/features/catalog/CategoryFilter";
 import { ProductGrid } from "@/features/catalog/ProductGrid";
 import {
@@ -84,6 +85,8 @@ function CatalogIndexPage() {
     categoryIds: selectedCategoryIds,
   });
   const products = productsQuery.products;
+
+  useCatalogReturnRestore(productsQuery);
 
   function onSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -215,6 +218,7 @@ function CatalogIndexPage() {
               <ProductGrid
                 products={products}
                 className="lg:grid-cols-3 xl:grid-cols-4"
+                pageCount={productsQuery.data?.pages.length ?? 1}
               />
               {productsQuery.hasNextPage ? (
                 <div className="mt-8 flex justify-center">

@@ -199,7 +199,15 @@ export function CategoryFilter({
         <p className="px-3 text-xs font-bold tracking-wide text-muted-foreground uppercase">
           {words.heading}
         </p>
-        <div className="mt-2">{tree}</div>
+        {/*
+         * Своя высота и скролл: без них длинное дерево категорий уезжало
+         * за экран и листалось вместе со страницей товаров, а не отдельно
+         * от неё. 8rem — отступ под `top-24` этого же `<nav>` плюс запас
+         * снизу, чтобы дерево не упиралось в самый край вьюпорта.
+         */}
+        <div className="mt-2 overflow-y-auto overscroll-contain lg:max-h-[calc(100dvh-8rem)]">
+          {tree}
+        </div>
       </nav>
 
       {/* ── Шторка ──────────────────────────────────────────────────── */}
