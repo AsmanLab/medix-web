@@ -1,10 +1,18 @@
 import type { ProductListOut } from "@/api/catalog";
+import { saveCatalogReturn } from "@/features/catalog/catalog-return";
 import { ProductCard } from "@/features/catalog/ProductCard";
 import { cn } from "@/lib/utils";
 
 type ProductGridProps = {
   products: ProductListOut[];
   className?: string;
+  /**
+   * Сколько страниц каталога сейчас догружено — нужно только на страницах
+   * каталога и раздела, чтобы кнопка «Назад» с карточки товара могла
+   * восстановить не только фильтр, но и докрученные «Показать ещё»
+   * страницы. На ленте главной не задаётся — туда возвращаться некуда.
+   */
+  pageCount?: number;
 };
 
 /**
@@ -29,7 +37,7 @@ type ProductGridProps = {
  * фотографии пол-экрана, и в поле зрения помещалось полтора товара. Карточка
  * при этом ужимается — см. `density` в ProductCard.
  */
-export function ProductGrid({ products, className }: ProductGridProps) {
+export function ProductGrid({ products, className, pageCount }: ProductGridProps) {
   return (
     <ul
       className={cn(
@@ -40,7 +48,21 @@ export function ProductGrid({ products, className }: ProductGridProps) {
       {products.map((product, index) => (
         <li key={product.id}>
           {/* Первый ряд грузится немедленно: он попадает в LCP. */}
-          <ProductCard product={product} priority={index < 4} />
+          <ProductCard
+            product={product}
+            priority={index < 4}
+            onBeforeNavigate={
+              pageCount === undefined
+                ? undefined
+                : () =>
+                    saveCatalogReturn({
+                      pathname: window.location.pathname,
+                      search: window.location.search,
+                      scrollY: window.scrollY,
+                      pageCount,
+                    })
+            }
+          />
         </li>
       ))}
     </ul>

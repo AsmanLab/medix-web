@@ -8,6 +8,7 @@ import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
 import { CatalogSearch } from "@/features/catalog/CatalogSearch";
+import { useCatalogReturnRestore } from "@/features/catalog/catalog-return";
 import { CategoryFilter } from "@/features/catalog/CategoryFilter";
 import { useProductPages } from "@/features/catalog/use-product-pages";
 import {
@@ -110,6 +111,8 @@ function CategoryPage() {
     enabled: productCategoryIds.length > 0,
   });
   const products = productsQuery.products;
+
+  useCatalogReturnRestore(productsQuery);
 
   // seo_title/seo_description заполняются в админке для каждой категории —
   // до сих пор они никуда не попадали.
@@ -311,6 +314,7 @@ function CategoryPage() {
                         className={cn(
                           hasBranch && "lg:grid-cols-3 xl:grid-cols-4",
                         )}
+                        pageCount={productsQuery.data?.pages.length ?? 1}
                       />
                       {productsQuery.hasNextPage ? (
                         <div className="mt-8 flex justify-center">

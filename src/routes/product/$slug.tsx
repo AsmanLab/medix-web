@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
@@ -15,6 +15,7 @@ import {
   availabilityLabel,
   availabilityTone,
 } from "@/features/catalog/availability";
+import { catalogReturnHref } from "@/features/catalog/catalog-return";
 import {
   emptySelection,
   missingRequiredGroups,
@@ -44,6 +45,10 @@ function ProductDetailPage() {
   const t = useT();
   const { slug } = Route.useParams();
   const navigate = useNavigate();
+  // Вычисляется один раз при заходе на страницу: сама запись читается
+  // (и, если страница восстановления её использует, стирается) на стороне
+  // каталога — здесь только берём тот же адрес для ссылки «Назад».
+  const [backHref] = useState(() => catalogReturnHref());
   const query = useQuery({
     queryKey: queryKeys.catalog.product(slug),
     queryFn: ({ signal }) => fetchProductBySlug(slug, signal),
@@ -191,13 +196,19 @@ function ProductDetailPage() {
 
   return (
     <AppShell>
-      <Link
-        to="/catalog"
-        search={{ q: undefined }}
+      {/*
+       * Обычный <a>, не Link роутера: адрес — произвольный путь каталога
+       * или раздела, известный только в рантайме (из sessionStorage), а не
+       * один из типизированных маршрутов. Полная навигация здесь не в
+       * тягость — то же сохранённое место каталог читает из sessionStorage,
+       * а не из истории роутера, и переживает даже F5.
+       */}
+      <a
+        href={backHref}
         className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary"
       >
         <ArrowLeft className="h-4 w-4" />{t("К каталогу")}
-      </Link>
+      </a>
 
       <div className="mt-6">
         <StateBlock

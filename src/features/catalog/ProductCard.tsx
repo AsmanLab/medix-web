@@ -25,6 +25,12 @@ type ProductCardProps = {
    */
   density?: "compact" | "full";
   className?: string;
+  /**
+   * Вызывается перед переходом на карточку товара — сохраняет, куда
+   * возвращаться кнопкой «Назад» (см. `catalog-return.ts`). Не задан на
+   * ленте главной: туда возвращаться некуда, это не каталог.
+   */
+  onBeforeNavigate?: () => void;
 };
 
 /**
@@ -43,6 +49,7 @@ export function ProductCard({
   priority,
   density = "compact",
   className,
+  onBeforeNavigate,
 }: ProductCardProps) {
   const t = useT();
   const origin = [product.manufacturer, product.country]
@@ -60,6 +67,7 @@ export function ProductCard({
     <Link
       to="/product/$slug"
       params={{ slug: product.slug }}
+      onClick={onBeforeNavigate}
       className={cn(
         "group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card sm:rounded-2xl",
         "shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:border-primary/40",
