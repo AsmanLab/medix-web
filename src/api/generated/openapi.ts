@@ -2827,6 +2827,8 @@ export interface components {
             name_en: string;
             /** Name Ru */
             name_ru: string;
+            /** Old Price Amount */
+            old_price_amount?: number | string | null;
             /** Price Amount */
             price_amount?: number | string | null;
             /** Sku */
@@ -3641,6 +3643,10 @@ export interface components {
             name_en: string;
             /** Name Ru */
             name_ru: string;
+            /** Old Price */
+            old_price?: string | null;
+            /** Old Price Amount */
+            old_price_amount?: string | null;
             /** Option Groups */
             option_groups: components["schemas"]["OptionGroupOut"][];
             /** Price */
@@ -3714,6 +3720,8 @@ export interface components {
             name_en: string;
             /** Name Ru */
             name_ru: string;
+            /** Old Price */
+            old_price?: string | null;
             /** Price */
             price: string | null;
             /** Primary Image Key */
@@ -4261,6 +4269,8 @@ export interface components {
             name_en?: string | null;
             /** Name Ru */
             name_ru?: string | null;
+            /** Old Price Amount */
+            old_price_amount?: number | string | null;
             /** Price Amount */
             price_amount?: number | string | null;
             /** Sku */

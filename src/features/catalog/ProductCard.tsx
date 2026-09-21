@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ImageOff } from "lucide-react";
 import type { ProductListOut } from "@/api/catalog";
 import { availabilityLabel } from "@/features/catalog/availability";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, parseMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { contentText } from "@/i18n/content";
 import { useT } from "@/i18n/LocaleProvider";
@@ -48,6 +48,10 @@ export function ProductCard({
   const origin = [product.manufacturer, product.country]
     .filter(Boolean)
     .join(" · ");
+
+  const price = parseMoney(product.price);
+  const oldPrice = parseMoney(product.old_price);
+  const isOnSale = Boolean(price && oldPrice && oldPrice.amount > price.amount);
 
   // Второстепенные строки карточки: в компактном виде появляются с 640px.
   const meta = density === "full" ? "" : "hidden sm:block";
@@ -117,8 +121,20 @@ export function ProductCard({
           <span className={cn("text-xs text-muted-foreground", meta)}>
             {availabilityLabel(product.availability, t)}
           </span>
-          <span className="ml-auto text-right text-sm font-semibold text-primary sm:text-base">
-            {formatMoney(product.price, t("По запросу"))}
+          <span className="ml-auto flex flex-col items-end text-right">
+            {isOnSale ? (
+              <span className="text-xs text-muted-foreground line-through">
+                {formatMoney(product.old_price)}
+              </span>
+            ) : null}
+            <span
+              className={cn(
+                "text-sm font-semibold sm:text-base",
+                isOnSale ? "text-destructive" : "text-primary",
+              )}
+            >
+              {formatMoney(product.price, t("По запросу"))}
+            </span>
           </span>
         </div>
       </div>

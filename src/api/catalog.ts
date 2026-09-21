@@ -203,6 +203,7 @@ export type CreateProductBody = {
   video_url?: string;
   availability?: string;
   price_amount?: number | null;
+  old_price_amount?: number | null;
 };
 
 export type UpdateProductBody = {
@@ -218,6 +219,7 @@ export type UpdateProductBody = {
   video_url?: string;
   availability?: string;
   price_amount?: number | null;
+  old_price_amount?: number | null;
 };
 
 export function createAdminProduct(body: CreateProductBody) {

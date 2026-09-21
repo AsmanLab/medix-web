@@ -1309,6 +1309,21 @@
             "title": "Name Ru",
             "type": "string"
           },
+          "old_price_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Price Amount"
+          },
           "price_amount": {
             "anyOf": [
               {
@@ -3256,6 +3271,28 @@
             "title": "Name Ru",
             "type": "string"
           },
+          "old_price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Price"
+          },
+          "old_price_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Price Amount"
+          },
           "option_groups": {
             "items": {
               "$ref": "#/components/schemas/OptionGroupOut"
@@ -3457,6 +3494,17 @@
           "name_ru": {
             "title": "Name Ru",
             "type": "string"
+          },
+          "old_price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Price"
           },
           "price": {
             "anyOf": [
@@ -5040,6 +5088,21 @@
               }
             ],
             "title": "Name Ru"
+          },
+          "old_price_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Price Amount"
           },
           "price_amount": {
             "anyOf": [

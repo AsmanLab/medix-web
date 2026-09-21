@@ -29,8 +29,9 @@ import { ProductGallery } from "@/features/catalog/ProductGallery";
 import { ProductTabs, type ProductTab } from "@/features/catalog/ProductTabs";
 import { ProductVideo } from "@/features/catalog/ProductVideo";
 import { parseVideoUrl } from "@/features/catalog/video-url";
-import { formatPrice } from "@/lib/money";
+import { formatMoney, formatPrice, parseMoney } from "@/lib/money";
 import { usePageMeta } from "@/lib/page-meta";
+import { cn } from "@/lib/utils";
 import { useSession } from "@/session/store";
 import { contentText } from "@/i18n/content";
 import { useT } from "@/i18n/LocaleProvider";
@@ -76,6 +77,12 @@ function ProductDetailPage() {
     () => summarizeConfigPrice(product?.price ?? null, selected, t),
     [product?.price, selected, t],
   );
+
+  const isOnSale = useMemo(() => {
+    const price = parseMoney(product?.price);
+    const oldPrice = parseMoney(product?.old_price);
+    return Boolean(price && oldPrice && oldPrice.amount > price.amount);
+  }, [product?.price, product?.old_price]);
 
   // Название на языке страницы. `name` появилось вместе с переводами;
   // на старом бэкенде его нет, и тогда берётся русское — иначе карточка
@@ -253,11 +260,25 @@ function ProductDetailPage() {
                 <div className="space-y-5 rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
                   <div>
                     <div className="flex flex-wrap items-end justify-between gap-3">
-                      <p className="text-2xl font-bold text-primary">
-                        {groups.length > 0
-                          ? summary.label
-                          : formatPrice(product.price, t)}
-                      </p>
+                      <div>
+                        {groups.length === 0 && isOnSale ? (
+                          <p className="text-sm text-muted-foreground line-through">
+                            {formatMoney(product.old_price)}
+                          </p>
+                        ) : null}
+                        <p
+                          className={cn(
+                            "text-2xl font-bold",
+                            groups.length === 0 && isOnSale
+                              ? "text-destructive"
+                              : "text-primary",
+                          )}
+                        >
+                          {groups.length > 0
+                            ? summary.label
+                            : formatPrice(product.price, t)}
+                        </p>
+                      </div>
                       <StatusPill tone={availabilityTone(product.availability)}>
                         {availabilityLabel(product.availability, t)}
                       </StatusPill>
