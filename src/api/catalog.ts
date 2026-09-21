@@ -107,10 +107,13 @@ export type FetchProductsParams = {
   limit?: number;
   /**
    * id последнего показанного товара. Пагинация в API — keyset по возрастанию
-   * id: сервер отдаёт то, что строго больше курсора. Смещения (offset) нет
-   * намеренно — при вставке товара оно сдвигает выдачу и даёт дубли.
+   * id: сервер отдаёт то, что строго больше курсора. Работает только при
+   * пустом `q` — сортировка по релевантности несовместима с курсором,
+   * непустой поиск листается через `offset`.
    */
   cursor?: string | null;
+  /** Смещение для страницы поиска (непустой `q`). Игнорируется при пустом `q`. */
+  offset?: number;
 };
 
 /** Сколько товаров запрашивается за раз. Потолок сервера — 100. */
@@ -129,6 +132,7 @@ export function fetchProducts(
         ? params.category_ids
         : undefined,
       cursor: params.cursor || undefined,
+      offset: params.offset,
       limit: params.limit ?? PRODUCTS_PAGE_SIZE,
     },
     signal,
@@ -154,6 +158,8 @@ export type FetchAdminProductsParams = {
   category_id?: string | null;
   is_published?: boolean | null;
   cursor?: string | null;
+  /** Смещение для страницы поиска (непустой `q`). Игнорируется при пустом `q`. */
+  offset?: number;
   limit?: number;
 };
 
@@ -171,6 +177,7 @@ export function fetchAdminProducts(
           ? undefined
           : params.is_published,
       cursor: params.cursor || undefined,
+      offset: params.offset,
       limit: params.limit ?? ADMIN_PRODUCTS_PAGE_SIZE,
     },
     signal,

@@ -77,16 +77,29 @@ function AdminProductsPage() {
    * Список обрывался на 80 товарах: курсор в API есть, но фронт его не
    * использовал, поэтому в каталоге больше 80 позиций остальные были
    * недоступны — и админка об этом молчала, список просто заканчивался.
+   *
+   * При непустом `q` сервер сортирует по релевантности, курсор с этим
+   * несовместим — листаем через `offset`.
    */
+  const isSearch = !!listParams.q.trim();
   const listQuery = useInfiniteQuery({
     queryKey: queryKeys.catalog.adminProducts(listParams),
-    initialPageParam: null as string | null,
+    initialPageParam: null as string | number | null,
     queryFn: ({ pageParam, signal }) =>
-      fetchAdminProducts({ ...listParams, cursor: pageParam }, signal),
-    getNextPageParam: (lastPage) =>
-      lastPage.length < ADMIN_PRODUCTS_PAGE_SIZE
-        ? undefined
-        : (lastPage.at(-1)?.id ?? undefined),
+      fetchAdminProducts(
+        {
+          ...listParams,
+          cursor: isSearch ? undefined : ((pageParam as string | null) ?? undefined),
+          offset: isSearch ? ((pageParam as number | null) ?? undefined) : undefined,
+        },
+        signal,
+      ),
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < ADMIN_PRODUCTS_PAGE_SIZE) return undefined;
+      return isSearch
+        ? allPages.flat().length
+        : (lastPage.at(-1)?.id ?? undefined);
+    },
   });
 
   const categoriesQuery = useQuery({
