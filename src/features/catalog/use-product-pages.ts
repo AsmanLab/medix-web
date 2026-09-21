@@ -28,6 +28,10 @@ type UseProductPagesInput = {
  * Пагинация keyset: курсор — id последнего показанного товара. Признак
  * «есть ещё» — заполненная до конца страница; общего количества сервер
  * не отдаёт, а отдельный запрос ради счётчика делать не за чем.
+ *
+ * Поиск (непустой `q`) листается иначе: сервер сортирует по релевантности,
+ * а не по `id`, поэтому курсор с ней несовместим — страница поиска
+ * запрашивается через `offset` (номер страницы × размер страницы).
  */
 export function useProductPages({
   q,
@@ -38,6 +42,7 @@ export function useProductPages({
   // Порядок в ключе не должен влиять на кеш: дерево категорий отдаёт их
   // отсортированными, но полагаться на это не стоит.
   const ids = categoryIds?.length ? [...categoryIds].sort() : undefined;
+  const isSearch = !!q?.trim();
 
   const query = useInfiniteQuery({
     queryKey: queryKeys.catalog.products({
@@ -46,7 +51,7 @@ export function useProductPages({
       category_ids: ids ?? [],
       paged: true,
     }),
-    initialPageParam: null as string | null,
+    initialPageParam: null as string | number | null,
     queryFn: ({ pageParam, signal }) =>
       fetchProducts(
         {
@@ -58,15 +63,21 @@ export function useProductPages({
           // раньше бэкенда превратил бы раздел в «показать всё».
           category_id: ids ? (ids[0] ?? null) : (categoryId ?? null),
           category_ids: ids,
-          cursor: pageParam,
+          cursor: isSearch ? undefined : ((pageParam as string | null) ?? undefined),
+          offset: isSearch ? ((pageParam as number | null) ?? undefined) : undefined,
           limit: PRODUCTS_PAGE_SIZE,
         },
         signal,
       ),
-    getNextPageParam: (lastPage: ProductListOut[]) =>
-      lastPage.length < PRODUCTS_PAGE_SIZE
-        ? undefined
-        : (lastPage.at(-1)?.id ?? undefined),
+    getNextPageParam: (
+      lastPage: ProductListOut[],
+      allPages: ProductListOut[][],
+    ) => {
+      if (lastPage.length < PRODUCTS_PAGE_SIZE) return undefined;
+      return isSearch
+        ? allPages.flat().length
+        : (lastPage.at(-1)?.id ?? undefined);
+    },
     enabled,
   });
 

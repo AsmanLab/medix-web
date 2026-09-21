@@ -4799,6 +4799,7 @@ export interface operations {
                 category_id?: string | null;
                 is_published?: boolean | null;
                 cursor?: string | null;
+                offset?: number | null;
                 limit?: number;
                 /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
                 lang?: string | null;
@@ -8547,6 +8548,8 @@ export interface operations {
                 /** @description Товары любой из категорий. Нужен разделу витрины, который показывает раздел вместе с подкатегориями одним листаемым списком. Имеет приоритет над category_id. */
                 category_ids?: string[] | null;
                 cursor?: string | null;
+                /** @description Смещение для страницы с непустым `q` — сортировка по релевантности несовместима с keyset-курсором. При пустом `q` игнорируется, работает cursor. */
+                offset?: number | null;
                 limit?: number;
                 /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
                 lang?: string | null;

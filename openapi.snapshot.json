@@ -6320,6 +6320,23 @@
           },
           {
             "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Offset"
+            }
+          },
+          {
+            "in": "query",
             "name": "limit",
             "required": false,
             "schema": {
@@ -13422,6 +13439,25 @@
                 }
               ],
               "title": "Cursor"
+            }
+          },
+          {
+            "description": "Смещение для страницы с непустым `q` — сортировка по релевантности несовместима с keyset-курсором. При пустом `q` игнорируется, работает cursor.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Смещение для страницы с непустым `q` — сортировка по релевантности несовместима с keyset-курсором. При пустом `q` игнорируется, работает cursor.",
+              "title": "Offset"
             }
           },
           {
