@@ -53,7 +53,9 @@ import {
   DescriptionPreview,
 } from "@/features/admin/DescriptionGuide";
 import {
+  parseOldPriceInput,
   parsePriceInput,
+  productOldPriceAmount,
   productPriceAmount,
 } from "@/features/admin/product-price";
 import { LanguageTabs } from "@/features/admin/LanguageTabs";
@@ -180,6 +182,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
   const [availability, setAvailability] = useState("on_order");
   const [priceOnRequest, setPriceOnRequest] = useState(true);
   const [priceAmount, setPriceAmount] = useState("");
+  const [oldPriceAmount, setOldPriceAmount] = useState("");
   const [published, setPublished] = useState(false);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
 
@@ -196,6 +199,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
     setAvailability(existing.availability || "on_order");
     setPriceOnRequest(!existing.price);
     setPriceAmount(productPriceAmount(existing));
+    setOldPriceAmount(productOldPriceAmount(existing));
     setPublished(existing.is_published);
   }, [existing]);
 
@@ -254,6 +258,13 @@ export function ProductEditor({ productId }: ProductEditorProps) {
           message: "Укажите корректную цену",
         });
       }
+      const parsedOldPrice = parseOldPriceInput(oldPriceAmount);
+      if (parsedOldPrice === undefined) {
+        throw Object.assign(new Error("Укажите корректную старую цену"), {
+          status: 400,
+          message: "Укажите корректную старую цену",
+        });
+      }
       const body = {
         sku: sku.trim(),
         // Плоские поля — ради уже написанных клиентов (мобильное
@@ -270,6 +281,7 @@ export function ProductEditor({ productId }: ProductEditorProps) {
         video_url: videoUrl.trim(),
         availability,
         price_amount: parsedPrice,
+        old_price_amount: parsedOldPrice,
       };
       if (isEdit && productId) {
         return updateAdminProduct(productId, body);
@@ -834,6 +846,23 @@ export function ProductEditor({ productId }: ProductEditorProps) {
                     onChange={(e) => setPriceAmount(e.target.value)}
                     className="field-control mt-1.5"
                   />
+                </label>
+              ) : null}
+              {!priceOnRequest ? (
+                <label className="block text-xs font-semibold">
+                  Старая цена для акции/скидки (KGS)
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={oldPriceAmount}
+                    onChange={(e) => setOldPriceAmount(e.target.value)}
+                    className="field-control mt-1.5"
+                  />
+                  <span className="mt-1.5 block font-normal text-muted-foreground">
+                    Заполните, если товар в акции: витрина покажет эту цену
+                    зачёркнутой рядом с текущей. Оставьте пустым — скидки нет.
+                  </span>
                 </label>
               ) : null}
             </div>

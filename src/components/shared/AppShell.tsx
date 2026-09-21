@@ -7,17 +7,17 @@ import {
   ChevronRight,
   LayoutGrid,
   LogIn,
-  MapPin,
+  Menu,
   Package,
-  Phone,
   Search,
   ShoppingCart,
   User,
   Wrench,
+  X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { fetchCategories } from "@/api/catalog";
-import { LocaleSwitcher } from "@/i18n/LocaleSwitcher";
+import { fetchContacts } from "@/api/cms";
 import { listNotifications } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
 import { fetchCart } from "@/api/cart";
@@ -449,6 +449,14 @@ export function AppShell({
   const session = useSession();
   const authenticated = session.status === "authenticated";
   const [headerQuery, setHeaderQuery] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const contactsQuery = useQuery({
+    queryKey: queryKeys.cms.contacts(),
+    queryFn: ({ signal }) => fetchContacts(signal),
+    staleTime: 5 * 60_000,
+  });
+  const mainOffice = contactsQuery.data?.[0] ?? null;
 
   const categoriesQuery = useQuery({
     queryKey: queryKeys.catalog.categories(),
@@ -524,6 +532,23 @@ export function AppShell({
     };
   }, []);
 
+  useEffect(() => setMobileMenuOpen(false), [path]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    document.addEventListener("keydown", onEscape);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onEscape);
+      document.body.style.overflow = previous;
+    };
+
+    function onEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    }
+  }, [mobileMenuOpen]);
+
   function onHeaderSearch(event: React.FormEvent) {
     event.preventDefault();
     void navigate({
@@ -541,41 +566,6 @@ export function AppShell({
         {t("Перейти к содержимому")}
       </a>
 
-      <div className="hidden border-b border-border/70 bg-card text-[12px] text-muted-foreground lg:block">
-        <div className="mx-auto flex h-9 max-w-[1320px] items-center justify-between px-6">
-          <div className="flex items-center gap-5">
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-primary" /> {t("Бишкек, Кыргызстан")}
-            </span>
-            <a
-              href="tel:+996312660066"
-              className="inline-flex items-center gap-1.5 transition-colors hover:text-primary"
-            >
-              <Phone className="h-3.5 w-3.5 text-primary" /> +996 (312) 66-00-66
-            </a>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link
-              to="/service"
-              className="transition-colors hover:text-primary"
-            >
-              {t("Сервис и ремонт")}
-            </Link>
-            <Link
-              to="/contacts"
-              className="transition-colors hover:text-primary"
-            >
-              {t("Контакты")}
-            </Link>
-            {/* Переключатель появится сам, когда в AVAILABLE_LOCALES
-                добавят второй язык. Пока язык один, он не рисуется —
-                ровно поэтому 10.08 отсюда убрали нерабочую кнопку «RU»:
-                мёртвый элемент в шапке читается как недоделка. */}
-            <LocaleSwitcher />
-          </div>
-        </div>
-      </div>
-
       {/*
         Мобильная шапка. Была из логотипа и колокольчика: ни поиска,
         ни корзины — искать товар с телефона можно было, только дойдя
@@ -583,6 +573,16 @@ export function AppShell({
       */}
       <header className="sticky top-0 z-50 border-b border-border/80 bg-card/90 backdrop-blur-xl lg:hidden">
         <div className="mx-auto flex h-14 max-w-[1320px] items-center gap-2 px-4">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={mobileMenuOpen}
+            aria-label={t("Открыть меню")}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-muted-foreground"
+          >
+            <Menu className="h-5 w-5" aria-hidden />
+          </button>
           <Logo compact />
           <div className="ml-auto flex items-center gap-1">
             <NotificationsBell unreadCount={unreadCount} />
@@ -634,6 +634,58 @@ export function AppShell({
         </form>
       </header>
 
+      {mobileMenuOpen ? (
+        <>
+          <div
+            className="overlay-fade fixed inset-0 z-[55] bg-black/40 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("Основная навигация")}
+            className="sheet-rise fixed inset-x-0 top-0 z-[60] max-h-[85dvh] overflow-y-auto rounded-b-2xl border-b border-border bg-card lg:hidden"
+            style={{ boxShadow: "var(--shadow-nav)" }}
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+              <Logo compact />
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label={t("Закрыть")}
+                className="grid size-11 touch-manipulation place-items-center rounded-xl text-muted-foreground active:bg-secondary"
+              >
+                <X className="h-5 w-5" aria-hidden />
+              </button>
+            </div>
+            <nav aria-label={t("Основная навигация")} className="flex flex-col p-2 text-sm font-medium">
+              {[
+                { to: "/", label: t("Главная") },
+                { to: "/catalog", label: t("Каталог") },
+                { to: "/about", label: t("О компании") },
+                { to: "/service", label: t("Сервис") },
+                { to: "/contacts", label: t("Контакты") },
+                { to: "/promotions", label: t("Акции") },
+              ].map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "min-h-11 rounded-xl px-3 py-2.5",
+                    path === item.to || (item.to !== "/" && path.startsWith(item.to))
+                      ? "bg-primary-soft text-primary"
+                      : "text-foreground/80 active:bg-secondary",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </>
+      ) : null}
+
       <header className="sticky top-0 z-50 hidden border-b border-border/80 bg-card/90 backdrop-blur-xl lg:block">
         <div className="mx-auto flex h-[82px] max-w-[1320px] items-center gap-4 px-4 xl:gap-8 xl:px-6">
           <Logo />
@@ -676,11 +728,31 @@ export function AppShell({
             >
               {t("Сервис")}
             </Link>
+            <Link
+              to="/contacts"
+              className={
+                path.startsWith("/contacts")
+                  ? "text-primary"
+                  : "text-foreground/75 hover:text-primary"
+              }
+            >
+              {t("Контакты")}
+            </Link>
+            <Link
+              to="/promotions"
+              className={
+                path.startsWith("/promotions")
+                  ? "text-primary"
+                  : "text-foreground/75 hover:text-primary"
+              }
+            >
+              {t("Акции")}
+            </Link>
           </nav>
 
           <form
             onSubmit={onHeaderSearch}
-            className="ml-auto flex h-11 max-w-[200px] min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-background px-4 transition-colors focus-within:border-primary/60 xl:max-w-[280px]"
+            className="ml-auto flex h-11 max-w-[200px] min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-background px-4 transition-colors focus-within:border-primary/60 xl:max-w-[200px]"
             role="search"
           >
             <button type="submit" aria-label={t("Найти в каталоге")}>
@@ -742,7 +814,34 @@ export function AppShell({
       </main>
 
       <footer className="border-t border-border bg-card pb-20 lg:pb-0">
-        <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm lg:px-6">
+        <div className="mx-auto flex max-w-[1320px] flex-col gap-6 px-5 py-6 text-sm lg:px-6">
+          {mainOffice ? (
+            <div className="flex flex-col gap-1.5 border-b border-border pb-6 text-muted-foreground">
+              <p className="text-sm font-semibold text-foreground">
+                {mainOffice.name}
+              </p>
+              {mainOffice.address ? <p>{mainOffice.address}</p> : null}
+              {mainOffice.working_hours ? <p>{mainOffice.working_hours}</p> : null}
+              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                {[
+                  mainOffice.phone_sales,
+                  mainOffice.phone_service,
+                  mainOffice.phone_accounting,
+                ]
+                  .filter((phone): phone is string => Boolean(phone?.trim()))
+                  .map((phone) => (
+                    <a
+                      key={phone}
+                      href={`tel:${phone.replace(/\s/g, "")}`}
+                      className="font-semibold text-foreground hover:text-primary"
+                    >
+                      {phone}
+                    </a>
+                  ))}
+              </div>
+            </div>
+          ) : null}
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <Logo compact />
           {/*
            * Ссылки подвала набраны 14px и занимали 20px по высоте — вдвое
@@ -791,6 +890,7 @@ export function AppShell({
               {t("Условия пользования")}
             </Link>
           </nav>
+        </div>
         </div>
       </footer>
 

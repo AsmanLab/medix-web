@@ -24,6 +24,20 @@ export function productPriceAmount(product: PriceFields | null): string {
   return parsed ? parsed[1]!.replace(",", ".") : "";
 }
 
+type OldPriceFields = {
+  old_price?: string | null;
+  old_price_amount?: string | null;
+};
+
+/** То же самое для старой цены (зачёркнутая цена при акции/скидке). */
+export function productOldPriceAmount(product: OldPriceFields | null): string {
+  if (!product) return "";
+  if (product.old_price_amount) return product.old_price_amount;
+  if (!product.old_price) return "";
+  const parsed = /^\s*(\d+(?:[.,]\d+)?)/.exec(product.old_price);
+  return parsed ? parsed[1]!.replace(",", ".") : "";
+}
+
 /**
  * Разбор того, что админ ввёл руками.
  * `null` — цена по запросу, `undefined` — значение непригодно.
@@ -37,6 +51,18 @@ export function parsePriceInput(
   // Пустое поле раньше уходило как Number("") === 0: цена молча
   // становилась нулём вместо «по запросу».
   if (!trimmed) return undefined;
+  const value = Number(trimmed.replace(",", "."));
+  if (!Number.isFinite(value) || value < 0) return undefined;
+  return value;
+}
+
+/**
+ * Разбор старой цены (для акции/скидки). Пустое поле — скидки нет (`null`).
+ * `undefined` — значение непригодно.
+ */
+export function parseOldPriceInput(raw: string): number | null | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
   const value = Number(trimmed.replace(",", "."));
   if (!Number.isFinite(value) || value < 0) return undefined;
   return value;
