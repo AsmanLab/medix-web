@@ -3,11 +3,13 @@ import { apiRequest } from "@/api/client";
 export type BannerOut = {
   id: string;
   image_key: string;
+  image_url: string;
   title: string;
   subtitle: string;
   cta_text: string;
   link_url: string;
   deep_link: string;
+  duration_ms: number;
 };
 
 export type CmsPageOut = {

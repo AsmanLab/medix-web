@@ -2325,6 +2325,8 @@ export interface components {
             cta_text: string;
             /** Deep Link */
             deep_link: string;
+            /** Duration Ms */
+            duration_ms: number;
             /** Id */
             id: string;
             /** Image Key */
@@ -2427,10 +2429,14 @@ export interface components {
             cta_text: string;
             /** Deep Link */
             deep_link: string;
+            /** Duration Ms */
+            duration_ms: number;
             /** Id */
             id: string;
             /** Image Key */
             image_key: string;
+            /** Image Url */
+            image_url: string;
             /** Link Url */
             link_url: string;
             /** Subtitle */
@@ -2662,6 +2668,11 @@ export interface components {
              * @default
              */
             deep_link: string;
+            /**
+             * Duration Ms
+             * @default 7000
+             */
+            duration_ms: number;
             /** Image Key */
             image_key: string;
             /**
@@ -4147,6 +4158,8 @@ export interface components {
             cta_text?: string | null;
             /** Deep Link */
             deep_link?: string | null;
+            /** Duration Ms */
+            duration_ms?: number | null;
             /** Image Key */
             image_key?: string | null;
             /** Is Enabled */

@@ -145,6 +145,10 @@
             "title": "Deep Link",
             "type": "string"
           },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -183,7 +187,8 @@
           "link_url",
           "deep_link",
           "sort",
-          "is_enabled"
+          "is_enabled",
+          "duration_ms"
         ],
         "title": "AdminBannerOut",
         "type": "object"
@@ -445,12 +450,20 @@
             "title": "Deep Link",
             "type": "string"
           },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
           "id": {
             "title": "Id",
             "type": "string"
           },
           "image_key": {
             "title": "Image Key",
+            "type": "string"
+          },
+          "image_url": {
+            "title": "Image Url",
             "type": "string"
           },
           "link_url": {
@@ -469,11 +482,13 @@
         "required": [
           "id",
           "image_key",
+          "image_url",
           "title",
           "subtitle",
           "cta_text",
           "link_url",
-          "deep_link"
+          "deep_link",
+          "duration_ms"
         ],
         "title": "BannerOut",
         "type": "object"
@@ -1022,6 +1037,13 @@
             "default": "",
             "title": "Deep Link",
             "type": "string"
+          },
+          "duration_ms": {
+            "default": 7000,
+            "maximum": 30000.0,
+            "minimum": 2000.0,
+            "title": "Duration Ms",
+            "type": "integer"
           },
           "image_key": {
             "title": "Image Key",
@@ -4582,6 +4604,19 @@
               }
             ],
             "title": "Deep Link"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "maximum": 30000.0,
+                "minimum": 2000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
           },
           "image_key": {
             "anyOf": [

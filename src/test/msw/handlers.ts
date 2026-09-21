@@ -8,11 +8,13 @@ export const handlers = [
       {
         id: "b1",
         image_key: "",
+        image_url: "",
         title: "Оборудование для клиник",
         subtitle: "Каталог Medix International",
         cta_text: "Смотреть каталог",
         link_url: "/catalog",
         deep_link: "",
+        duration_ms: 7000,
       },
     ]);
   }),

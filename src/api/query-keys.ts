@@ -26,8 +26,6 @@ export const queryKeys = {
   cms: {
     all: ["cms"] as const,
     banners: () => [...queryKeys.cms.all, "banners"] as const,
-    bannerImages: (keys: string[]) =>
-      [...queryKeys.cms.all, "banner-images", [...keys].sort()] as const,
     page: (slug: string) => [...queryKeys.cms.all, "page", slug] as const,
     pages: () => [...queryKeys.cms.all, "pages"] as const,
     blockImages: (keys: string[]) =>

@@ -230,6 +230,7 @@ export type AdminBanner = {
   deep_link: string;
   sort: number;
   is_enabled: boolean;
+  duration_ms: number;
 };
 
 export type CreateBannerInput = {
@@ -241,6 +242,7 @@ export type CreateBannerInput = {
   deep_link?: string;
   sort?: number;
   is_enabled?: boolean;
+  duration_ms?: number;
 };
 
 export type UpdateBannerInput = Partial<CreateBannerInput>;
@@ -265,6 +267,7 @@ export function createAdminBanner(body: CreateBannerInput) {
       deep_link: body.deep_link ?? "",
       sort: body.sort ?? 0,
       is_enabled: body.is_enabled ?? true,
+      duration_ms: body.duration_ms ?? 7000,
     },
   });
 }
