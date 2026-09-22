@@ -28,6 +28,7 @@ import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { availabilityLabel } from "@/features/catalog/availability";
+import { buildAdminCategoryTree, findCategoryPath } from "@/features/catalog/map-category";
 import { requireStaffPanel } from "@/session/guards";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -145,11 +146,24 @@ function AdminProductsPage() {
   const items = listQuery.data?.pages.flat() ?? [];
   const categories = categoriesQuery.data ?? [];
 
-  const categoryNameById = useMemo(() => {
+  const categoryTree = useMemo(
+    () => buildAdminCategoryTree(categories),
+    [categories],
+  );
+
+  /**
+   * Путь от корня до категории, а не голое имя: плоский список названий не
+   * показывал, в каком разделе на самом деле лежит товар — «УЗИ» могло
+   * быть и корнем, и третьим уровнем внутри «Диагностика → Визуализация».
+   */
+  const categoryPathById = useMemo(() => {
     const map = new Map<string, string>();
-    for (const c of categories) map.set(c.id, c.name_ru);
+    for (const c of categories) {
+      const path = findCategoryPath(categoryTree, c.id);
+      map.set(c.id, path ? path.map((n) => n.name).join(" → ") : c.name_ru);
+    }
     return map;
-  }, [categories]);
+  }, [categories, categoryTree]);
 
   /**
    * Ручной порядок бэкенд отдаёт только для выборки по одной категории без
@@ -398,12 +412,20 @@ function AdminProductsPage() {
                 </p>
               </div>
               <Cell label="Категории">
-                {p.category_ids.length
-                  ? p.category_ids
-                      .map((id) => categoryNameById.get(id) ?? null)
-                      .filter((name): name is string => Boolean(name))
-                      .join(", ") || "—"
-                  : "—"}
+                {p.category_ids.length ? (
+                  <span className="flex flex-col gap-0.5">
+                    {p.category_ids
+                      .map((id) => categoryPathById.get(id) ?? null)
+                      .filter((path): path is string => Boolean(path))
+                      .map((path) => (
+                        <span key={path} className="block truncate" title={path}>
+                          {path}
+                        </span>
+                      ))}
+                  </span>
+                ) : (
+                  "—"
+                )}
               </Cell>
               <Cell label="SKU">
                 <span className="font-mono">{p.sku}</span>
