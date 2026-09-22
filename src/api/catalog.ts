@@ -95,6 +95,33 @@ export function deleteAdminCategory(categoryId: string) {
   });
 }
 
+/**
+ * Пакетная перестановка `sort` у категорий одного уровня. Список
+ * частичный — только реально сдвинутые узлы, остальные сервер не трогает.
+ */
+export function reorderAdminCategories(items: { id: string; sort: number }[]) {
+  return apiRequest<void>({
+    method: "POST",
+    path: "/admin/catalog/categories/reorder",
+    body: { items },
+  });
+}
+
+/**
+ * Пакетная перестановка `sort` у товаров внутри одной категории. Список
+ * частичный, как и у {@link reorderAdminCategories}.
+ */
+export function reorderAdminCategoryProducts(
+  categoryId: string,
+  items: { product_id: string; sort: number }[],
+) {
+  return apiRequest<void>({
+    method: "POST",
+    path: `/admin/catalog/categories/${encodeURIComponent(categoryId)}/products/reorder`,
+    body: { items },
+  });
+}
+
 export type FetchProductsParams = {
   q?: string;
   category_id?: string | null;

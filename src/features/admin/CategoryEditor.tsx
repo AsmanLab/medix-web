@@ -93,9 +93,14 @@ function translationsBody(texts: CategoryTexts): CategoryTranslationsBody {
 
 type CategoryEditorProps = {
   categoryId?: string;
+  /** Предзаполненный родитель для новой категории (кнопка «+ подкатегория»). */
+  initialParentId?: string;
 };
 
-export function CategoryEditor({ categoryId }: CategoryEditorProps) {
+export function CategoryEditor({
+  categoryId,
+  initialParentId,
+}: CategoryEditorProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEdit = Boolean(categoryId);
@@ -120,7 +125,7 @@ export function CategoryEditor({ categoryId }: CategoryEditorProps) {
   const [lang, setLang] = useState<Locale>(DEFAULT_LOCALE);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
-  const [parentId, setParentId] = useState("");
+  const [parentId, setParentId] = useState(initialParentId ?? "");
   const [imageKey, setImageKey] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [sort, setSort] = useState(0);
