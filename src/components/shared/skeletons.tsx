@@ -129,7 +129,7 @@ export function BannerSkeleton({ className }: { className?: string }) {
   return (
     <Skeleton
       className={cn(
-        "aspect-[21/9] min-h-[280px] max-h-[520px] w-full rounded-3xl",
+        "aspect-[21/9] min-h-[340px] sm:min-h-[280px] max-h-[520px] w-full rounded-3xl",
         className,
       )}
       aria-busy

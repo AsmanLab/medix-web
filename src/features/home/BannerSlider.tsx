@@ -79,7 +79,7 @@ export function BannerSlider({ banners }: BannerSliderProps) {
       role="region"
       aria-roledescription={t("слайдер")}
       aria-label={t("Баннеры Medix")}
-      className="relative w-full aspect-[21/9] min-h-[280px] max-h-[520px] overflow-hidden rounded-3xl bg-[oklch(0.28_0.05_230)] text-white shadow-[0_22px_70px_-34px_rgba(11,68,99,0.55)]"
+      className="relative w-full aspect-[21/9] min-h-[340px] sm:min-h-[280px] max-h-[520px] overflow-hidden rounded-3xl bg-[oklch(0.28_0.05_230)] text-white shadow-[0_22px_70px_-34px_rgba(11,68,99,0.55)]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -135,19 +135,19 @@ export function BannerSlider({ banners }: BannerSliderProps) {
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.22_0.05_230)] via-[oklch(0.22_0.05_230)/0.75] to-transparent" />
 
-            <div className="relative z-10 flex h-full flex-col justify-center overflow-hidden px-6 py-8 sm:px-10 lg:px-14">
+            <div className="relative z-10 flex h-full flex-col justify-center overflow-hidden px-6 py-6 sm:px-10 sm:py-8 lg:px-14">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
                 Medix International
               </p>
-              <h1 className="mt-3 line-clamp-2 max-w-xl font-display text-3xl font-bold leading-tight sm:text-5xl">
+              <h1 className="mt-2 line-clamp-2 max-w-xl font-display text-2xl font-bold leading-tight sm:mt-3 sm:text-3xl lg:text-5xl">
                 {banner.title || t("Медицинское оборудование для клиник")}
               </h1>
               {banner.subtitle ? (
-                <p className="mt-4 line-clamp-3 max-w-lg text-sm text-white/80 sm:text-base">
+                <p className="mt-2 line-clamp-2 max-w-lg text-sm text-white/80 sm:mt-4 sm:line-clamp-3 sm:text-base">
                   {banner.subtitle}
                 </p>
               ) : null}
-              <div className="mt-8">
+              <div className="mt-4 sm:mt-8">
                 <button
                   type="button"
                   onClick={onCta}
@@ -167,7 +167,7 @@ export function BannerSlider({ banners }: BannerSliderProps) {
             type="button"
             aria-label={t("Предыдущий слайд")}
             onClick={() => go(index - 1)}
-            className="absolute top-1/2 left-3 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
+            className="absolute top-1/2 left-3 z-20 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40 sm:grid"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -175,7 +175,7 @@ export function BannerSlider({ banners }: BannerSliderProps) {
             type="button"
             aria-label={t("Следующий слайд")}
             onClick={() => go(index + 1)}
-            className="absolute top-1/2 right-3 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
+            className="absolute top-1/2 right-3 z-20 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40 sm:grid"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
