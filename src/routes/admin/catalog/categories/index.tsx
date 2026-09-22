@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
   ChevronRight,
+  ChevronUp,
+  FolderPlus,
   FolderTree,
   GripVertical,
   Plus,
@@ -11,6 +13,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   fetchAdminCategories,
+  reorderAdminCategories,
   updateAdminCategory,
   type CategoryOut,
 } from "@/api/catalog";
@@ -19,6 +22,7 @@ import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import {
   buildAdminCategoryTree,
+  MAX_CATEGORY_DEPTH,
   type CatalogCategoryNode,
 } from "@/features/catalog/map-category";
 import { requireStaffPanel } from "@/session/guards";
@@ -61,11 +65,8 @@ function AdminCategoriesPage() {
   });
 
   const reorderMutation = useMutation({
-    mutationFn: async (updates: { id: string; sort: number }[]) => {
-      await Promise.all(
-        updates.map((u) => updateAdminCategory(u.id, { sort: u.sort })),
-      );
-    },
+    mutationFn: (updates: { id: string; sort: number }[]) =>
+      reorderAdminCategories(updates),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.catalog.all,
@@ -119,10 +120,31 @@ function AdminCategoriesPage() {
     reorderMutation.mutate(updates);
   }
 
+  /**
+   * Клавиатурный/тач-путь к тому же результату, что и drag-and-drop:
+   * своп с соседом внутри своей группы и та же пакетная перестановка.
+   */
+  function moveWithArrow(nodeId: string, direction: -1 | 1) {
+    const siblings = siblingsOf(nodeId);
+    const index = siblings.findIndex((c) => c.id === nodeId);
+    const swapIndex = index + direction;
+    if (index < 0 || swapIndex < 0 || swapIndex >= siblings.length) return;
+    const reordered = siblings.slice();
+    const tmp = reordered[index]!;
+    reordered[index] = reordered[swapIndex]!;
+    reordered[swapIndex] = tmp;
+    reorderMutation.mutate(reordered.map((c, i) => ({ id: c.id, sort: i })));
+  }
+
   function renderNode(node: CatalogCategoryNode, depth: number) {
     const hasChildren = node.children.length > 0;
     const open = expanded.has(node.id);
     const raw = byId.get(node.id);
+    const siblings = siblingsOf(node.id);
+    const siblingIndex = siblings.findIndex((c) => c.id === node.id);
+    const canMoveUp = siblingIndex > 0;
+    const canMoveDown =
+      siblingIndex >= 0 && siblingIndex < siblings.length - 1;
 
     return (
       <div key={node.id}>
@@ -142,6 +164,31 @@ function AdminCategoriesPage() {
               className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block"
               aria-hidden
             />
+            {/*
+              Стрелки — основной путь перестановки: drag-and-drop не
+              работает ни с тача, ни с клавиатуры. Видны всегда, а не по
+              hover, иначе на тач-экране их не найти.
+            */}
+            <div className="flex shrink-0 flex-col">
+              <button
+                type="button"
+                aria-label="Переместить выше"
+                disabled={!canMoveUp || reorderMutation.isPending}
+                onClick={() => moveWithArrow(node.id, -1)}
+                className="grid h-4 w-5 place-items-center text-muted-foreground disabled:opacity-30"
+              >
+                <ChevronUp className="h-3.5 w-3.5" aria-hidden />
+              </button>
+              <button
+                type="button"
+                aria-label="Переместить ниже"
+                disabled={!canMoveDown || reorderMutation.isPending}
+                onClick={() => moveWithArrow(node.id, 1)}
+                className="grid h-4 w-5 place-items-center text-muted-foreground disabled:opacity-30"
+              >
+                <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            </div>
             {hasChildren ? (
               <button
                 type="button"
@@ -166,6 +213,11 @@ function AdminCategoriesPage() {
             >
               {node.name}
             </Link>
+            {node.productCount !== null ? (
+              <span className="shrink-0 text-xs text-muted-foreground">
+                · {node.productCount} товаров
+              </span>
+            ) : null}
           </div>
           <span className="hidden truncate font-mono text-xs text-muted-foreground sm:block">
             {node.slug}
@@ -184,13 +236,26 @@ function AdminCategoriesPage() {
             />
             {raw?.is_active ?? node.isActive ? "Активна" : "Скрыта"}
           </label>
-          <Link
-            to="/admin/catalog/categories/$categoryId"
-            params={{ categoryId: node.id }}
-            className="text-xs font-semibold text-primary"
-          >
-            Изменить
-          </Link>
+          <div className="flex shrink-0 items-center gap-3">
+            {node.depth < MAX_CATEGORY_DEPTH ? (
+              <Link
+                to="/admin/catalog/categories/new"
+                search={{ parent_id: node.id }}
+                className="hidden items-center gap-1 text-xs font-semibold text-primary sm:inline-flex"
+                title="Создать подкатегорию"
+              >
+                <FolderPlus className="h-3.5 w-3.5" aria-hidden />
+                Подкатегория
+              </Link>
+            ) : null}
+            <Link
+              to="/admin/catalog/categories/$categoryId"
+              params={{ categoryId: node.id }}
+              className="text-xs font-semibold text-primary"
+            >
+              Изменить
+            </Link>
+          </div>
         </div>
         {hasChildren && open
           ? node.children.map((child) => renderNode(child, depth + 1))
