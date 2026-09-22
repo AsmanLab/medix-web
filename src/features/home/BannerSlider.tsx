@@ -79,7 +79,7 @@ export function BannerSlider({ banners }: BannerSliderProps) {
       role="region"
       aria-roledescription={t("слайдер")}
       aria-label={t("Баннеры Medix")}
-      className="relative aspect-[21/9] min-h-[280px] max-h-[520px] overflow-hidden rounded-3xl bg-[oklch(0.28_0.05_230)] text-white shadow-[0_22px_70px_-34px_rgba(11,68,99,0.55)]"
+      className="relative w-full aspect-[21/9] min-h-[280px] max-h-[520px] overflow-hidden rounded-3xl bg-[oklch(0.28_0.05_230)] text-white shadow-[0_22px_70px_-34px_rgba(11,68,99,0.55)]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
