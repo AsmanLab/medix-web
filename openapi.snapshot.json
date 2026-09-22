@@ -15012,6 +15012,124 @@
         ]
       }
     },
+    "/api/v1/manager/customers/export.xlsx": {
+      "get": {
+        "description": "Выгрузка клиентов и агрегатов по их заказам в один XLSX-файл.\n\nEmail в системе нет (в `users` только `phone`) — колонка не заводится.\nКнига собирается в `write_only`-режиме openpyxl: `list_by_status` тянет\nвсю таблицу без пагинации, и на 1 vCPU / ~805 МБ прод-VPS обычный режим\n(с деревом ячеек в памяти на произвольный доступ) на большой базе может\nне влезть в память.",
+        "operationId": "export_customers_xlsx_api_v1_manager_customers_export_xlsx_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Экспорт базы клиентов в Excel",
+        "tags": [
+          "customers"
+        ]
+      }
+    },
     "/api/v1/manager/customers/{customer_id}/orders": {
       "get": {
         "description": "Полная история заказов клиента и агрегаты по ней.\n\nНамеренно не переиспользует `SqlOrderRepository.list_for_manager` — тот\nподмешивает `manager_id == me OR manager_id IS NULL` для роли manager, и\nменеджер увидел бы заниженную сумму покупок клиента без единого признака,\nчто это не вся история.",
