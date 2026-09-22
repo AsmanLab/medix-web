@@ -735,6 +735,25 @@
         "title": "CategoryOut",
         "type": "object"
       },
+      "CategorySortItem": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "sort": {
+            "title": "Sort",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "sort"
+        ],
+        "title": "CategorySortItem",
+        "type": "object"
+      },
       "CategoryTextIn": {
         "properties": {
           "name": {
@@ -3233,6 +3252,7 @@
             "type": "string"
           },
           "category_ids": {
+            "default": [],
             "items": {
               "type": "string"
             },
@@ -3400,7 +3420,6 @@
           "price",
           "is_published",
           "description_ru",
-          "category_ids",
           "images",
           "documents",
           "option_groups"
@@ -3486,6 +3505,14 @@
           "availability": {
             "title": "Availability",
             "type": "string"
+          },
+          "category_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Category Ids",
+            "type": "array"
           },
           "country": {
             "title": "Country",
@@ -3646,6 +3673,25 @@
           "sort"
         ],
         "title": "ProductOptionOut",
+        "type": "object"
+      },
+      "ProductSortItem": {
+        "properties": {
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "sort": {
+            "title": "Sort",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_id",
+          "sort"
+        ],
+        "title": "ProductSortItem",
         "type": "object"
       },
       "ProductTextIn": {
@@ -4090,6 +4136,42 @@
           "reason"
         ],
         "title": "RejectRequest",
+        "type": "object"
+      },
+      "ReorderCategoriesRequest": {
+        "description": "Частичный порядок: только категории, которые правда переставили.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CategorySortItem"
+            },
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReorderCategoriesRequest",
+        "type": "object"
+      },
+      "ReorderCategoryProductsRequest": {
+        "description": "Частичный порядок товаров внутри одной категории.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductSortItem"
+            },
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReorderCategoryProductsRequest",
         "type": "object"
       },
       "ReorderImagesRequest": {
@@ -5878,6 +5960,128 @@
         ]
       }
     },
+    "/api/v1/admin/catalog/categories/reorder": {
+      "post": {
+        "operationId": "admin_reorder_categories_api_v1_admin_catalog_categories_reorder_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderCategoriesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Изменить порядок категорий",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/api/v1/admin/catalog/categories/{category_id}": {
       "delete": {
         "operationId": "admin_delete_category_api_v1_admin_catalog_categories__category_id__delete",
@@ -6136,6 +6340,140 @@
           }
         ],
         "summary": "Обновить категорию",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/admin/catalog/categories/{category_id}/products/reorder": {
+      "post": {
+        "operationId": "admin_reorder_category_products_api_v1_admin_catalog_categories__category_id__products_reorder_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "category_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Category Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderCategoryProductsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Изменить порядок товаров внутри категории",
         "tags": [
           "catalog"
         ]

@@ -22,6 +22,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/catalog/categories/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Изменить порядок категорий */
+        post: operations["admin_reorder_categories_api_v1_admin_catalog_categories_reorder_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/catalog/categories/{category_id}": {
         parameters: {
             query?: never;
@@ -38,6 +55,23 @@ export interface paths {
         head?: never;
         /** Обновить категорию */
         patch: operations["admin_update_category_api_v1_admin_catalog_categories__category_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/catalog/categories/{category_id}/products/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Изменить порядок товаров внутри категории */
+        post: operations["admin_reorder_category_products_api_v1_admin_catalog_categories__category_id__products_reorder_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/catalog/import": {
@@ -2552,6 +2586,16 @@ export interface components {
                 [key: string]: components["schemas"]["CategoryTextOut"];
             };
         };
+        /** CategorySortItem */
+        CategorySortItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Sort */
+            sort: number;
+        };
         /** CategoryTextIn */
         CategoryTextIn: {
             /** Name */
@@ -3622,7 +3666,10 @@ export interface components {
         ProductDetailOut: {
             /** Availability */
             availability: string;
-            /** Category Ids */
+            /**
+             * Category Ids
+             * @default []
+             */
             category_ids: string[];
             /** Country */
             country: string;
@@ -3713,6 +3760,11 @@ export interface components {
         ProductListOut: {
             /** Availability */
             availability: string;
+            /**
+             * Category Ids
+             * @default []
+             */
+            category_ids: string[];
             /** Country */
             country: string;
             /** Id */
@@ -3767,6 +3819,16 @@ export interface components {
             option_type: string;
             /** Price */
             price: string | null;
+            /** Sort */
+            sort: number;
+        };
+        /** ProductSortItem */
+        ProductSortItem: {
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
             /** Sort */
             sort: number;
         };
@@ -3937,6 +3999,22 @@ export interface components {
         RejectRequest: {
             /** Reason */
             reason: string;
+        };
+        /**
+         * ReorderCategoriesRequest
+         * @description Частичный порядок: только категории, которые правда переставили.
+         */
+        ReorderCategoriesRequest: {
+            /** Items */
+            items: components["schemas"]["CategorySortItem"][];
+        };
+        /**
+         * ReorderCategoryProductsRequest
+         * @description Частичный порядок товаров внутри одной категории.
+         */
+        ReorderCategoryProductsRequest: {
+            /** Items */
+            items: components["schemas"]["ProductSortItem"][];
         };
         /**
          * ReorderImagesRequest
@@ -4588,6 +4666,76 @@ export interface operations {
             };
         };
     };
+    admin_reorder_categories_api_v1_admin_catalog_categories_reorder_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderCategoriesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
     admin_delete_category_api_v1_admin_catalog_categories__category_id__delete: {
         parameters: {
             query?: never;
@@ -4679,6 +4827,78 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CategoryOut"];
                 };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    admin_reorder_category_products_api_v1_admin_catalog_categories__category_id__products_reorder_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderCategoryProductsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Требуется аутентификация */
             401: {
