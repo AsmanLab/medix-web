@@ -5,7 +5,14 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Package, Plus, Search, Upload } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Package,
+  Plus,
+  Search,
+  Upload,
+} from "lucide-react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
@@ -14,6 +21,7 @@ import {
   fetchAdminProducts,
   importCatalogFile,
   publishAdminProduct,
+  reorderAdminCategoryProducts,
   unpublishAdminProduct,
 } from "@/api/catalog";
 import { isAppError } from "@/api/errors";
@@ -136,6 +144,48 @@ function AdminProductsPage() {
 
   const items = listQuery.data?.pages.flat() ?? [];
   const categories = categoriesQuery.data ?? [];
+
+  const categoryNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of categories) map.set(c.id, c.name_ru);
+    return map;
+  }, [categories]);
+
+  /**
+   * Ручной порядок бэкенд отдаёт только для выборки по одной категории без
+   * поиска — при релевантности поиска или «Все категории» сортировать
+   * стрелками нечего, порядок всё равно перезапишется при рефетче.
+   */
+  const canReorder = Boolean(category_id) && !isSearch;
+
+  const reorderMutation = useMutation({
+    mutationFn: (updates: { product_id: string; sort: number }[]) =>
+      reorderAdminCategoryProducts(category_id!, updates),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.catalog.all });
+      toast.success("Порядок обновлён");
+    },
+    onError: (err) => {
+      toast.error(isAppError(err) ? err.message : "Не удалось изменить порядок");
+    },
+  });
+
+  /**
+   * Переставляет только уже загруженные строки — как и в дереве категорий,
+   * перенос через границу ещё не подгруженной страницы не поддержан.
+   */
+  function moveProduct(productId: string, direction: -1 | 1) {
+    const index = items.findIndex((p) => p.id === productId);
+    const swapIndex = index + direction;
+    if (index < 0 || swapIndex < 0 || swapIndex >= items.length) return;
+    const reordered = items.slice();
+    const tmp = reordered[index]!;
+    reordered[index] = reordered[swapIndex]!;
+    reordered[swapIndex] = tmp;
+    reorderMutation.mutate(
+      reordered.map((p, i) => ({ product_id: p.id, sort: i })),
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -281,8 +331,17 @@ function AdminProductsPage() {
         }
       >
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
-          <div className="hidden grid-cols-[1fr_100px_120px_110px_90px] border-b border-border bg-muted/40 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
+          <div
+            className={cn(
+              "hidden border-b border-border bg-muted/40 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid",
+              canReorder
+                ? "grid-cols-[28px_1fr_140px_100px_120px_110px_90px]"
+                : "grid-cols-[1fr_140px_100px_120px_110px_90px]",
+            )}
+          >
+            {canReorder ? <span className="sr-only">Порядок</span> : null}
             <span>Название</span>
+            <span>Категории</span>
             <span>SKU</span>
             <span>Наличие</span>
             <span>Цена</span>
@@ -294,11 +353,38 @@ function AdminProductsPage() {
             без единой подписи, и понять, что есть что, можно было только
             по догадке. Ниже sm подписи выводятся рядом со значением.
           */}
-          {items.map((p) => (
+          {items.map((p, index) => (
             <div
               key={p.id}
-              className="grid gap-2 border-b border-border px-4 py-3 last:border-0 sm:grid-cols-[1fr_100px_120px_110px_90px] sm:items-center"
+              className={cn(
+                "grid gap-2 border-b border-border px-4 py-3 last:border-0 sm:items-center",
+                canReorder
+                  ? "sm:grid-cols-[28px_1fr_140px_100px_120px_110px_90px]"
+                  : "sm:grid-cols-[1fr_140px_100px_120px_110px_90px]",
+              )}
             >
+              {canReorder ? (
+                <div className="flex shrink-0 flex-row gap-1 sm:flex-col sm:gap-0">
+                  <button
+                    type="button"
+                    aria-label="Переместить выше"
+                    disabled={index === 0 || reorderMutation.isPending}
+                    onClick={() => moveProduct(p.id, -1)}
+                    className="grid h-6 w-6 place-items-center text-muted-foreground disabled:opacity-30 sm:h-4 sm:w-5"
+                  >
+                    <ChevronUp className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Переместить ниже"
+                    disabled={index === items.length - 1 || reorderMutation.isPending}
+                    onClick={() => moveProduct(p.id, 1)}
+                    className="grid h-6 w-6 place-items-center text-muted-foreground disabled:opacity-30 sm:h-4 sm:w-5"
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                </div>
+              ) : null}
               <div className="min-w-0">
                 <Link
                   to="/admin/catalog/products/$productId"
@@ -311,6 +397,14 @@ function AdminProductsPage() {
                   {p.manufacturer || "—"} · {p.slug}
                 </p>
               </div>
+              <Cell label="Категории">
+                {p.category_ids.length
+                  ? p.category_ids
+                      .map((id) => categoryNameById.get(id) ?? null)
+                      .filter((name): name is string => Boolean(name))
+                      .join(", ") || "—"
+                  : "—"}
+              </Cell>
               <Cell label="SKU">
                 <span className="font-mono">{p.sku}</span>
               </Cell>
