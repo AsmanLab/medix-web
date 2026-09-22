@@ -100,3 +100,18 @@ export function fetchCustomerOrders(customerId: string, signal?: AbortSignal) {
     signal,
   });
 }
+
+/** Экспорт базы клиентов в Excel — с тем же фильтром статуса, что и список. */
+export function fetchManagerCustomersXlsx(
+  status?: CustomerStatusFilter | null,
+) {
+  return apiRequest<Blob>({
+    path: "/manager/customers/export.xlsx",
+    query: status ? { status } : undefined,
+    headers: {
+      Accept:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+    responseType: "blob",
+  });
+}

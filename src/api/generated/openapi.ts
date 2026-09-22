@@ -1128,6 +1128,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/manager/customers/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Экспорт базы клиентов в Excel
+         * @description Выгрузка клиентов и агрегатов по их заказам в один XLSX-файл.
+         *
+         *     Email в системе нет (в `users` только `phone`) — колонка не заводится.
+         *     Книга собирается в `write_only`-режиме openpyxl: `list_by_status` тянет
+         *     всю таблицу без пагинации, и на 1 vCPU / ~805 МБ прод-VPS обычный режим
+         *     (с деревом ячеек в памяти на произвольный доступ) на большой базе может
+         *     не влезть в память.
+         */
+        get: operations["export_customers_xlsx_api_v1_manager_customers_export_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/manager/customers/{customer_id}/orders": {
         parameters: {
             query?: never;
@@ -2480,7 +2506,10 @@ export interface components {
         };
         /** Body_admin_import_catalog_api_v1_admin_catalog_import_post */
         Body_admin_import_catalog_api_v1_admin_catalog_import_post: {
-            /** File */
+            /**
+             * File
+             * Format: binary
+             */
             file: string;
         };
         /** CartItemOut */
@@ -9359,6 +9388,65 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileResponse"][];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    export_customers_xlsx_api_v1_manager_customers_export_xlsx_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Требуется аутентификация */
