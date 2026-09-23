@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Users } from "lucide-react";
+import { Download, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { isAppError } from "@/api/errors";
 import {
+  fetchManagerCustomersXlsx,
   listManagerCustomers,
   type CustomerStatusFilter,
 } from "@/api/customers";
@@ -53,6 +56,7 @@ function UsersPage() {
   const { status, q: qFromUrl } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [draftQ, setDraftQ] = useState(qFromUrl ?? "");
+  const [exporting, setExporting] = useState(false);
 
   const listQuery = useQuery({
     queryKey: queryKeys.adminCustomers.list(status),
@@ -95,6 +99,25 @@ function UsersPage() {
     });
   }
 
+  async function onExportXlsx() {
+    setExporting(true);
+    try {
+      const blob = await fetchManagerCustomersXlsx(status);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "medix-customers.xlsx";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(isAppError(err) ? err.message : "Не удалось скачать файл");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -109,6 +132,15 @@ function UsersPage() {
             </p>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={onExportXlsx}
+          disabled={exporting}
+          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold disabled:opacity-60"
+        >
+          <Download className="h-4 w-4" aria-hidden />
+          {exporting ? "Экспортируем…" : "Экспорт в Excel"}
+        </button>
       </header>
 
       <div

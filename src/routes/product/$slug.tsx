@@ -202,15 +202,29 @@ function ProductDetailPage() {
        * один из типизированных маршрутов. Полная навигация здесь не в
        * тягость — то же сохранённое место каталог читает из sessionStorage,
        * а не из истории роутера, и переживает даже F5.
+       *
+       * На ноутбуке (lg+) кнопка уходит из потока в узкую липкую колонку
+       * слева от фото — блок «фото + название + цена» поднимается выше,
+       * не теряя строку под сплошную ссылку сверху. На телефоне это лишний
+       * фиксированный элемент на небольшом экране, поэтому там остаётся
+       * обычная ссылка в потоке над фото.
        */}
-      <a
-        href={backHref}
-        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" />{t("К каталогу")}
-      </a>
+      <div className="lg:flex lg:items-start lg:gap-3">
+        <a
+          href={backHref}
+          aria-label={t("К каталогу")}
+          className="hidden lg:sticky lg:top-24 lg:flex lg:h-11 lg:w-11 lg:shrink-0 lg:items-center lg:justify-center lg:self-start lg:rounded-full lg:border lg:border-border lg:bg-card lg:text-primary lg:shadow-[var(--shadow-soft)]"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </a>
+        <a
+          href={backHref}
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary lg:hidden"
+        >
+          <ArrowLeft className="h-4 w-4" />{t("К каталогу")}
+        </a>
 
-      <div className="mt-6">
+        <div className="mt-6 min-w-0 flex-1 lg:mt-0">
         <StateBlock
           isLoading={query.isLoading}
           isError={query.isError}
@@ -220,45 +234,26 @@ function ProductDetailPage() {
         >
           {product ? (
             /*
-             * Две колонки на десктопе: слева название, фотография и вкладки,
-             * справа — липкий блок покупки. Карточка была одноколоночной на
-             * любом экране, поэтому на 1920px под галереей во весь контейнер
-             * шли цена и «В корзину», а до кнопки после чтения описания
-             * приходилось скроллить обратно вверх.
+             * Две колонки на десктопе: слева фотография и вкладки, справа —
+             * липкий блок покупки, который теперь начинается с названия
+             * (SKU → название → цена → наличие → конфигуратор → «В корзину»).
+             * Раньше название стояло отдельным блоком над галереей во всю
+             * ширину и визуально «лежало на фото», а справа при этом
+             * пустовало место.
              *
              * `order-*` действует только во флексе (мобильная раскладка),
-             * `col-start`/`row-start` — только в гриде (десктоп). Благодаря
-             * этому блок покупки стоит сразу под галереей на телефоне и в
-             * правой колонке на десктопе, оставаясь одним узлом DOM:
-             * дублировать его ради раскладки значило бы завести две кнопки
-             * «В корзину».
+             * `col-start`/`row-start` — только в гриде (десктоп). На телефоне
+             * это даёт порядок фото → название и цена → вкладки, оставаясь
+             * одним узлом DOM: дублировать блок покупки ради раскладки
+             * значило бы завести две кнопки «В корзину».
              *
              * Страница уже общего контейнера витрины: на 1320px левая колонка
              * отдавала фотографии ~900px, кадр занимал почти весь первый
              * экран, а строка описания под ним получалась длиной, на которой
              * глаз теряет начало следующей.
              */
-            <article className="flex flex-col gap-6 lg:mx-auto lg:max-w-[1060px] lg:grid lg:grid-cols-[minmax(0,1fr)_clamp(320px,26vw,380px)] lg:[grid-template-rows:auto_auto_1fr] lg:items-start lg:gap-8">
-              {/* Название над фотографией, а не внутри блока покупки: это
-                  заголовок страницы, и читать его сбоку от картинки
-                  неестественно. */}
-              <header className="order-1 lg:col-start-1 lg:row-start-1">
-                <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
-                  {product.sku}
-                </p>
-                <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">
-                  {productName}
-                </h1>
-                {product.manufacturer || product.country ? (
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {[product.manufacturer, product.country]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                ) : null}
-              </header>
-
-              <div className="order-2 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1 lg:row-start-2">
+            <article className="flex flex-col gap-6 lg:mx-auto lg:max-w-[1060px] lg:grid lg:grid-cols-[minmax(0,1fr)_clamp(320px,26vw,380px)] lg:[grid-template-rows:auto_1fr] lg:items-start lg:gap-8">
+              <div className="order-1 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] lg:col-start-1 lg:row-start-1">
                 <ProductGallery
                   images={product.images ?? []}
                   alt={productName}
@@ -267,9 +262,25 @@ function ProductDetailPage() {
 
               {/* grid-row: 1/-1 — область сайдбара во всю высоту сетки,
                   иначе sticky некуда прилипать. */}
-              <aside className="order-3 lg:col-start-2 lg:self-start lg:[grid-row:1/-1] lg:sticky lg:top-24">
+              <aside className="order-2 lg:col-start-2 lg:self-start lg:[grid-row:1/-1] lg:sticky lg:top-24">
                 <div className="space-y-5 rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
-                  <div>
+                  <header>
+                    <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                      {product.sku}
+                    </p>
+                    <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">
+                      {productName}
+                    </h1>
+                    {product.manufacturer || product.country ? (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {[product.manufacturer, product.country]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    ) : null}
+                  </header>
+
+                  <div className="border-t border-border pt-5">
                     <div className="flex flex-wrap items-end justify-between gap-3">
                       <div>
                         {groups.length === 0 && isOnSale ? (
@@ -363,13 +374,14 @@ function ProductDetailPage() {
               </aside>
 
               {tabs.length > 0 ? (
-                <div className="order-4 lg:col-start-1 lg:row-start-3">
+                <div className="order-3 lg:col-start-1 lg:row-start-2">
                   <ProductTabs tabs={tabs} />
                 </div>
               ) : null}
             </article>
           ) : null}
         </StateBlock>
+        </div>
       </div>
     </AppShell>
   );

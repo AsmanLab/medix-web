@@ -36,6 +36,7 @@ import {
   buildAdminCategoryTree,
   collectCategoryIds,
   findCategoryNode,
+  findCategoryPath,
 } from "@/features/catalog/map-category";
 import { requireStaffPanel } from "@/session/guards";
 import { formatMoney } from "@/lib/money";
@@ -200,11 +201,19 @@ function AdminProductsPage() {
 
   const items = listQuery.data?.pages.flat() ?? [];
 
-  const categoryNameById = useMemo(() => {
+  /**
+   * Путь от корня до категории, а не голое имя: плоский список названий не
+   * показывал, в каком разделе на самом деле лежит товар — «УЗИ» могло
+   * быть и корнем, и третьим уровнем внутри «Диагностика → Визуализация».
+   */
+  const categoryPathById = useMemo(() => {
     const map = new Map<string, string>();
-    for (const c of categories) map.set(c.id, c.name_ru);
+    for (const c of categories) {
+      const path = findCategoryPath(tree, c.id);
+      map.set(c.id, path ? path.map((n) => n.name).join(" → ") : c.name_ru);
+    }
     return map;
-  }, [categories]);
+  }, [categories, tree]);
 
   /**
    * Стрелки порядка бэкенд поддерживает только для выборки по ровно одной
@@ -582,12 +591,24 @@ function AdminProductsPage() {
                   </div>
                   {!category_id ? (
                     <Cell label="Категории">
-                      {p.category_ids.length
-                        ? p.category_ids
-                            .map((id) => categoryNameById.get(id) ?? null)
-                            .filter((name): name is string => Boolean(name))
-                            .join(", ") || "—"
-                        : "—"}
+                      {p.category_ids.length ? (
+                        <span className="flex flex-col gap-0.5">
+                          {p.category_ids
+                            .map((id) => categoryPathById.get(id) ?? null)
+                            .filter((path): path is string => Boolean(path))
+                            .map((path) => (
+                              <span
+                                key={path}
+                                className="block truncate"
+                                title={path}
+                              >
+                                {path}
+                              </span>
+                            ))}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </Cell>
                   ) : null}
                   <Cell label="SKU">
