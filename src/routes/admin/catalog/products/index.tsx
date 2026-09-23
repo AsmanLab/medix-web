@@ -28,7 +28,11 @@ import { isAppError } from "@/api/errors";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { availabilityLabel } from "@/features/catalog/availability";
-import { buildAdminCategoryTree, findCategoryPath } from "@/features/catalog/map-category";
+import {
+  buildAdminCategoryTree,
+  findCategoryPath,
+  flattenCategoryTree,
+} from "@/features/catalog/map-category";
 import { requireStaffPanel } from "@/session/guards";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -149,6 +153,12 @@ function AdminProductsPage() {
   const categoryTree = useMemo(
     () => buildAdminCategoryTree(categories),
     [categories],
+  );
+
+  /** Плоский список в порядке обхода дерева — тот же приём, что в CategoryEditor. */
+  const categoryRows = useMemo(
+    () => flattenCategoryTree(categoryTree),
+    [categoryTree],
   );
 
   /**
@@ -316,9 +326,17 @@ function AdminProductsPage() {
           className="field-control sm:w-auto"
         >
           <option value="">Все категории</option>
-          {categories.map((c) => (
+          {categoryRows.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name_ru}
+              {/*
+               * Обычные пробелы, а не отступ стилями: содержимое <option>
+               * браузеры оформляют по-своему. Тот же приём, что в
+               * CategoryEditor — иначе список из трёх уровней читается как
+               * плоская каша и непонятно, какая подкатегория чья.
+               */}
+              {"  ".repeat(c.depth - 1)}
+              {c.depth > 1 ? "└ " : ""}
+              {c.name}
             </option>
           ))}
         </select>
@@ -403,7 +421,8 @@ function AdminProductsPage() {
                 <Link
                   to="/admin/catalog/products/$productId"
                   params={{ productId: p.id }}
-                  className="truncate text-sm font-semibold hover:text-primary"
+                  title={p.name_ru}
+                  className="block truncate text-sm font-semibold hover:text-primary"
                 >
                   {p.name_ru}
                 </Link>
