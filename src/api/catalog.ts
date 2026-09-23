@@ -238,6 +238,22 @@ export function reorderAdminHomeProducts(
   });
 }
 
+/**
+ * Полный список закреплённых категорий — replace-all: перечисленные получают
+ * `catalog_priority = sort`, отсутствующие в списке снимаются с закрепления.
+ * Одна операция на добавление, удаление и перестановку — промежуточных
+ * состояний нет. Зеркалит {@link reorderAdminHomeProducts} для товаров.
+ */
+export function setCatalogPriorityCategories(
+  items: { id: string; sort: number }[],
+) {
+  return apiRequest<void>({
+    method: "POST",
+    path: "/admin/catalog/categories/priority",
+    body: { items },
+  });
+}
+
 /** Страница списка товаров в админке. Потолок сервера — 100. */
 export const ADMIN_PRODUCTS_PAGE_SIZE = 50;
 

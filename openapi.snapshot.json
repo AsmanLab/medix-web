@@ -646,6 +646,17 @@
       },
       "CategoryOut": {
         "properties": {
+          "catalog_priority": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalog Priority"
+          },
           "depth": {
             "default": 1,
             "description": "Уровень в дереве: 1 — корневая категория, 2 — подкатегория, 3 — подкатегория подкатегории. Глубже трёх не бывает. Считается сервером, чтобы клиенту не приходилось разбирать цепочку `parent_id` ради отступа в списке.",
@@ -733,6 +744,25 @@
           "is_active"
         ],
         "title": "CategoryOut",
+        "type": "object"
+      },
+      "CategoryPriorityItem": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "sort": {
+            "title": "Sort",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "sort"
+        ],
+        "title": "CategoryPriorityItem",
         "type": "object"
       },
       "CategorySortItem": {
@@ -4632,6 +4662,21 @@
         "title": "SetCartQtyRequest",
         "type": "object"
       },
+      "SetCategoryPriorityRequest": {
+        "description": "Полный список закреплённых категорий каталога — replace-all, пустой список снимает всех.",
+        "properties": {
+          "items": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CategoryPriorityItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "SetCategoryPriorityRequest",
+        "type": "object"
+      },
       "StaffUserOut": {
         "properties": {
           "created_at": {
@@ -6011,6 +6056,128 @@
           }
         ],
         "summary": "Создать категорию",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/admin/catalog/categories/priority": {
+      "post": {
+        "operationId": "admin_set_catalog_priority_api_v1_admin_catalog_categories_priority_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCategoryPriorityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Задать закреплённый порядок категорий в каталоге",
         "tags": [
           "catalog"
         ]
