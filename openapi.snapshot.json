@@ -1816,6 +1816,25 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HomeProductSortItem": {
+        "properties": {
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "sort": {
+            "title": "Sort",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_id",
+          "sort"
+        ],
+        "title": "HomeProductSortItem",
+        "type": "object"
+      },
       "IdOut": {
         "properties": {
           "id": {
@@ -3280,6 +3299,17 @@
             "title": "Documents",
             "type": "array"
           },
+          "home_sort": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Sort"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -3517,6 +3547,17 @@
           "country": {
             "title": "Country",
             "type": "string"
+          },
+          "home_sort": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Sort"
           },
           "id": {
             "title": "Id",
@@ -4172,6 +4213,21 @@
           "items"
         ],
         "title": "ReorderCategoryProductsRequest",
+        "type": "object"
+      },
+      "ReorderHomeProductsRequest": {
+        "description": "Полный список товаров на главной — replace-all, пустой список снимает всех.",
+        "properties": {
+          "items": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/HomeProductSortItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "ReorderHomeProductsRequest",
         "type": "object"
       },
       "ReorderImagesRequest": {
@@ -6624,6 +6680,28 @@
             }
           },
           {
+            "description": "Товары всей ветки категорий — раздел с подкатегориями. Имеет приоритет над category_id, как и в публичном списке.",
+            "in": "query",
+            "name": "category_ids",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Товары всей ветки категорий — раздел с подкатегориями. Имеет приоритет над category_id, как и в публичном списке.",
+              "title": "Category Ids"
+            }
+          },
+          {
             "in": "query",
             "name": "is_published",
             "required": false,
@@ -6683,6 +6761,18 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Только товары главной страницы, в заданном порядке",
+            "in": "query",
+            "name": "home",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Только товары главной страницы, в заданном порядке",
+              "title": "Home",
+              "type": "boolean"
             }
           },
           {
@@ -6926,6 +7016,128 @@
           }
         ],
         "summary": "Создать товар",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/admin/catalog/products/home": {
+      "post": {
+        "operationId": "admin_set_home_products_api_v1_admin_catalog_products_home_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderHomeProductsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Задать товары главной страницы",
         "tags": [
           "catalog"
         ]
@@ -13808,6 +14020,18 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Только товары главной страницы, в заданном порядке",
+            "in": "query",
+            "name": "home",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Только товары главной страницы, в заданном порядке",
+              "title": "Home",
+              "type": "boolean"
             }
           },
           {

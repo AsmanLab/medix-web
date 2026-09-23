@@ -109,6 +109,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/catalog/products/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Задать товары главной страницы */
+        post: operations["admin_set_home_products_api_v1_admin_catalog_products_home_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/catalog/products/{product_id}": {
         parameters: {
             query?: never;
@@ -3091,6 +3108,16 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HomeProductSortItem */
+        HomeProductSortItem: {
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Sort */
+            sort: number;
+        };
         /** IdOut */
         IdOut: {
             /** Id */
@@ -3709,6 +3736,8 @@ export interface components {
             description_ru: string;
             /** Documents */
             documents: components["schemas"]["ProductDocumentOut"][];
+            /** Home Sort */
+            home_sort?: number | null;
             /** Id */
             id: string;
             /** Images */
@@ -3793,6 +3822,8 @@ export interface components {
             category_ids: string[];
             /** Country */
             country: string;
+            /** Home Sort */
+            home_sort?: number | null;
             /** Id */
             id: string;
             /** Is Published */
@@ -4041,6 +4072,17 @@ export interface components {
         ReorderCategoryProductsRequest: {
             /** Items */
             items: components["schemas"]["ProductSortItem"][];
+        };
+        /**
+         * ReorderHomeProductsRequest
+         * @description Полный список товаров на главной — replace-all, пустой список снимает всех.
+         */
+        ReorderHomeProductsRequest: {
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["HomeProductSortItem"][];
         };
         /**
          * ReorderImagesRequest
@@ -5043,10 +5085,14 @@ export interface operations {
                 /** @description Поиск по названию, артикулу, производителю */
                 q?: string;
                 category_id?: string | null;
+                /** @description Товары всей ветки категорий — раздел с подкатегориями. Имеет приоритет над category_id, как и в публичном списке. */
+                category_ids?: string[] | null;
                 is_published?: boolean | null;
                 cursor?: string | null;
                 offset?: number | null;
                 limit?: number;
+                /** @description Только товары главной страницы, в заданном порядке */
+                home?: boolean;
                 /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
                 lang?: string | null;
             };
@@ -5141,6 +5187,76 @@ export interface operations {
             };
             /** @description Доступ запрещён */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    admin_set_home_products_api_v1_admin_catalog_products_home_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderHomeProductsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8797,6 +8913,8 @@ export interface operations {
                 /** @description Смещение для страницы с непустым `q` — сортировка по релевантности несовместима с keyset-курсором. При пустом `q` игнорируется, работает cursor. */
                 offset?: number | null;
                 limit?: number;
+                /** @description Только товары главной страницы, в заданном порядке */
+                home?: boolean;
                 /** @description Язык ответа: ru, ky, en. По умолчанию берётся из заголовка Accept-Language, иначе русский. Неизвестный язык не ошибка — ответ придёт на русском. */
                 lang?: string | null;
             };

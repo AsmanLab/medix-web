@@ -99,12 +99,27 @@ function HomePage() {
     [categoriesQuery.data],
   );
 
-  const productsQuery = useQuery({
-    queryKey: queryKeys.catalog.products({ home: true, limit: 8 }),
-    queryFn: ({ signal }) => fetchProducts({ limit: 8 }, signal),
+  const homeProductsQuery = useQuery({
+    queryKey: queryKeys.catalog.products({ home: true }),
+    queryFn: ({ signal }) => fetchProducts({ home: true }, signal),
   });
 
-  const products = (productsQuery.data ?? []).filter((p) => p.is_published);
+  /**
+   * Пока заказчик не выбрал товары для блока на главной (`home_sort` пуст
+   * у всех), `home: true` отдаёт пустой список. Чтобы блок не оказался
+   * пустым, подстраховываемся первыми товарами общего порядка каталога.
+   */
+  const fallbackProductsQuery = useQuery({
+    queryKey: queryKeys.catalog.products({ limit: 8 }),
+    queryFn: ({ signal }) => fetchProducts({ limit: 8 }, signal),
+    enabled: homeProductsQuery.data?.length === 0,
+  });
+
+  const products = (
+    homeProductsQuery.data?.length
+      ? homeProductsQuery.data
+      : (fallbackProductsQuery.data ?? [])
+  ).filter((p) => p.is_published);
 
   return (
     <AppShell>
@@ -187,11 +202,20 @@ function HomePage() {
           </div>
 
           <StateBlock
-            isLoading={productsQuery.isLoading}
-            isError={productsQuery.isError}
-            error={productsQuery.error}
-            isEmpty={productsQuery.isSuccess && products.length === 0}
-            onRetry={() => void productsQuery.refetch()}
+            isLoading={
+              homeProductsQuery.isLoading || fallbackProductsQuery.isLoading
+            }
+            isError={homeProductsQuery.isError || fallbackProductsQuery.isError}
+            error={homeProductsQuery.error || fallbackProductsQuery.error}
+            isEmpty={
+              (homeProductsQuery.isSuccess &&
+                !fallbackProductsQuery.isFetching) &&
+              products.length === 0
+            }
+            onRetry={() => {
+              void homeProductsQuery.refetch();
+              void fallbackProductsQuery.refetch();
+            }}
             loadingVariant="card-grid"
             cardGridVariant="product"
             loadingCount={4}

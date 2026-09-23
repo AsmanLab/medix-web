@@ -209,7 +209,8 @@ function AdminCategoriesPage() {
             <Link
               to="/admin/catalog/categories/$categoryId"
               params={{ categoryId: node.id }}
-              className="truncate text-sm font-semibold hover:text-primary"
+              title={node.name}
+              className="block min-w-0 truncate text-sm font-semibold hover:text-primary"
             >
               {node.name}
             </Link>
