@@ -183,11 +183,15 @@ export function fetchProductBySlug(
 export type FetchAdminProductsParams = {
   q?: string;
   category_id?: string | null;
+  /** Товары всей ветки категорий — раздел с подкатегориями. Приоритет над category_id. */
+  category_ids?: string[] | null;
   is_published?: boolean | null;
   cursor?: string | null;
   /** Смещение для страницы поиска (непустой `q`). Игнорируется при пустом `q`. */
   offset?: number;
   limit?: number;
+  /** Только товары блока «Товары в каталоге» на главной, в заданном порядке. */
+  home?: boolean;
 };
 
 export function fetchAdminProducts(
@@ -199,6 +203,9 @@ export function fetchAdminProducts(
     query: {
       q: params.q?.trim() || undefined,
       category_id: params.category_id || undefined,
+      category_ids: params.category_ids?.length
+        ? params.category_ids
+        : undefined,
       is_published:
         params.is_published === undefined || params.is_published === null
           ? undefined
@@ -206,8 +213,25 @@ export function fetchAdminProducts(
       cursor: params.cursor || undefined,
       offset: params.offset,
       limit: params.limit ?? ADMIN_PRODUCTS_PAGE_SIZE,
+      home: params.home || undefined,
     },
     signal,
+  });
+}
+
+/**
+ * Полный список товаров на главной — replace-all: перечисленные получают
+ * `home_sort = sort`, отсутствующие в списке снимаются с главной. Одна
+ * операция на добавление, удаление и перестановку — промежуточных
+ * состояний нет.
+ */
+export function reorderAdminHomeProducts(
+  items: { product_id: string; sort: number }[],
+) {
+  return apiRequest<void>({
+    method: "POST",
+    path: "/admin/catalog/products/home",
+    body: { items },
   });
 }
 
