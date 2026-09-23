@@ -22,6 +22,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/catalog/categories/priority": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Задать закреплённый порядок категорий в каталоге */
+        post: operations["admin_set_catalog_priority_api_v1_admin_catalog_categories_priority_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/catalog/categories/reorder": {
         parameters: {
             query?: never;
@@ -2574,6 +2591,8 @@ export interface components {
         };
         /** CategoryOut */
         CategoryOut: {
+            /** Catalog Priority */
+            catalog_priority?: number | null;
             /**
              * Depth
              * @description Уровень в дереве: 1 — корневая категория, 2 — подкатегория, 3 — подкатегория подкатегории. Глубже трёх не бывает. Считается сервером, чтобы клиенту не приходилось разбирать цепочку `parent_id` ради отступа в списке.
@@ -2628,6 +2647,16 @@ export interface components {
             translations?: {
                 [key: string]: components["schemas"]["CategoryTextOut"];
             };
+        };
+        /** CategoryPriorityItem */
+        CategoryPriorityItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Sort */
+            sort: number;
         };
         /** CategorySortItem */
         CategorySortItem: {
@@ -4256,6 +4285,17 @@ export interface components {
             /** Qty */
             qty: number;
         };
+        /**
+         * SetCategoryPriorityRequest
+         * @description Полный список закреплённых категорий каталога — replace-all, пустой список снимает всех.
+         */
+        SetCategoryPriorityRequest: {
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["CategoryPriorityItem"][];
+        };
         /** StaffUserOut */
         StaffUserOut: {
             /** Created At */
@@ -4708,6 +4748,76 @@ export interface operations {
             };
             /** @description Доступ запрещён */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    admin_set_catalog_priority_api_v1_admin_catalog_categories_priority_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetCategoryPriorityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

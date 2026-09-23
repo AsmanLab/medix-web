@@ -7,13 +7,16 @@ import {
   FolderPlus,
   FolderTree,
   GripVertical,
+  Pin,
   Plus,
+  Search,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   fetchAdminCategories,
   reorderAdminCategories,
+  setCatalogPriorityCategories,
   updateAdminCategory,
   type CategoryOut,
 } from "@/api/catalog";
@@ -22,21 +25,34 @@ import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import {
   buildAdminCategoryTree,
+  findCategoryPath,
+  flattenCategoryTree,
   MAX_CATEGORY_DEPTH,
   type CatalogCategoryNode,
 } from "@/features/catalog/map-category";
 import { requireStaffPanel } from "@/session/guards";
 import { cn } from "@/lib/utils";
 
+type CategoriesSearch = {
+  /** Режим «Закреплённый порядок»: плоский список только листовых категорий. */
+  priority?: boolean;
+};
+
 export const Route = createFileRoute("/admin/catalog/categories/")({
+  validateSearch: (search: Record<string, unknown>): CategoriesSearch => ({
+    priority: search.priority === true ? true : undefined,
+  }),
   beforeLoad: () => requireStaffPanel({ roles: ["admin"] }),
   component: AdminCategoriesPage,
 });
 
 function AdminCategoriesPage() {
+  const { priority } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [dragId, setDragId] = useState<string | null>(null);
+  const [priorityFilter, setPriorityFilter] = useState("");
 
   const listQuery = useQuery({
     queryKey: queryKeys.catalog.adminCategories(),
@@ -77,6 +93,97 @@ function AdminCategoriesPage() {
       toast.error(isAppError(err) ? err.message : "Не удалось изменить порядок");
     },
   });
+
+  const priorityMutation = useMutation({
+    mutationFn: (items: { id: string; sort: number }[]) =>
+      setCatalogPriorityCategories(items),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.catalog.all });
+      toast.success("Закреплённый порядок обновлён");
+    },
+    onError: (err) => {
+      toast.error(
+        isAppError(err) ? err.message : "Не удалось обновить закреплённый порядок",
+      );
+    },
+  });
+
+  /**
+   * Только листовые категории: пиннить раздел с подкатегориями нельзя —
+   * непонятно, чьи товары «форсировать», его собственных нет.
+   */
+  const leaves = useMemo(
+    () => flattenCategoryTree(tree).filter((n) => n.children.length === 0),
+    [tree],
+  );
+
+  const categoryPathById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const node of leaves) {
+      const path = findCategoryPath(tree, node.id);
+      map.set(node.id, path ? path.map((n) => n.name).join(" → ") : node.name);
+    }
+    return map;
+  }, [leaves, tree]);
+
+  /** Закреплённые категории, отсортированные по текущему `catalog_priority`. */
+  const priorityItems = useMemo(
+    () =>
+      flat
+        .filter((c) => c.catalog_priority !== null && c.catalog_priority !== undefined)
+        .slice()
+        .sort((a, b) => (a.catalog_priority ?? 0) - (b.catalog_priority ?? 0)),
+    [flat],
+  );
+
+  const filteredLeaves = useMemo(() => {
+    const q = priorityFilter.trim().toLowerCase();
+    if (!q) return leaves;
+    return leaves.filter((n) =>
+      (categoryPathById.get(n.id) ?? n.name).toLowerCase().includes(q),
+    );
+  }, [leaves, priorityFilter, categoryPathById]);
+
+  /** Убрать категорию из закреплённых, сохранив порядок остальных. */
+  function removeFromPriority(categoryId: string) {
+    const remaining = priorityItems.filter((c) => c.id !== categoryId);
+    priorityMutation.mutate(remaining.map((c, i) => ({ id: c.id, sort: i })));
+  }
+
+  /** Закрепить категорию — в конец текущего порядка. */
+  function addToPriority(categoryId: string) {
+    const next = [
+      ...priorityItems.map((c, i) => ({ id: c.id, sort: i })),
+      { id: categoryId, sort: priorityItems.length },
+    ];
+    priorityMutation.mutate(next);
+  }
+
+  function togglePriority(categoryId: string, next: boolean) {
+    if (next) addToPriority(categoryId);
+    else removeFromPriority(categoryId);
+  }
+
+  /** Своп с соседом в пределах закреплённого подмножества. */
+  function movePriorityItem(categoryId: string, direction: -1 | 1) {
+    const index = priorityItems.findIndex((c) => c.id === categoryId);
+    const swapIndex = index + direction;
+    if (index < 0 || swapIndex < 0 || swapIndex >= priorityItems.length) return;
+    const reordered = priorityItems.slice();
+    const tmp = reordered[index]!;
+    reordered[index] = reordered[swapIndex]!;
+    reordered[swapIndex] = tmp;
+    priorityMutation.mutate(reordered.map((c, i) => ({ id: c.id, sort: i })));
+  }
+
+  function togglePriorityMode() {
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        priority: priority ? undefined : true,
+      }),
+    });
+  }
 
   function toggleExpand(id: string) {
     setExpanded((prev) => {
@@ -290,36 +397,180 @@ function AdminCategoriesPage() {
         </Link>
       </header>
 
-      <StateBlock
-        isLoading={listQuery.isLoading}
-        isError={listQuery.isError}
-        error={listQuery.error}
-        onRetry={() => void listQuery.refetch()}
-        isEmpty={!listQuery.isLoading && tree.length === 0}
-        loadingVariant="list"
-        emptyIcon={FolderTree}
-        emptyTitle="Категорий пока нет"
-        emptyDescription="Создайте первую корневую категорию."
-        emptyAction={
-          <Link
-            to="/admin/catalog/categories/new"
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
-          >
-            <Plus className="h-4 w-4" aria-hidden />
-            Создать категорию
-          </Link>
-        }
+      <button
+        type="button"
+        onClick={togglePriorityMode}
+        aria-pressed={priority}
+        className={cn(
+          "flex min-h-11 w-full items-center gap-2 rounded-xl border px-3 text-left text-sm font-semibold transition sm:w-auto",
+          priority
+            ? "border-primary bg-primary-soft text-primary"
+            : "border-border bg-card text-foreground hover:bg-secondary/70",
+        )}
       >
-        <div className="overflow-hidden rounded-3xl border border-border bg-card">
-          <div className="grid grid-cols-[1fr_auto] border-b border-border bg-muted/40 px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid-cols-[1fr_140px_100px_auto]">
-            <span>Название</span>
-            <span className="hidden sm:block">Slug</span>
-            <span className="hidden sm:block">Статус</span>
-            <span className="sr-only">Действия</span>
+        <Pin className={cn("h-4 w-4", priority && "fill-primary")} aria-hidden />
+        Закреплённый порядок в каталоге{" "}
+        <span className="ml-auto text-xs tabular-nums text-muted-foreground sm:ml-2">
+          {priorityItems.length}
+        </span>
+      </button>
+
+      {priority ? (
+        <StateBlock
+          isLoading={listQuery.isLoading}
+          isError={listQuery.isError}
+          error={listQuery.error}
+          onRetry={() => void listQuery.refetch()}
+          isEmpty={!listQuery.isLoading && leaves.length === 0}
+          loadingVariant="list"
+          emptyIcon={Pin}
+          emptyTitle="Листовых категорий пока нет"
+          emptyDescription="Закреплять можно только категории без подкатегорий."
+        >
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Отмеченные категории всегда идут первыми в каталоге и на
+              страницах разделов, в указанном порядке — независимо от того, в
+              какой ветке дерева они лежат.
+            </p>
+            <div className="relative">
+              <Search
+                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <input
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                placeholder="Поиск по названию или пути"
+                className="h-11 w-full rounded-xl border border-border bg-background pr-3 pl-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+
+            {priorityItems.length ? (
+              <div className="overflow-hidden rounded-3xl border border-border bg-card">
+                <div className="border-b border-border bg-muted/40 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Закреплено · порядок сверху вниз
+                </div>
+                {priorityItems.map((c, index) => (
+                  <div
+                    key={c.id}
+                    className="grid grid-cols-[28px_1fr_auto] items-center gap-2 border-b border-border px-3 py-2.5 last:border-0"
+                  >
+                    <div className="flex flex-col">
+                      <button
+                        type="button"
+                        aria-label="Переместить выше"
+                        disabled={index === 0 || priorityMutation.isPending}
+                        onClick={() => movePriorityItem(c.id, -1)}
+                        className="grid h-4 w-5 place-items-center text-muted-foreground disabled:opacity-30"
+                      >
+                        <ChevronUp className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Переместить ниже"
+                        disabled={
+                          index === priorityItems.length - 1 ||
+                          priorityMutation.isPending
+                        }
+                        onClick={() => movePriorityItem(c.id, 1)}
+                        className="grid h-4 w-5 place-items-center text-muted-foreground disabled:opacity-30"
+                      >
+                        <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                    </div>
+                    <span
+                      className="min-w-0 truncate text-sm font-semibold"
+                      title={categoryPathById.get(c.id) ?? c.name_ru}
+                    >
+                      {categoryPathById.get(c.id) ?? c.name_ru}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={priorityMutation.isPending}
+                      onClick={() => removeFromPriority(c.id)}
+                      className="text-xs font-semibold text-destructive"
+                    >
+                      Открепить
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="overflow-hidden rounded-3xl border border-border bg-card">
+              <div className="border-b border-border bg-muted/40 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Все листовые категории
+              </div>
+              {filteredLeaves.length ? (
+                filteredLeaves.map((node) => {
+                  const raw = byId.get(node.id);
+                  const checked =
+                    raw?.catalog_priority !== null &&
+                    raw?.catalog_priority !== undefined;
+                  return (
+                    <label
+                      key={node.id}
+                      className="flex min-h-11 items-center gap-2 border-b border-border px-3 py-2.5 text-sm last:border-0"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 shrink-0"
+                        checked={checked}
+                        disabled={priorityMutation.isPending}
+                        onChange={(e) =>
+                          togglePriority(node.id, e.target.checked)
+                        }
+                      />
+                      <span
+                        className="min-w-0 truncate"
+                        title={categoryPathById.get(node.id) ?? node.name}
+                      >
+                        {categoryPathById.get(node.id) ?? node.name}
+                      </span>
+                    </label>
+                  );
+                })
+              ) : (
+                <p className="px-3 py-4 text-sm text-muted-foreground">
+                  Ничего не найдено.
+                </p>
+              )}
+            </div>
           </div>
-          {tree.map((node) => renderNode(node, 0))}
-        </div>
-      </StateBlock>
+        </StateBlock>
+      ) : (
+        <StateBlock
+          isLoading={listQuery.isLoading}
+          isError={listQuery.isError}
+          error={listQuery.error}
+          onRetry={() => void listQuery.refetch()}
+          isEmpty={!listQuery.isLoading && tree.length === 0}
+          loadingVariant="list"
+          emptyIcon={FolderTree}
+          emptyTitle="Категорий пока нет"
+          emptyDescription="Создайте первую корневую категорию."
+          emptyAction={
+            <Link
+              to="/admin/catalog/categories/new"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
+            >
+              <Plus className="h-4 w-4" aria-hidden />
+              Создать категорию
+            </Link>
+          }
+        >
+          <div className="overflow-hidden rounded-3xl border border-border bg-card">
+            <div className="grid grid-cols-[1fr_auto] border-b border-border bg-muted/40 px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid-cols-[1fr_140px_100px_auto]">
+              <span>Название</span>
+              <span className="hidden sm:block">Slug</span>
+              <span className="hidden sm:block">Статус</span>
+              <span className="sr-only">Действия</span>
+            </div>
+            {tree.map((node) => renderNode(node, 0))}
+          </div>
+        </StateBlock>
+      )}
     </div>
   );
 }
