@@ -202,15 +202,29 @@ function ProductDetailPage() {
        * один из типизированных маршрутов. Полная навигация здесь не в
        * тягость — то же сохранённое место каталог читает из sessionStorage,
        * а не из истории роутера, и переживает даже F5.
+       *
+       * На ноутбуке (lg+) кнопка уходит из потока в узкую липкую колонку
+       * слева от фото — блок «фото + название + цена» поднимается выше,
+       * не теряя строку под сплошную ссылку сверху. На телефоне это лишний
+       * фиксированный элемент на небольшом экране, поэтому там остаётся
+       * обычная ссылка в потоке над фото.
        */}
-      <a
-        href={backHref}
-        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" />{t("К каталогу")}
-      </a>
+      <div className="lg:flex lg:items-start lg:gap-3">
+        <a
+          href={backHref}
+          aria-label={t("К каталогу")}
+          className="hidden lg:sticky lg:top-24 lg:flex lg:h-11 lg:w-11 lg:shrink-0 lg:items-center lg:justify-center lg:self-start lg:rounded-full lg:border lg:border-border lg:bg-card lg:text-primary lg:shadow-[var(--shadow-soft)]"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </a>
+        <a
+          href={backHref}
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary lg:hidden"
+        >
+          <ArrowLeft className="h-4 w-4" />{t("К каталогу")}
+        </a>
 
-      <div className="mt-6">
+        <div className="mt-6 min-w-0 flex-1 lg:mt-0">
         <StateBlock
           isLoading={query.isLoading}
           isError={query.isError}
@@ -367,6 +381,7 @@ function ProductDetailPage() {
             </article>
           ) : null}
         </StateBlock>
+        </div>
       </div>
     </AppShell>
   );
