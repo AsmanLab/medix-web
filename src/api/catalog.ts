@@ -141,6 +141,8 @@ export type FetchProductsParams = {
   cursor?: string | null;
   /** Смещение для страницы поиска (непустой `q`). Игнорируется при пустом `q`. */
   offset?: number;
+  /** Только товары блока «Товары в каталоге» на главной, в заданном порядке. */
+  home?: boolean;
 };
 
 /** Сколько товаров запрашивается за раз. Потолок сервера — 100. */
@@ -161,6 +163,7 @@ export function fetchProducts(
       cursor: params.cursor || undefined,
       offset: params.offset,
       limit: params.limit ?? PRODUCTS_PAGE_SIZE,
+      home: params.home || undefined,
     },
     signal,
   });
