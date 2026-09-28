@@ -5,7 +5,7 @@ import { fetchContacts } from "@/api/cms";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
-import { mapsSearchUrl } from "@/features/cms/promotions";
+import { mapsEmbedUrl, mapsSearchUrl } from "@/features/cms/promotions";
 import { usePageMeta } from "@/lib/page-meta";
 import { useT } from "@/i18n/LocaleProvider";
 
@@ -59,63 +59,83 @@ function ContactsPage() {
             </div>
           }
         >
-          <ul className="space-y-4">
+          <ul className="space-y-6">
             {offices.map((office) => {
+              const address = office.address.trim();
+              const embedSrc =
+                office.map_embed_url?.trim() ||
+                (address ? mapsEmbedUrl(address) : null);
               const mapHref =
                 office.map_embed_url?.trim() ||
-                (office.address.trim() ? mapsSearchUrl(office.address) : null);
+                (address ? mapsSearchUrl(address) : null);
               return (
                 <li
                   key={office.id}
-                  className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]"
+                  className="overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)]"
                 >
-                  <h2 className="font-display text-xl font-bold">
-                    {office.name}
-                  </h2>
-                  {office.address ? (
-                    <p className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      {office.address}
-                    </p>
-                  ) : null}
-                  {office.working_hours ? (
-                    <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
-                      <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      {office.working_hours}
-                    </p>
-                  ) : null}
+                  <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+                    <div className="p-5 sm:p-7">
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
+                          <Building2 className="h-5 w-5" />
+                        </span>
+                        <h2 className="font-display text-xl font-bold">
+                          {office.name}
+                        </h2>
+                      </div>
 
-                  <dl className="mt-4 grid gap-2 sm:grid-cols-3">
-                    <PhoneRow label={t("Продажи")} value={office.phone_sales} />
-                    <PhoneRow label={t("Сервис")} value={office.phone_service} />
-                    <PhoneRow
-                      label={t("Бухгалтерия")}
-                      value={office.phone_accounting}
-                    />
-                  </dl>
+                      {address ? (
+                        <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                          {address}
+                        </p>
+                      ) : null}
+                      {office.working_hours ? (
+                        <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+                          <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                          {office.working_hours}
+                        </p>
+                      ) : null}
 
-                  {mapHref ? (
-                    <a
-                      href={mapHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
-                    >
-                      {t("На карте")} <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  ) : null}
+                      <dl className="mt-5 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                        <PhoneRow label={t("Продажи")} value={office.phone_sales} />
+                        <PhoneRow label={t("Сервис")} value={office.phone_service} />
+                        <PhoneRow
+                          label={t("Бухгалтерия")}
+                          value={office.phone_accounting}
+                        />
+                      </dl>
 
-                  {office.map_embed_url?.trim().startsWith("http") ? (
-                    <div className="mt-4 overflow-hidden rounded-2xl border border-border">
-                      <iframe
-                        title={t("Карта — {name}", { name: office.name })}
-                        src={office.map_embed_url.trim()}
-                        className="aspect-[16/9] w-full border-0"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                      />
+                      {mapHref ? (
+                        <a
+                          href={mapHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+                        >
+                          {t("Открыть в Google Картах")}{" "}
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      ) : null}
                     </div>
-                  ) : null}
+
+                    {embedSrc ? (
+                      <div className="min-h-[240px] w-full border-t border-border lg:min-h-full lg:border-l lg:border-t-0">
+                        <iframe
+                          title={t("Карта — {name}", { name: office.name })}
+                          src={embedSrc}
+                          className="h-full min-h-[240px] w-full border-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                    ) : (
+                      <div className="grid min-h-[160px] place-items-center gap-2 border-t border-border bg-secondary/40 p-6 text-center text-sm text-muted-foreground lg:border-l lg:border-t-0">
+                        <MapPin className="mx-auto h-6 w-6 text-muted-foreground" />
+                        {t("Адрес пока не указан")}
+                      </div>
+                    )}
+                  </div>
                 </li>
               );
             })}
