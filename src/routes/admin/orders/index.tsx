@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Package, Search } from "lucide-react";
+import { Package, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { listManagerOrders } from "@/api/manager-orders";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
+import { buttonVariants } from "@/components/ui/button";
 import {
   orderSourceLabel,
   orderStatusLabel,
@@ -101,6 +102,10 @@ function ManagerOrdersPage() {
             </p>
           </div>
         </div>
+        <Link to="/admin/orders/new" className={buttonVariants()}>
+          <Plus className="h-4 w-4" aria-hidden />
+          Создать заказ
+        </Link>
       </header>
 
       <div className="flex flex-wrap gap-2">

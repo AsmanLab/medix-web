@@ -57,6 +57,7 @@ import { Route as AdminCommerceRfqIdRouteImport } from './routes/admin/commerce/
 import { Route as AdminNotificationsIndexRouteImport } from './routes/admin/notifications/index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrdersOrderIdRouteImport } from './routes/admin/orders/$orderId'
+import { Route as AdminOrdersNewRouteImport } from './routes/admin/orders/new'
 import { Route as AdminReportsIndexRouteImport } from './routes/admin/reports/index'
 import { Route as AdminServiceDeskIndexRouteImport } from './routes/admin/service-desk/index'
 import { Route as AdminServiceDeskRequestIdRouteImport } from './routes/admin/service-desk/$requestId'
@@ -319,6 +320,11 @@ const AdminOrdersOrderIdRoute = AdminOrdersOrderIdRouteImport.update({
   path: '/orders/$orderId',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminOrdersNewRoute = AdminOrdersNewRouteImport.update({
+  id: '/orders/new',
+  path: '/orders/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminReportsIndexRoute = AdminReportsIndexRouteImport.update({
   id: '/reports/',
   path: '/reports/',
@@ -476,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/admin/cms/contacts': typeof AdminCmsContactsRoute
   '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
   '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
+  '/admin/orders/new': typeof AdminOrdersNewRoute
   '/admin/service-desk/$requestId': typeof AdminServiceDeskRequestIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
@@ -541,6 +548,7 @@ export interface FileRoutesByTo {
   '/admin/cms/contacts': typeof AdminCmsContactsRoute
   '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
   '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
+  '/admin/orders/new': typeof AdminOrdersNewRoute
   '/admin/service-desk/$requestId': typeof AdminServiceDeskRequestIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
@@ -613,6 +621,7 @@ export interface FileRoutesById {
   '/admin/cms/contacts': typeof AdminCmsContactsRoute
   '/admin/commerce/$rfqId': typeof AdminCommerceRfqIdRoute
   '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
+  '/admin/orders/new': typeof AdminOrdersNewRoute
   '/admin/service-desk/$requestId': typeof AdminServiceDeskRequestIdRoute
   '/admin/users/$customerId': typeof AdminUsersCustomerIdRoute
   '/service/requests/$requestId': typeof ServiceRequestsRequestIdRoute
@@ -686,6 +695,7 @@ export interface FileRouteTypes {
     | '/admin/cms/contacts'
     | '/admin/commerce/$rfqId'
     | '/admin/orders/$orderId'
+    | '/admin/orders/new'
     | '/admin/service-desk/$requestId'
     | '/admin/users/$customerId'
     | '/service/requests/$requestId'
@@ -751,6 +761,7 @@ export interface FileRouteTypes {
     | '/admin/cms/contacts'
     | '/admin/commerce/$rfqId'
     | '/admin/orders/$orderId'
+    | '/admin/orders/new'
     | '/admin/service-desk/$requestId'
     | '/admin/users/$customerId'
     | '/service/requests/$requestId'
@@ -822,6 +833,7 @@ export interface FileRouteTypes {
     | '/admin/cms/contacts'
     | '/admin/commerce/$rfqId'
     | '/admin/orders/$orderId'
+    | '/admin/orders/new'
     | '/admin/service-desk/$requestId'
     | '/admin/users/$customerId'
     | '/service/requests/$requestId'
@@ -1219,6 +1231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersOrderIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/orders/new': {
+      id: '/admin/orders/new'
+      path: '/orders/new'
+      fullPath: '/admin/orders/new'
+      preLoaderRoute: typeof AdminOrdersNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/reports/': {
       id: '/admin/reports/'
       path: '/reports'
@@ -1374,6 +1393,7 @@ interface AdminRouteRouteChildren {
   AdminCmsContactsRoute: typeof AdminCmsContactsRoute
   AdminCommerceRfqIdRoute: typeof AdminCommerceRfqIdRoute
   AdminOrdersOrderIdRoute: typeof AdminOrdersOrderIdRoute
+  AdminOrdersNewRoute: typeof AdminOrdersNewRoute
   AdminServiceDeskRequestIdRoute: typeof AdminServiceDeskRequestIdRoute
   AdminUsersCustomerIdRoute: typeof AdminUsersCustomerIdRoute
   AdminBannersIndexRoute: typeof AdminBannersIndexRoute
@@ -1406,6 +1426,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminCmsContactsRoute: AdminCmsContactsRoute,
   AdminCommerceRfqIdRoute: AdminCommerceRfqIdRoute,
   AdminOrdersOrderIdRoute: AdminOrdersOrderIdRoute,
+  AdminOrdersNewRoute: AdminOrdersNewRoute,
   AdminServiceDeskRequestIdRoute: AdminServiceDeskRequestIdRoute,
   AdminUsersCustomerIdRoute: AdminUsersCustomerIdRoute,
   AdminBannersIndexRoute: AdminBannersIndexRoute,
