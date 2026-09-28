@@ -78,13 +78,3 @@ export function promotionDateRange(
 export function mapsSearchUrl(address: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
-
-/**
- * Встраиваемая карта по тексту адреса, без API-ключа.
- * Нужна как запасной вариант, когда в CMS не заполнен map_embed_url —
- * иначе карта либо не рисуется вовсе, либо (при неверном вручную
- * скопированном src) показывает не тот адрес.
- */
-export function mapsEmbedUrl(address: string): string {
-  return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
-}

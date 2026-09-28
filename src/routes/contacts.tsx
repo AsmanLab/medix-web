@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Clock3, MapPin, Phone, Building2, ExternalLink } from "lucide-react";
+import { Clock3, MapPin, Phone, Building2 } from "lucide-react";
 import { fetchContacts } from "@/api/cms";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
+import { OfficeMap } from "@/components/shared/OfficeMap";
 import { StateBlock } from "@/components/shared/StateBlock";
-import { mapsEmbedUrl, mapsSearchUrl } from "@/features/cms/promotions";
 import { usePageMeta } from "@/lib/page-meta";
 import { useT } from "@/i18n/LocaleProvider";
 
@@ -62,12 +62,6 @@ function ContactsPage() {
           <ul className="space-y-6">
             {offices.map((office) => {
               const address = office.address.trim();
-              const embedSrc =
-                office.map_embed_url?.trim() ||
-                (address ? mapsEmbedUrl(address) : null);
-              const mapHref =
-                office.map_embed_url?.trim() ||
-                (address ? mapsSearchUrl(address) : null);
               return (
                 <li
                   key={office.id}
@@ -105,36 +99,22 @@ function ContactsPage() {
                           value={office.phone_accounting}
                         />
                       </dl>
-
-                      {mapHref ? (
-                        <a
-                          href={mapHref}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
-                        >
-                          {t("Открыть в Google Картах")}{" "}
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                      ) : null}
                     </div>
 
-                    {embedSrc ? (
-                      <div className="min-h-[240px] w-full border-t border-border lg:min-h-full lg:border-l lg:border-t-0">
-                        <iframe
-                          title={t("Карта — {name}", { name: office.name })}
-                          src={embedSrc}
-                          className="h-full min-h-[240px] w-full border-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
+                    <div className="border-t border-border lg:border-l lg:border-t-0">
+                      {address || office.map_embed_url?.trim() ? (
+                        <OfficeMap
+                          officeName={office.name}
+                          address={address}
+                          explicitEmbedUrl={office.map_embed_url}
                         />
-                      </div>
-                    ) : (
-                      <div className="grid min-h-[160px] place-items-center gap-2 border-t border-border bg-secondary/40 p-6 text-center text-sm text-muted-foreground lg:border-l lg:border-t-0">
-                        <MapPin className="mx-auto h-6 w-6 text-muted-foreground" />
-                        {t("Адрес пока не указан")}
-                      </div>
-                    )}
+                      ) : (
+                        <div className="grid min-h-[160px] h-full place-items-center gap-2 bg-secondary/40 p-6 text-center text-sm text-muted-foreground">
+                          <MapPin className="mx-auto h-6 w-6" />
+                          {t("Адрес пока не указан")}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </li>
               );
