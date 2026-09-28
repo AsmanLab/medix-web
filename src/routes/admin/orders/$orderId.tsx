@@ -168,6 +168,36 @@ function ManagerOrderDetailPage() {
               </StatusPill>
             </header>
 
+            {order.delivery_address ||
+            order.contact_name ||
+            order.contact_phone ||
+            order.comment ? (
+              <section className="grid gap-4 rounded-3xl border border-border bg-card p-5 sm:grid-cols-2">
+                <div>
+                  <h2 className="text-sm font-bold">Доставка</h2>
+                  <p className="mt-2 text-sm whitespace-pre-wrap">
+                    {order.delivery_address || "Адрес не указан"}
+                  </p>
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold">Контакт</h2>
+                  <p className="mt-2 text-sm">
+                    {[order.contact_name, order.contact_phone]
+                      .filter(Boolean)
+                      .join(" · ") || "Не указан"}
+                  </p>
+                </div>
+                {order.comment ? (
+                  <div className="sm:col-span-2">
+                    <h2 className="text-sm font-bold">Комментарий</h2>
+                    <p className="mt-2 text-sm whitespace-pre-wrap text-muted-foreground">
+                      {order.comment}
+                    </p>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
+
             {order.rfq_id ? (
               <Link
                 to="/admin/commerce/$rfqId"

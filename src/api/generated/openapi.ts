@@ -1142,6 +1142,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/manager/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Создать клиента (менеджер, звонок по телефону)
+         * @description Заводит клиента, которого менеджер принял по телефонному звонку.
+         *
+         *     Временный пароль возвращается ровно один раз в этом ответе — нигде
+         *     больше не хранится в открытом виде и по SMS не отправляется.
+         */
+        post: operations["create_manager_client_api_v1_manager_clients_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/manager/customers": {
         parameters: {
             query?: never;
@@ -1363,7 +1386,13 @@ export interface paths {
          */
         get: operations["manager_list_orders_api_v1_manager_orders_get"];
         put?: never;
-        post?: never;
+        /**
+         * Создать заказ вручную (менеджер)
+         * @description Менеджер оформляет заказ (или отправляет КП) за клиента, принятого по
+         *     телефону — единственная альтернатива раньше была `convert-to-order`
+         *     из RFQ в статусе `accepted`, то есть клиент должен был сам зайти на сайт.
+         */
+        post: operations["manager_create_order_api_v1_manager_orders_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1692,6 +1721,32 @@ export interface paths {
         get: operations["request_download_api_v1_media__key__download_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{key}/optimize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Пережать загруженную CMS-картинку (resize + progressive JPEG)
+         * @description Загрузка идёт напрямую браузер → S3 по presigned PUT (см. `request_upload`),
+         *     backend байты не видит — поэтому пережатие не часть аплоада, а отдельный
+         *     шаг, который фронт вызывает сразу после успешного PUT.
+         *
+         *     Ограничено `cms/`: это баннеры и CMS-блоки, которые массово смотрит
+         *     витрина; чужие оригиналы (продукты, документы, фото с сервиса) этим
+         *     эндпоинтом не трогаем.
+         */
+        post: operations["optimize_media_api_v1_media__key__optimize_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2860,6 +2915,36 @@ export interface components {
                 [key: string]: components["schemas"]["CategoryTextIn"];
             } | null;
         };
+        /**
+         * CreateManagerClientRequest
+         * @description Менеджер заводит клиента по телефонному звонку (ручное создание заказа).
+         */
+        CreateManagerClientRequest: {
+            /**
+             * Address
+             * @default
+             */
+            address: string;
+            /**
+             * City
+             * @default
+             */
+            city: string;
+            /**
+             * Client Type
+             * @default individual
+             */
+            client_type: string;
+            /** Full Name */
+            full_name: string;
+            /**
+             * Organization
+             * @default
+             */
+            organization: string;
+            /** Phone */
+            phone: string;
+        };
         /** CreateOptionGroupRequest */
         CreateOptionGroupRequest: {
             /** Name Ru */
@@ -3380,6 +3465,66 @@ export interface components {
             /** Refresh Token */
             refresh_token?: string | null;
         };
+        /**
+         * ManagerClientCreatedResponse
+         * @description Ответ на создание клиента менеджером.
+         *
+         *     `temporary_password` показывается ровно один раз — нигде, кроме этого
+         *     ответа, пароль в открытом виде не хранится и не логируется.
+         */
+        ManagerClientCreatedResponse: {
+            /** Full Name */
+            full_name: string;
+            /** Phone */
+            phone: string;
+            /** Temporary Password */
+            temporary_password: string;
+            /** User Id */
+            user_id: string;
+        };
+        /**
+         * ManagerCreateOrderRequest
+         * @description Ручное создание заказа менеджером — клиент принят по телефонному звонку.
+         */
+        ManagerCreateOrderRequest: {
+            /**
+             * As Quote
+             * @default false
+             */
+            as_quote: boolean;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Comment
+             * @default
+             */
+            comment: string;
+            /**
+             * Contact Name
+             * @default
+             */
+            contact_name: string;
+            /**
+             * Contact Phone
+             * @default
+             */
+            contact_phone: string;
+            /**
+             * Delivery Address
+             * @default
+             */
+            delivery_address: string;
+            /** Items */
+            items: components["schemas"]["ManagerOrderItemRequest"][];
+            /**
+             * Requisites
+             * @default
+             */
+            requisites: string;
+        };
         /** ManagerOrderDetailResponse */
         ManagerOrderDetailResponse: {
             /** Client Id */
@@ -3394,8 +3539,28 @@ export interface components {
              * @default
              */
             client_organization: string;
+            /**
+             * Comment
+             * @default
+             */
+            comment: string;
+            /**
+             * Contact Name
+             * @default
+             */
+            contact_name: string;
+            /**
+             * Contact Phone
+             * @default
+             */
+            contact_phone: string;
             /** Created At */
             created_at: string;
+            /**
+             * Delivery Address
+             * @default
+             */
+            delivery_address: string;
             /** Id */
             id: string;
             /** Items */
@@ -3412,6 +3577,22 @@ export interface components {
             status_history: components["schemas"]["OrderStatusHistoryOut"][];
             /** Total */
             total?: string | null;
+        };
+        /** ManagerOrderItemRequest */
+        ManagerOrderItemRequest: {
+            /** Option Type */
+            option_type?: string | null;
+            /** Parent Product Id */
+            parent_product_id?: string | null;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Qty */
+            qty: number;
+            /** Unit Price Amount */
+            unit_price_amount?: number | string | null;
         };
         /** ManagerOrderOut */
         ManagerOrderOut: {
@@ -3524,6 +3705,13 @@ export interface components {
             /** Key */
             key: string;
         };
+        /** MediaOptimizeResponse */
+        MediaOptimizeResponse: {
+            /** Key */
+            key: string;
+            /** Optimized */
+            optimized: boolean;
+        };
         /** MediaUploadRequest */
         MediaUploadRequest: {
             /** Content Type */
@@ -3597,8 +3785,28 @@ export interface components {
         };
         /** OrderDetailResponse */
         OrderDetailResponse: {
+            /**
+             * Comment
+             * @default
+             */
+            comment: string;
+            /**
+             * Contact Name
+             * @default
+             */
+            contact_name: string;
+            /**
+             * Contact Phone
+             * @default
+             */
+            contact_phone: string;
             /** Created At */
             created_at: string;
+            /**
+             * Delivery Address
+             * @default
+             */
+            delivery_address: string;
             /** Id */
             id: string;
             /** Items */
@@ -9595,6 +9803,78 @@ export interface operations {
             };
         };
     };
+    create_manager_client_api_v1_manager_clients_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateManagerClientRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagerClientCreatedResponse"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Конфликт данных */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
     list_customers_api_v1_manager_customers_get: {
         parameters: {
             query?: {
@@ -10311,6 +10591,78 @@ export interface operations {
             };
             /** @description Доступ запрещён */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    manager_create_order_api_v1_manager_orders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManagerCreateOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaceOrderResponse"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ресурс не найден */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11345,6 +11697,65 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    optimize_media_api_v1_media__key__optimize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaOptimizeResponse"];
+                };
+            };
+            /** @description Требуется аутентификация */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Доступ запрещён */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: string;
+                    };
+                };
+            };
+            /** @description Ошибка валидации */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail?: {
+                            loc?: (string | number)[];
+                            msg?: string;
+                            type?: string;
+                        }[];
+                    };
                 };
             };
         };

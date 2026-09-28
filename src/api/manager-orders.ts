@@ -30,6 +30,37 @@ export type ManagerOrderDetail = ManagerOrderSummary & {
   rfq_id: string | null;
   items: ManagerOrderLineItem[];
   status_history: ManagerOrderStatusEntry[];
+  delivery_address: string;
+  contact_name: string;
+  contact_phone: string;
+  comment: string;
+};
+
+export type ManagerOrderItemInput = {
+  product_id: string;
+  qty: number;
+  option_type?: string | null;
+  parent_product_id?: string | null;
+  /** Ручная цена позиции — строкой или числом; без неё берётся цена каталога. */
+  unit_price_amount?: string | number | null;
+};
+
+export type CreateManagerOrderBody = {
+  client_id: string;
+  items: ManagerOrderItemInput[];
+  delivery_address?: string;
+  contact_name?: string;
+  contact_phone?: string;
+  comment?: string;
+  /** true — отправить клиенту КП вместо оформления заказа сразу. */
+  as_quote?: boolean;
+  requisites?: string;
+};
+
+export type PlaceOrderResponse = {
+  type: "order" | "rfq" | string;
+  id: string;
+  status: string;
 };
 
 export type ManagerOrderStatusUpdate = {
@@ -66,6 +97,26 @@ export function updateManagerOrderStatus(
     method: "PATCH",
     path: `/manager/orders/${encodeURIComponent(orderId)}/status`,
     body: { status: body.status, comment: body.comment ?? "" },
+  });
+}
+
+/** Ручное создание заказа менеджером — клиент принят по телефонному звонку. */
+export function createManagerOrder(
+  body: CreateManagerOrderBody,
+): Promise<PlaceOrderResponse> {
+  return apiRequest<PlaceOrderResponse>({
+    method: "POST",
+    path: "/manager/orders",
+    body: {
+      client_id: body.client_id,
+      items: body.items,
+      delivery_address: body.delivery_address ?? "",
+      contact_name: body.contact_name ?? "",
+      contact_phone: body.contact_phone ?? "",
+      comment: body.comment ?? "",
+      as_quote: body.as_quote ?? false,
+      requisites: body.requisites ?? "",
+    },
   });
 }
 

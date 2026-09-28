@@ -1204,6 +1204,51 @@
         "title": "CreateCategoryRequest",
         "type": "object"
       },
+      "CreateManagerClientRequest": {
+        "description": "Менеджер заводит клиента по телефонному звонку (ручное создание заказа).",
+        "properties": {
+          "address": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Address",
+            "type": "string"
+          },
+          "city": {
+            "default": "",
+            "maxLength": 100,
+            "title": "City",
+            "type": "string"
+          },
+          "client_type": {
+            "default": "individual",
+            "pattern": "^(clinic|laboratory|hospital|individual)$",
+            "title": "Client Type",
+            "type": "string"
+          },
+          "full_name": {
+            "maxLength": 200,
+            "title": "Full Name",
+            "type": "string"
+          },
+          "organization": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Organization",
+            "type": "string"
+          },
+          "phone": {
+            "pattern": "^996\\d{9}$",
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone",
+          "full_name"
+        ],
+        "title": "CreateManagerClientRequest",
+        "type": "object"
+      },
       "CreateOptionGroupRequest": {
         "properties": {
           "name_ru": {
@@ -2369,6 +2414,88 @@
         "title": "LogoutRequest",
         "type": "object"
       },
+      "ManagerClientCreatedResponse": {
+        "description": "Ответ на создание клиента менеджером.\n\n`temporary_password` показывается ровно один раз — нигде, кроме этого\nответа, пароль в открытом виде не хранится и не логируется.",
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "temporary_password": {
+            "title": "Temporary Password",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "phone",
+          "full_name",
+          "temporary_password"
+        ],
+        "title": "ManagerClientCreatedResponse",
+        "type": "object"
+      },
+      "ManagerCreateOrderRequest": {
+        "description": "Ручное создание заказа менеджером — клиент принят по телефонному звонку.",
+        "properties": {
+          "as_quote": {
+            "default": false,
+            "title": "As Quote",
+            "type": "boolean"
+          },
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "comment": {
+            "default": "",
+            "title": "Comment",
+            "type": "string"
+          },
+          "contact_name": {
+            "default": "",
+            "title": "Contact Name",
+            "type": "string"
+          },
+          "contact_phone": {
+            "default": "",
+            "title": "Contact Phone",
+            "type": "string"
+          },
+          "delivery_address": {
+            "default": "",
+            "title": "Delivery Address",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ManagerOrderItemRequest"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "requisites": {
+            "default": "",
+            "title": "Requisites",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "items"
+        ],
+        "title": "ManagerCreateOrderRequest",
+        "type": "object"
+      },
       "ManagerOrderDetailResponse": {
         "properties": {
           "client_id": {
@@ -2385,8 +2512,28 @@
             "title": "Client Organization",
             "type": "string"
           },
+          "comment": {
+            "default": "",
+            "title": "Comment",
+            "type": "string"
+          },
+          "contact_name": {
+            "default": "",
+            "title": "Contact Name",
+            "type": "string"
+          },
+          "contact_phone": {
+            "default": "",
+            "title": "Contact Phone",
+            "type": "string"
+          },
           "created_at": {
             "title": "Created At",
+            "type": "string"
+          },
+          "delivery_address": {
+            "default": "",
+            "title": "Delivery Address",
             "type": "string"
           },
           "id": {
@@ -2459,6 +2606,63 @@
           "client_id"
         ],
         "title": "ManagerOrderDetailResponse",
+        "type": "object"
+      },
+      "ManagerOrderItemRequest": {
+        "properties": {
+          "option_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Type"
+          },
+          "parent_product_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Product Id"
+          },
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "qty": {
+            "title": "Qty",
+            "type": "integer"
+          },
+          "unit_price_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price Amount"
+          }
+        },
+        "required": [
+          "product_id",
+          "qty"
+        ],
+        "title": "ManagerOrderItemRequest",
         "type": "object"
       },
       "ManagerOrderOut": {
@@ -2701,6 +2905,24 @@
         "title": "MediaDownloadResponse",
         "type": "object"
       },
+      "MediaOptimizeResponse": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "optimized": {
+            "title": "Optimized",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "optimized"
+        ],
+        "title": "MediaOptimizeResponse",
+        "type": "object"
+      },
       "MediaUploadRequest": {
         "properties": {
           "content_type": {
@@ -2894,8 +3116,28 @@
       },
       "OrderDetailResponse": {
         "properties": {
+          "comment": {
+            "default": "",
+            "title": "Comment",
+            "type": "string"
+          },
+          "contact_name": {
+            "default": "",
+            "title": "Contact Name",
+            "type": "string"
+          },
+          "contact_phone": {
+            "default": "",
+            "title": "Contact Phone",
+            "type": "string"
+          },
           "created_at": {
             "title": "Created At",
+            "type": "string"
+          },
+          "delivery_address": {
+            "default": "",
+            "title": "Delivery Address",
             "type": "string"
           },
           "id": {
@@ -15279,6 +15521,136 @@
         ]
       }
     },
+    "/api/v1/manager/clients": {
+      "post": {
+        "description": "Заводит клиента, которого менеджер принял по телефонному звонку.\n\nВременный пароль возвращается ровно один раз в этом ответе — нигде\nбольше не хранится в открытом виде и по SMS не отправляется.",
+        "operationId": "create_manager_client_api_v1_manager_clients_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManagerClientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagerClientCreatedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Конфликт данных"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Создать клиента (менеджер, звонок по телефону)",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
     "/api/v1/manager/customers": {
       "get": {
         "description": "Список профилей клиентов с опциональной фильтрацией по статусу верификации.",
@@ -16718,6 +17090,134 @@
           }
         ],
         "summary": "Список заказов (менеджер)",
+        "tags": [
+          "commerce"
+        ]
+      },
+      "post": {
+        "description": "Менеджер оформляет заказ (или отправляет КП) за клиента, принятого по\nтелефону — единственная альтернатива раньше была `convert-to-order`\nиз RFQ в статусе `accepted`, то есть клиент должен был сам зайти на сайт.",
+        "operationId": "manager_create_order_api_v1_manager_orders_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManagerCreateOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceOrderResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ресурс не найден"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Создать заказ вручную (менеджер)",
         "tags": [
           "commerce"
         ]
@@ -18703,6 +19203,119 @@
           }
         ],
         "summary": "Presigned URL для скачивания файла",
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/media/{key}/optimize": {
+      "post": {
+        "description": "Загрузка идёт напрямую браузер → S3 по presigned PUT (см. `request_upload`),\nbackend байты не видит — поэтому пережатие не часть аплоада, а отдельный\nшаг, который фронт вызывает сразу после успешного PUT.\n\nОграничено `cms/`: это баннеры и CMS-блоки, которые массово смотрит\nвитрина; чужие оригиналы (продукты, документы, фото с сервиса) этим\nэндпоинтом не трогаем.",
+        "operationId": "optimize_media_api_v1_media__key__optimize_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOptimizeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Требуется аутентификация"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "detail"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Доступ запрещён"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "items": {
+                        "properties": {
+                          "loc": {
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "integer"
+                                }
+                              ]
+                            },
+                            "type": "array"
+                          },
+                          "msg": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ошибка валидации"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Пережать загруженную CMS-картинку (resize + progressive JPEG)",
         "tags": [
           "media"
         ]
