@@ -117,6 +117,21 @@ export async function uploadFileToPresignedUrl(
   }
 }
 
+/**
+ * Пережатие только что загруженной cms/-картинки на сервере (resize +
+ * progressive JPEG) — см. `POST /media/{key}/optimize`. Best-effort: аплоад
+ * идёт напрямую в S3 мимо бэкенда, поэтому это отдельный шаг после PUT, а не
+ * часть самой загрузки. Если он не удался, баннер всё равно отображается —
+ * просто неоптимизированным оригиналом, так что ошибку не пробрасываем.
+ */
+async function optimizeMediaFile(key: string): Promise<void> {
+  try {
+    await apiRequest({ method: "POST", path: `/media/${key}/optimize` });
+  } catch (error) {
+    console.warn(`[media] optimize failed for "${key}":`, error);
+  }
+}
+
 /** Request presign, PUT bytes, return object key. */
 export async function uploadMediaFile(
   purpose: MediaUploadPurpose,
@@ -129,5 +144,8 @@ export async function uploadMediaFile(
     contentType,
   });
   await uploadFileToPresignedUrl(upload_url, file, contentType);
+  if (purpose === "cms") {
+    await optimizeMediaFile(key);
+  }
   return key;
 }
