@@ -99,7 +99,7 @@ function PromotionsListPage() {
                         alt=""
                         loading="lazy"
                         decoding="async"
-                        className="aspect-[16/9] w-full object-cover"
+                        className="aspect-[16/9] w-full bg-white object-contain"
                       />
                     ) : (
                       <div className="grid aspect-[16/9] place-items-center bg-primary-soft text-primary">

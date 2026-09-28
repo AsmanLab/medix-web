@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Tag } from "lucide-react";
+import { ArrowLeft, ArrowRight, Maximize2, Tag } from "lucide-react";
+import { useState } from "react";
 import { isAppError } from "@/api/errors";
 import { fetchPromotion } from "@/api/cms";
 import { fetchMediaDownloadUrl } from "@/api/media";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
+import { ImageLightbox } from "@/components/shared/ImageLightbox";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { CmsHtml } from "@/features/cms/CmsHtml";
 import { useT } from "@/i18n/LocaleProvider";
@@ -17,6 +19,8 @@ export const Route = createFileRoute("/promotions/$slug")({
 function PromotionDetailPage() {
   const t = useT();
   const { slug } = Route.useParams();
+
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const query = useQuery({
     queryKey: queryKeys.cms.promotion(slug),
@@ -72,11 +76,22 @@ function PromotionDetailPage() {
             <article className="space-y-6">
               <div className="overflow-hidden rounded-3xl border border-border bg-card">
                 {imageQuery.data ? (
-                  <img
-                    src={imageQuery.data}
-                    alt=""
-                    className="aspect-[16/9] w-full object-cover"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setLightboxOpen(true)}
+                    aria-label={t("Открыть фото крупнее")}
+                    className="group relative block w-full"
+                  >
+                    <img
+                      src={imageQuery.data}
+                      alt=""
+                      className="aspect-[16/9] w-full bg-white object-contain"
+                    />
+                    <span className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-foreground/70 px-3 py-1.5 text-xs font-semibold text-background opacity-0 transition group-hover:opacity-100">
+                      <Maximize2 className="h-3.5 w-3.5" aria-hidden />
+                      {t("Увеличить")}
+                    </span>
+                  </button>
                 ) : (
                   <div className="grid aspect-[16/9] place-items-center bg-primary-soft text-primary">
                     <Tag className="h-10 w-10" />
@@ -121,6 +136,14 @@ function PromotionDetailPage() {
           ) : null}
         </StateBlock>
       </div>
+
+      {lightboxOpen && imageQuery.data ? (
+        <ImageLightbox
+          src={imageQuery.data}
+          alt={promo?.title ?? ""}
+          onClose={() => setLightboxOpen(false)}
+        />
+      ) : null}
     </AppShell>
   );
 }
