@@ -4395,6 +4395,12 @@ export interface components {
         /** SendOtpResponse */
         SendOtpResponse: {
             /**
+             * Delivery Channel
+             * @description Канал доставки кода: sms или whatsapp (номера оператора «О»)
+             * @default sms
+             */
+            delivery_channel: string;
+            /**
              * Expires At
              * @description Когда код перестанет действовать (ISO 8601, UTC)
              */

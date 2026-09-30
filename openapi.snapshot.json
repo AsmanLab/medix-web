@@ -4680,6 +4680,12 @@
       },
       "SendOtpResponse": {
         "properties": {
+          "delivery_channel": {
+            "default": "sms",
+            "description": "Канал доставки кода: sms или whatsapp (номера оператора «О»)",
+            "title": "Delivery Channel",
+            "type": "string"
+          },
           "expires_at": {
             "anyOf": [
               {
