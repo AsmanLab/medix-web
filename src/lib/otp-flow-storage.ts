@@ -34,6 +34,8 @@ export type OtpFlowState = {
   cooldownUntil: number | null;
   /** epoch ms, срок действия самого кода. */
   codeExpiresAt: number | null;
+  /** Канал доставки кода — влияет только на текст подсказки после reload. */
+  deliveryChannel?: "sms" | "whatsapp";
 };
 
 function isValid(value: unknown): value is OtpFlowState {
@@ -47,6 +49,11 @@ function isValid(value: unknown): value is OtpFlowState {
   // и получит отказ.
   if (s.step === 3 && !s.ticket) return false;
   return true;
+}
+
+/** Старые сохранённые сессии не знали про delivery_channel — по умолчанию SMS. */
+function deliveryChannelOf(value: Partial<OtpFlowState>): "sms" | "whatsapp" {
+  return value.deliveryChannel === "whatsapp" ? "whatsapp" : "sms";
 }
 
 export function loadOtpFlow(key: string): OtpFlowState | null {
@@ -75,7 +82,7 @@ export function loadOtpFlow(key: string): OtpFlowState | null {
     clearOtpFlow(key);
     return null;
   }
-  return parsed;
+  return { ...parsed, deliveryChannel: deliveryChannelOf(parsed) };
 }
 
 export function saveOtpFlow(key: string, state: OtpFlowState): void {

@@ -496,7 +496,7 @@
       "Body_admin_import_catalog_api_v1_admin_catalog_import_post": {
         "properties": {
           "file": {
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File",
             "type": "string"
           }
@@ -4680,6 +4680,12 @@
       },
       "SendOtpResponse": {
         "properties": {
+          "delivery_channel": {
+            "default": "sms",
+            "description": "Канал доставки кода: sms или whatsapp (номера оператора «О»)",
+            "title": "Delivery Channel",
+            "type": "string"
+          },
           "expires_at": {
             "anyOf": [
               {

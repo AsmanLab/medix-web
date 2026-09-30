@@ -2595,7 +2595,10 @@ export interface components {
         };
         /** Body_admin_import_catalog_api_v1_admin_catalog_import_post */
         Body_admin_import_catalog_api_v1_admin_catalog_import_post: {
-            /** File */
+            /**
+             * File
+             * Format: binary
+             */
             file: string;
         };
         /** CartItemOut */
@@ -4394,6 +4397,12 @@ export interface components {
         };
         /** SendOtpResponse */
         SendOtpResponse: {
+            /**
+             * Delivery Channel
+             * @description Канал доставки кода: sms или whatsapp (номера оператора «О»)
+             * @default sms
+             */
+            delivery_channel: string;
             /**
              * Expires At
              * @description Когда код перестанет действовать (ISO 8601, UTC)

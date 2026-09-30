@@ -59,6 +59,9 @@ function RegisterPage() {
   const [transactionId, setTransactionId] = useState("");
   const [ticket, setTicket] = useState("");
   const [codeExpiresAt, setCodeExpiresAt] = useState<number | null>(null);
+  const [deliveryChannel, setDeliveryChannel] = useState<"sms" | "whatsapp">(
+    "sms",
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -74,6 +77,7 @@ function RegisterPage() {
     setTransactionId(saved.transactionId);
     setTicket(saved.ticket);
     setCodeExpiresAt(saved.codeExpiresAt);
+    setDeliveryChannel(saved.deliveryChannel ?? "sms");
     setCooldown(cooldownLeft(saved.cooldownUntil));
     setStep(saved.step);
   }, []);
@@ -111,8 +115,10 @@ function RegisterPage() {
     const res = await sendOtp(normalized, "registration");
     const codeExpires = res.expires_at ? Date.parse(res.expires_at) : null;
     const cooldownSec = res.retry_after || FALLBACK_COOLDOWN_SEC;
+    const channel = res.delivery_channel === "whatsapp" ? "whatsapp" : "sms";
     setTransactionId(res.transaction_id);
     setCodeExpiresAt(codeExpires);
+    setDeliveryChannel(channel);
     setCooldown(cooldownSec);
     // Кулдаун сохраняем дедлайном, а не остатком: иначе перезагрузка обнуляла
     // бы его и позволяла жечь SMS обновлением страницы.
@@ -124,7 +130,9 @@ function RegisterPage() {
       ticketExpiresAt: null,
       cooldownUntil: Date.now() + cooldownSec * 1000,
       codeExpiresAt: codeExpires,
+      deliveryChannel: channel,
     });
+    return channel;
   }
 
   async function onSubmitPhone(e: React.FormEvent) {
@@ -137,10 +145,14 @@ function RegisterPage() {
     }
     setSubmitting(true);
     try {
-      await requestCode(normalized);
+      const channel = await requestCode(normalized);
       setPhone(normalized);
       setStep(2);
-      toast.success(t("Код отправлен по SMS"));
+      toast.success(
+        channel === "whatsapp"
+          ? t("Код отправлен в WhatsApp")
+          : t("Код отправлен по SMS"),
+      );
     } catch (err) {
       applyError(err, t("Не удалось отправить код"));
     } finally {
@@ -222,6 +234,7 @@ function RegisterPage() {
     setOtp("");
     setTransactionId("");
     setCodeExpiresAt(null);
+    setDeliveryChannel("sms");
     setFormError(null);
     clearOtpFlow(OTP_FLOW_KEYS.registration);
   }
@@ -269,7 +282,9 @@ function RegisterPage() {
         {step === 2 ? (
           <form onSubmit={onSubmitCode} className="mt-6 space-y-3">
             <p className="text-sm text-muted-foreground">
-              {t("Код отправлен на {phone}", { phone })}
+              {deliveryChannel === "whatsapp"
+                ? t("Код на {phone} отправлен в WhatsApp", { phone })
+                : t("Код отправлен на {phone}", { phone })}
             </p>
             <input
               required
@@ -314,8 +329,12 @@ function RegisterPage() {
                 className="text-sm text-primary disabled:text-muted-foreground"
                 onClick={async () => {
                   try {
-                    await requestCode(phone);
-                    toast.success(t("Код отправлен повторно"));
+                    const channel = await requestCode(phone);
+                    toast.success(
+                      channel === "whatsapp"
+                        ? t("Код повторно отправлен в WhatsApp")
+                        : t("Код отправлен повторно"),
+                    );
                   } catch (err) {
                     applyError(err, t("Не удалось отправить код"));
                   }
