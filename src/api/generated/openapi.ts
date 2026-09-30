@@ -2595,10 +2595,7 @@ export interface components {
         };
         /** Body_admin_import_catalog_api_v1_admin_catalog_import_post */
         Body_admin_import_catalog_api_v1_admin_catalog_import_post: {
-            /**
-             * File
-             * Format: binary
-             */
+            /** File */
             file: string;
         };
         /** CartItemOut */
