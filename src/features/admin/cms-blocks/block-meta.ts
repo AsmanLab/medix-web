@@ -1,7 +1,8 @@
-import { AlignLeft, BarChart3, Columns3, Heading, Image, Images } from "lucide-react";
+import { AlignLeft, BarChart3, Columns3, Heading, Image, Images, Megaphone } from "lucide-react";
 import type { BlockType } from "@/features/cms/blocks/schema";
 
 export const BLOCK_TYPES: BlockType[] = [
+  "hero",
   "heading",
   "text",
   "image",
@@ -11,6 +12,7 @@ export const BLOCK_TYPES: BlockType[] = [
 ];
 
 export const BLOCK_META: Record<BlockType, { label: string; icon: typeof Heading }> = {
+  hero: { label: "Баннер", icon: Megaphone },
   heading: { label: "Заголовок", icon: Heading },
   text: { label: "Текст", icon: AlignLeft },
   image: { label: "Фото", icon: Image },

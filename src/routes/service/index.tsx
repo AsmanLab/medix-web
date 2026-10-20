@@ -4,10 +4,8 @@ import {
   ArrowRight,
   CalendarDays,
   CheckCircle2,
-  Clock3,
   FileUp,
   MapPin,
-  Phone,
   ShieldCheck,
   Wrench,
   X,
@@ -23,7 +21,11 @@ import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { FormField } from "@/components/shared/FormField";
 import { Button } from "@/components/ui/button";
-import { CmsPageBody, hasCmsContent } from "@/features/cms/CmsPageBody";
+import { CmsPageBody } from "@/features/cms/CmsPageBody";
+import { HeroBlock, type HeroBlockData } from "@/features/cms/blocks/HeroBlock";
+import { PageBlocks } from "@/features/cms/blocks/PageBlocks";
+import { parsePageContent } from "@/features/cms/blocks/schema";
+import { serviceHeroDefault } from "@/features/cms/blocks/service-hero-default";
 import { findSitePage } from "@/features/cms/site-pages";
 import {
   createPhotoDraft,
@@ -131,6 +133,17 @@ function ServicePage() {
   // всё равно нужно отправить, поэтому вместо select даём просто ввести текст.
   const equipmentTypeFallback = categoriesQuery.isError || rootCategoryCount === 0;
   const equipmentTypeOptions = equipmentTypeOptionsFrom(categoriesQuery.data ?? [], t);
+
+  // Баннер и остальные CMS-блоки показываем раздельно: баннер — вместо
+  // захардкоженного (ниже), остальное — в секции «О сервисе», как и раньше.
+  // Пока в CMS-странице `service` нет блока `hero`, баннер остаётся прежним
+  // (serviceHeroDefault) — заказчик правит его в админке, когда понадобится.
+  const blocks = parsePageContent(cmsQuery.data?.content_json);
+  const heroBlock =
+    blocks?.find((b): b is HeroBlockData => b.type === "hero") ?? serviceHeroDefault();
+  const restBlocks = blocks?.filter((b) => b.type !== "hero") ?? null;
+  const hasLegacyBody = blocks === null && Boolean(cmsQuery.data?.body_html?.trim());
+  const showAboutSection = (restBlocks && restBlocks.length > 0) || hasLegacyBody;
 
   useEffect(() => {
     const p = profileQuery.data;
@@ -245,43 +258,20 @@ function ServicePage() {
   return (
     <AppShell>
       <section>
-        <div className="relative overflow-hidden rounded-[28px] bg-[oklch(.24_.06_238)] px-6 py-10 text-white sm:rounded-[36px] sm:px-10 sm:py-14">
-          <div className="absolute -right-20 -top-24 h-80 w-80 rounded-full bg-primary/30 blur-3xl" />
-          <div className="relative z-10 max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em]">
-              <Wrench className="h-3.5 w-3.5" /> {t("Сервисный центр Medix")}
-            </span>
-            <h1 className="mt-5 font-display text-[34px] font-bold leading-tight tracking-tight sm:text-5xl">
-              {t("Поддерживаем оборудование в рабочем состоянии")}
-            </h1>
-            <p className="mt-5 max-w-xl text-sm leading-6 text-white/65 sm:text-base sm:leading-7">
-              Техническое обслуживание, ремонт, выезд инженера и гарантийная
-              поддержка медицинского оборудования.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-5 text-xs text-white/75 sm:text-sm">
-              <span className="inline-flex items-center gap-2">
-                <Clock3 className="h-4 w-4 text-[oklch(.78_.11_209)]" /> Ответ в
-                рабочее время
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Phone className="h-4 w-4 text-[oklch(.78_.11_209)]" /> +996
-                (312) 66-00-66
-              </span>
-            </div>
-          </div>
-        </div>
+        <HeroBlock block={heroBlock} titleAs="h1" />
       </section>
 
-      {hasCmsContent(cmsQuery.data) ? (
+      {showAboutSection ? (
         <section className="mt-8 rounded-3xl border border-border bg-card p-5 sm:p-7">
           <h2 className="font-display text-xl font-bold">
             {cmsQuery.data?.title || t("О сервисе")}
           </h2>
           <div className="mt-4">
-            <CmsPageBody
-              bodyHtml={cmsQuery.data?.body_html ?? ""}
-              contentJson={cmsQuery.data?.content_json}
-            />
+            {restBlocks && restBlocks.length > 0 ? (
+              <PageBlocks blocks={restBlocks} />
+            ) : (
+              <CmsPageBody bodyHtml={cmsQuery.data?.body_html ?? ""} contentJson={null} />
+            )}
           </div>
         </section>
       ) : null}

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { fetchCategories } from "@/api/catalog";
-import { fetchContacts } from "@/api/cms";
+import { fetchContacts, listCmsPages } from "@/api/cms";
 import { listNotifications } from "@/api/notifications";
 import { queryKeys } from "@/api/query-keys";
 import { fetchCart } from "@/api/cart";
@@ -25,6 +25,7 @@ import {
   buildCategoryTree,
   type CatalogCategoryNode,
 } from "@/features/catalog/map-category";
+import { navPagesFrom } from "@/features/cms/site-pages";
 import { useSession } from "@/session/store";
 import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
@@ -458,6 +459,17 @@ export function AppShell({
   });
   const mainOffice = contactsQuery.data?.[0] ?? null;
 
+  // Страницы, у которых нет своего пункта меню (не about/service/legal) —
+  // чтобы опубликованная в CMS страница была видна хоть где-то, а не только
+  // по прямому /pages/:slug. Ошибка или пустой список молча не рисует блок,
+  // подвал/меню не должны падать из-за этого запроса.
+  const cmsPagesQuery = useQuery({
+    queryKey: queryKeys.cms.pages(),
+    queryFn: ({ signal }) => listCmsPages(signal),
+    staleTime: 5 * 60_000,
+  });
+  const navCmsPages = navPagesFrom(cmsPagesQuery.data ?? []);
+
   const categoriesQuery = useQuery({
     queryKey: queryKeys.catalog.categories(),
     queryFn: ({ signal }) => fetchCategories(signal),
@@ -681,6 +693,21 @@ export function AppShell({
                   {item.label}
                 </Link>
               ))}
+              {navCmsPages.map((page) => (
+                <Link
+                  key={page.slug}
+                  to="/pages/$slug"
+                  params={{ slug: page.slug }}
+                  className={cn(
+                    "min-h-11 rounded-xl px-3 py-2.5",
+                    path === `/pages/${page.slug}`
+                      ? "bg-primary-soft text-primary"
+                      : "text-foreground/80 active:bg-secondary",
+                  )}
+                >
+                  {page.title}
+                </Link>
+              ))}
             </nav>
           </div>
         </>
@@ -877,6 +904,16 @@ export function AppShell({
             >
               {t("Сервис")}
             </Link>
+            {navCmsPages.map((page) => (
+              <Link
+                key={page.slug}
+                to="/pages/$slug"
+                params={{ slug: page.slug }}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"
+              >
+                {page.title}
+              </Link>
+            ))}
             <Link
               to="/legal/privacy"
               className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-foreground"

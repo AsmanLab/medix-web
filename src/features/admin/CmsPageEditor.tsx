@@ -25,6 +25,7 @@ import { blocksToHtml } from "@/features/cms/blocks/to-html";
 import { htmlToBlocks } from "@/features/cms/blocks/from-html";
 import { hasBlocks, parsePageContent, type Block } from "@/features/cms/blocks/schema";
 import { PageBlocks } from "@/features/cms/blocks/PageBlocks";
+import { serviceHeroDefault } from "@/features/cms/blocks/service-hero-default";
 import { CmsHtml } from "@/features/cms/CmsHtml";
 import { findSitePage } from "@/features/cms/site-pages";
 
@@ -207,6 +208,20 @@ export function CmsPageEditor({ slug, prefillSlug }: Props) {
                 Открыть на сайте
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               </a>
+            ) : isEdit && status === "published" ? (
+              <a
+                href={`/pages/${slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
+              >
+                Открыть на сайте
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              </a>
+            ) : isEdit ? (
+              <span className="text-xs text-muted-foreground">
+                Опубликуйте, чтобы открыть страницу на сайте
+              </span>
             ) : null}
           </div>
 
@@ -292,7 +307,19 @@ export function CmsPageEditor({ slug, prefillSlug }: Props) {
                   )}
                 </div>
               ) : (
-                <BlockListEditor blocks={blocks} onChange={setBlocks} />
+                <div className="space-y-3">
+                  {slug === "service" && !blocks.some((b) => b.type === "hero") ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setBlocks([serviceHeroDefault(), ...blocks])}
+                    >
+                      <Wand2 className="h-4 w-4" aria-hidden />
+                      Подставить текущий баннер сайта
+                    </Button>
+                  ) : null}
+                  <BlockListEditor blocks={blocks} onChange={setBlocks} />
+                </div>
               )}
 
               <Accordion type="single" collapsible>

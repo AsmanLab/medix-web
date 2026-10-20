@@ -5,7 +5,7 @@ import { listAdminCmsPages, type AdminCmsPageListItem } from "@/api/cms-admin";
 import { queryKeys } from "@/api/query-keys";
 import { StateBlock } from "@/components/shared/StateBlock";
 import { Button } from "@/components/ui/button";
-import { SITE_PAGES } from "@/features/cms/site-pages";
+import { navPagesFrom, SITE_PAGES } from "@/features/cms/site-pages";
 import { requireStaffPanel } from "@/session/guards";
 import { cn } from "@/lib/utils";
 
@@ -130,8 +130,15 @@ function CmsPagesListPage() {
                       <div>
                         <div className="font-semibold">{page.title}</div>
                         <div className="font-mono text-xs text-muted-foreground">
-                          /{page.slug}
+                          /pages/{page.slug}
                         </div>
+                        {page.status === "published" ? (
+                          <div className="text-xs text-muted-foreground">
+                            {navPagesFrom([page]).length > 0
+                              ? "Ссылка есть в подвале и меню сайта"
+                              : "Своя ссылка в меню — см. список выше"}
+                          </div>
+                        ) : null}
                       </div>
                       {statusPill(page.status)}
                     </Link>

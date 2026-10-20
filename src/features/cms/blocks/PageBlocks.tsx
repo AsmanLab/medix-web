@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { HeroBlock } from "./HeroBlock";
 import { splitTextBlock } from "./to-html";
 import { useBlockImages } from "./useBlockImages";
 import type { Block } from "./schema";
@@ -75,6 +76,9 @@ function BlockView({
   imagesLoading: boolean;
 }) {
   switch (block.type) {
+    case "hero":
+      return <HeroBlock block={block} titleAs="h2" />;
+
     case "heading":
       return block.level === 2 ? (
         <h2 className="font-display text-xl font-bold">{block.text}</h2>
