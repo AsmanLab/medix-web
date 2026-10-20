@@ -75,16 +75,29 @@ export function promotionDateRange(
   return t("Сроки не указаны");
 }
 
-export function mapsSearchUrl(address: string): string {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+/**
+ * Ссылка на поиск адреса на openstreetmap.org — запасной вариант для кнопки
+ * "Открыть на карте", пока координаты офиса ещё не геокодированы (или если
+ * геокодирование не удалось).
+ */
+export function osmSearchUrl(address: string): string {
+  return `https://www.openstreetmap.org/search?query=${encodeURIComponent(address)}`;
 }
 
 /**
- * Встраиваемая карта по тексту адреса, без API-ключа.
- * Нужна как запасной вариант, когда в CMS не заполнен map_embed_url —
- * иначе карта либо не рисуется вовсе, либо (при неверном вручную
- * скопированном src) показывает не тот адрес.
+ * Прямая ссылка на openstreetmap.org с центром по координатам офиса.
  */
-export function mapsEmbedUrl(address: string): string {
-  return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
+export function osmViewUrl(lat: number, lon: number): string {
+  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
+}
+
+/**
+ * Встраиваемая карта OpenStreetMap по координатам, без API-ключа.
+ * OSM не умеет геокодировать текстовый адрес сам (в отличие от старого
+ * Google-трюка `maps?q=...`), поэтому адрес офиса сначала геокодируется
+ * через Nominatim (см. useOsmGeocode), а тут только строится src iframe.
+ */
+export function osmEmbedUrl(lat: number, lon: number, delta = 0.01): string {
+  const bbox = [lon - delta, lat - delta, lon + delta, lat + delta].join(",");
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`;
 }
