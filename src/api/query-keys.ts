@@ -120,4 +120,9 @@ export const queryKeys = {
     orders: (customerId: string) =>
       [...queryKeys.adminCustomers.all, "orders", customerId] as const,
   },
+  geo: {
+    all: ["geo"] as const,
+    osmGeocode: (address: string) =>
+      [...queryKeys.geo.all, "osm-geocode", address] as const,
+  },
 } as const;

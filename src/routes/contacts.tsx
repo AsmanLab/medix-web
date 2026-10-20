@@ -1,13 +1,37 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Clock3, MapPin, Phone, Building2, ExternalLink } from "lucide-react";
-import { fetchContacts } from "@/api/cms";
+import { fetchContacts, type ContactOffice } from "@/api/cms";
 import { queryKeys } from "@/api/query-keys";
 import { AppShell } from "@/components/shared/AppShell";
 import { StateBlock } from "@/components/shared/StateBlock";
-import { mapsEmbedUrl, mapsSearchUrl } from "@/features/cms/promotions";
+import { osmEmbedUrl, osmSearchUrl, osmViewUrl } from "@/features/cms/promotions";
 import { usePageMeta } from "@/lib/page-meta";
 import { useT } from "@/i18n/LocaleProvider";
+
+/**
+ * Геокодирование адреса офиса через Nominatim (openstreetmap.org) — публичный
+ * сервис OSM без API-ключа. Результат кэшируется навсегда (адреса офисов
+ * практически не меняются), запрос уходит один раз на адрес за всю сессию.
+ */
+function useOsmGeocode(address: string | null) {
+  return useQuery({
+    queryKey: queryKeys.geo.osmGeocode(address ?? ""),
+    queryFn: async ({ signal }) => {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address!)}`;
+      const res = await fetch(url, { signal });
+      if (!res.ok) throw new Error("osm geocode request failed");
+      const hits: Array<{ lat: string; lon: string }> = await res.json();
+      const hit = hits[0];
+      if (!hit) throw new Error("osm geocode: address not found");
+      return { lat: Number(hit.lat), lon: Number(hit.lon) };
+    },
+    enabled: Boolean(address),
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: false,
+  });
+}
 
 export const Route = createFileRoute("/contacts")({
   component: ContactsPage,
@@ -60,89 +84,102 @@ function ContactsPage() {
           }
         >
           <ul className="space-y-6">
-            {offices.map((office) => {
-              const address = office.address.trim();
-              const embedSrc =
-                office.map_embed_url?.trim() ||
-                (address ? mapsEmbedUrl(address) : null);
-              const mapHref =
-                office.map_embed_url?.trim() ||
-                (address ? mapsSearchUrl(address) : null);
-              return (
-                <li
-                  key={office.id}
-                  className="overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)]"
-                >
-                  <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-                    <div className="p-5 sm:p-7">
-                      <div className="flex items-center gap-2.5">
-                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
-                          <Building2 className="h-5 w-5" />
-                        </span>
-                        <h2 className="font-display text-xl font-bold">
-                          {office.name}
-                        </h2>
-                      </div>
-
-                      {address ? (
-                        <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
-                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                          {address}
-                        </p>
-                      ) : null}
-                      {office.working_hours ? (
-                        <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
-                          <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                          {office.working_hours}
-                        </p>
-                      ) : null}
-
-                      <dl className="mt-5 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-                        <PhoneRow label={t("Продажи")} value={office.phone_sales} />
-                        <PhoneRow label={t("Сервис")} value={office.phone_service} />
-                        <PhoneRow
-                          label={t("Бухгалтерия")}
-                          value={office.phone_accounting}
-                        />
-                      </dl>
-
-                      {mapHref ? (
-                        <a
-                          href={mapHref}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
-                        >
-                          {t("Открыть в Google Картах")}{" "}
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                      ) : null}
-                    </div>
-
-                    {embedSrc ? (
-                      <div className="min-h-[240px] w-full border-t border-border lg:min-h-full lg:border-l lg:border-t-0">
-                        <iframe
-                          title={t("Карта — {name}", { name: office.name })}
-                          src={embedSrc}
-                          className="h-full min-h-[240px] w-full border-0"
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                        />
-                      </div>
-                    ) : (
-                      <div className="grid min-h-[160px] place-items-center gap-2 border-t border-border bg-secondary/40 p-6 text-center text-sm text-muted-foreground lg:border-l lg:border-t-0">
-                        <MapPin className="mx-auto h-6 w-6 text-muted-foreground" />
-                        {t("Адрес пока не указан")}
-                      </div>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+            {offices.map((office) => (
+              <OfficeCard key={office.id} office={office} />
+            ))}
           </ul>
         </StateBlock>
       </div>
     </AppShell>
+  );
+}
+
+function OfficeCard({ office }: { office: ContactOffice }) {
+  const t = useT();
+  const address = office.address.trim();
+  const overrideUrl = office.map_embed_url?.trim() || null;
+
+  // Если в CMS явно задан map_embed_url — используем его как есть (это может
+  // быть iframe на любой провайдер, в т.ч. вручную собранный OSM embed).
+  // Иначе геокодируем адрес через OSM/Nominatim и строим карту сами.
+  const geocode = useOsmGeocode(overrideUrl ? null : address || null);
+  const coords = geocode.data ?? null;
+
+  const embedSrc =
+    overrideUrl || (coords ? osmEmbedUrl(coords.lat, coords.lon) : null);
+  const mapHref =
+    overrideUrl ||
+    (coords
+      ? osmViewUrl(coords.lat, coords.lon)
+      : address
+        ? osmSearchUrl(address)
+        : null);
+
+  return (
+    <li className="overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)]">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="p-5 sm:p-7">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
+              <Building2 className="h-5 w-5" />
+            </span>
+            <h2 className="font-display text-xl font-bold">{office.name}</h2>
+          </div>
+
+          {address ? (
+            <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              {address}
+            </p>
+          ) : null}
+          {office.working_hours ? (
+            <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+              <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              {office.working_hours}
+            </p>
+          ) : null}
+
+          <dl className="mt-5 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <PhoneRow label={t("Продажи")} value={office.phone_sales} />
+            <PhoneRow label={t("Сервис")} value={office.phone_service} />
+            <PhoneRow
+              label={t("Бухгалтерия")}
+              value={office.phone_accounting}
+            />
+          </dl>
+
+          {mapHref ? (
+            <a
+              href={mapHref}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+            >
+              {t("Открыть на карте")} <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          ) : null}
+        </div>
+
+        {embedSrc ? (
+          <div className="min-h-[240px] w-full border-t border-border lg:min-h-full lg:border-l lg:border-t-0">
+            <iframe
+              title={t("Карта — {name}", { name: office.name })}
+              src={embedSrc}
+              className="h-full min-h-[240px] w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        ) : (
+          <div className="grid min-h-[160px] place-items-center gap-2 border-t border-border bg-secondary/40 p-6 text-center text-sm text-muted-foreground lg:border-l lg:border-t-0">
+            <MapPin className="mx-auto h-6 w-6 text-muted-foreground" />
+            {address
+              ? t("Карта временно недоступна")
+              : t("Адрес пока не указан")}
+          </div>
+        )}
+      </div>
+    </li>
   );
 }
 
