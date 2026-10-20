@@ -76,6 +76,7 @@ function blockToHtml(block: Block): string {
     case "text_image":
       return imageHtml(block.key, block.alt) + textChunksToHtml(block.text);
     case "hero": {
+      const background = block.backgroundImageKey ? imageHtml(block.backgroundImageKey, "") : "";
       const badge = block.badge ? `<p><strong>${escapeHtml(block.badge)}</strong></p>` : "";
       const title = `<h2>${escapeHtml(block.title)}</h2>`;
       const subtitle = block.subtitle ? `<p>${escapeHtml(block.subtitle)}</p>` : "";
@@ -83,7 +84,7 @@ function blockToHtml(block: Block): string {
         block.facts.length > 0
           ? `<ul>${block.facts.map((fact) => `<li>${escapeHtml(fact.text)}</li>`).join("")}</ul>`
           : "";
-      return badge + title + subtitle + facts;
+      return background + badge + title + subtitle + facts;
     }
   }
 }

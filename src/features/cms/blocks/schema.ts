@@ -61,6 +61,10 @@ export const blockSchema = z.discriminatedUnion("type", [
     badge: z.string().default(""),
     title: z.string(),
     subtitle: z.string().default(""),
+    // Необязательное фоновое фото; без него баннер остаётся однотонным
+    // (тот же фон, что сейчас). Затемняющий градиент поверх фото держит
+    // контраст белого текста независимо от того, что на фото.
+    backgroundImageKey: z.string().default(""),
     facts: z
       .array(
         z.object({
@@ -121,6 +125,7 @@ export function collectBlockImageKeys(blocks: Block[]): string[] {
   for (const block of blocks) {
     if (block.type === "image" || block.type === "text_image") keys.add(block.key);
     if (block.type === "gallery") for (const item of block.items) keys.add(item.key);
+    if (block.type === "hero" && block.backgroundImageKey) keys.add(block.backgroundImageKey);
   }
   return [...keys].sort();
 }

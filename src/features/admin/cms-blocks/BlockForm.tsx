@@ -38,6 +38,18 @@ export function BlockForm({ block, onChange }: BlockFormProps) {
             placeholder="Подзаголовок (необязательно)"
             className="field-control min-h-[88px] py-2"
           />
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-muted-foreground">
+              Фон баннера (необязательно)
+            </p>
+            <ImagePicker
+              imageKey={block.backgroundImageKey}
+              onChange={(key) => onChange({ backgroundImageKey: key })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Поверх фото накладывается затемнение, чтобы белый текст оставался читаемым.
+            </p>
+          </div>
           <div className="space-y-2">
             {block.facts.map((fact, i) => (
               <div key={i} className="flex items-center gap-2">

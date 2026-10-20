@@ -34,10 +34,20 @@ const HERO: Block = {
   badge: "Сервисный центр Medix",
   title: "Поддерживаем оборудование в рабочем состоянии",
   subtitle: "Техническое обслуживание и ремонт.",
+  backgroundImageKey: "",
+  facts: [{ text: "Ответ в рабочее время", icon: "clock" }],
+};
+const HERO_WITH_BG: Block = {
+  id: "8",
+  type: "hero",
+  badge: "Сервисный центр Medix",
+  title: "Поддерживаем оборудование в рабочем состоянии",
+  subtitle: "Техническое обслуживание и ремонт.",
+  backgroundImageKey: "cms/hero-bg.jpg",
   facts: [{ text: "Ответ в рабочее время", icon: "clock" }],
 };
 
-const ALL_BLOCKS = [HEADING, TEXT, IMAGE, GALLERY, STATS, TEXT_IMAGE, HERO];
+const ALL_BLOCKS = [HEADING, TEXT, IMAGE, GALLERY, STATS, TEXT_IMAGE, HERO, HERO_WITH_BG];
 
 describe("parsePageContent", () => {
   it("returns null for anything that is not an array", () => {
@@ -84,6 +94,11 @@ describe("collectBlockImageKeys", () => {
       HEADING,
     ]);
     expect(keys).toEqual(["cms/a.jpg", "cms/b.jpg", "cms/c.jpg", "cms/d.jpg"]);
+  });
+
+  it("collects the hero block's background image, but only when it is set", () => {
+    expect(collectBlockImageKeys([HERO])).toEqual([]);
+    expect(collectBlockImageKeys([HERO_WITH_BG])).toEqual(["cms/hero-bg.jpg"]);
   });
 });
 
@@ -139,6 +154,12 @@ describe("blocksToHtml", () => {
     expect(html).toContain("Поддерживаем оборудование в рабочем состоянии");
     expect(html).toContain("Техническое обслуживание и ремонт.");
     expect(html).toContain("Ответ в рабочее время");
+    expect(html).not.toContain("<img");
+  });
+
+  it("renders the hero background through the /raw redirect when it is set", () => {
+    const html = blocksToHtml([HERO_WITH_BG]);
+    expect(html).toContain("/api/v1/media/cms/hero-bg.jpg/raw");
   });
 });
 
