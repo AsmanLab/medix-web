@@ -77,7 +77,13 @@ function BlockView({
 }) {
   switch (block.type) {
     case "hero":
-      return <HeroBlock block={block} titleAs="h2" />;
+      return (
+        <HeroBlock
+          block={block}
+          titleAs="h2"
+          backgroundImageUrl={block.backgroundImageKey ? urls[block.backgroundImageKey] : null}
+        />
+      );
 
     case "heading":
       return block.level === 2 ? (
