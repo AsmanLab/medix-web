@@ -256,14 +256,20 @@ export function ContactsEditor() {
                 />
               </label>
               <label className="block text-xs font-semibold">
-                Map embed URL
+                Ссылка «Открыть на карте» (2GIS, Google Maps и т.п.)
                 <input
                   value={office.map_embed_url}
                   onChange={(e) =>
                     updateOffice(office.key, { map_embed_url: e.target.value })
                   }
                   className="field-control mt-1.5"
+                  placeholder="https://2gis.kg/... — необязательно"
                 />
+                <span className="mt-1 block text-[11px] font-normal text-muted-foreground">
+                  Карта на странице всегда своя (OpenStreetMap по адресу
+                  офиса). Эта ссылка — только для кнопки «Открыть на карте»,
+                  если нужно вести на другой сервис.
+                </span>
               </label>
             </section>
           ))}

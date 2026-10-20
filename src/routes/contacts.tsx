@@ -97,16 +97,19 @@ function ContactsPage() {
 function OfficeCard({ office }: { office: ContactOffice }) {
   const t = useT();
   const address = office.address.trim();
+  // map_embed_url в CMS — это ссылка для кнопки "Открыть на карте" (часто
+  // 2GIS, т.к. им проще пользоваться на месте), а не src для iframe: 2GIS
+  // и большинство других провайдеров запрещают встраивание в чужой iframe
+  // (CSP frame-ancestors на их стороне), поэтому карта на странице всегда
+  // своя — через OSM, вставить произвольный embed-URL сюда нельзя.
   const overrideUrl = office.map_embed_url?.trim() || null;
 
-  // Если в CMS явно задан map_embed_url — используем его как есть (это может
-  // быть iframe на любой провайдер, в т.ч. вручную собранный OSM embed).
-  // Иначе геокодируем адрес через OSM/Nominatim и строим карту сами.
-  const geocode = useOsmGeocode(overrideUrl ? null : address || null);
+  // Карта на странице всегда строится сами — геокодируем адрес через
+  // OSM/Nominatim и встраиваем openstreetmap.org/export/embed.html.
+  const geocode = useOsmGeocode(address || null);
   const coords = geocode.data ?? null;
 
-  const embedSrc =
-    overrideUrl || (coords ? osmEmbedUrl(coords.lat, coords.lon) : null);
+  const embedSrc = coords ? osmEmbedUrl(coords.lat, coords.lon) : null;
   const mapHref =
     overrideUrl ||
     (coords
