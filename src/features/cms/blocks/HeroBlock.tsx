@@ -18,6 +18,12 @@ type HeroBlockProps = {
    * На `/service`, где баннер — первое, что видит посетитель, это сам `<h1>`.
    */
   titleAs?: "h1" | "h2";
+  /**
+   * Presigned-ссылка фонового фото (`block.backgroundImageKey` → URL),
+   * резолвится вызывающей стороной через `useBlockImages` — сам `HeroBlock`
+   * ключи в URL не превращает, как и остальные блоки с фото.
+   */
+  backgroundImageUrl?: string | null;
 };
 
 /**
@@ -26,10 +32,22 @@ type HeroBlockProps = {
  * (витрина) и `CmsPageEditor` (превью в админке) рисуют один и тот же
  * компонент.
  */
-export function HeroBlock({ block, titleAs = "h2" }: HeroBlockProps) {
+export function HeroBlock({ block, titleAs = "h2", backgroundImageUrl }: HeroBlockProps) {
   const Title = titleAs;
   return (
     <div className="relative w-full overflow-hidden rounded-[28px] bg-[oklch(.24_.06_238)] px-6 py-10 text-white sm:rounded-[36px] sm:px-10 sm:py-14">
+      {backgroundImageUrl ? (
+        <>
+          <img
+            src={backgroundImageUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          {/* Затемнение поверх фото — иначе контраст белого текста зависит от
+              того, что принесёт заказчик, и может стать нечитаемым. */}
+          <div className="absolute inset-0 bg-[oklch(.24_.06_238)]/70" />
+        </>
+      ) : null}
       <div className="absolute -right-20 -top-24 h-80 w-80 rounded-full bg-primary/30 blur-3xl" />
       <div className="relative z-10 max-w-2xl">
         {block.badge ? (

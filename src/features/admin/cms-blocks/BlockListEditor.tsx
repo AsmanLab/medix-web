@@ -27,6 +27,7 @@ function blockHasContent(block: Block): boolean {
         block.badge.trim().length > 0 ||
         block.title.trim().length > 0 ||
         block.subtitle.trim().length > 0 ||
+        block.backgroundImageKey.trim().length > 0 ||
         block.facts.length > 0
       );
   }

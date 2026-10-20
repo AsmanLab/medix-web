@@ -26,6 +26,7 @@ import { HeroBlock, type HeroBlockData } from "@/features/cms/blocks/HeroBlock";
 import { PageBlocks } from "@/features/cms/blocks/PageBlocks";
 import { parsePageContent } from "@/features/cms/blocks/schema";
 import { serviceHeroDefault } from "@/features/cms/blocks/service-hero-default";
+import { useBlockImages } from "@/features/cms/blocks/useBlockImages";
 import { findSitePage } from "@/features/cms/site-pages";
 import {
   createPhotoDraft,
@@ -144,6 +145,9 @@ function ServicePage() {
   const restBlocks = blocks?.filter((b) => b.type !== "hero") ?? null;
   const hasLegacyBody = blocks === null && Boolean(cmsQuery.data?.body_html?.trim());
   const showAboutSection = (restBlocks && restBlocks.length > 0) || hasLegacyBody;
+  // heroBlock — либо блок из CMS (с собственным backgroundImageKey), либо
+  // дефолт без фото; в обоих случаях useBlockImages резолвит ключ в URL сам.
+  const { urls: heroImageUrls } = useBlockImages([heroBlock]);
 
   useEffect(() => {
     const p = profileQuery.data;
@@ -258,7 +262,13 @@ function ServicePage() {
   return (
     <AppShell>
       <section>
-        <HeroBlock block={heroBlock} titleAs="h1" />
+        <HeroBlock
+          block={heroBlock}
+          titleAs="h1"
+          backgroundImageUrl={
+            heroBlock.backgroundImageKey ? heroImageUrls[heroBlock.backgroundImageKey] : null
+          }
+        />
       </section>
 
       {showAboutSection ? (
