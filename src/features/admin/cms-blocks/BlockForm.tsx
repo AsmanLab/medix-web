@@ -7,9 +7,87 @@ type BlockFormProps = {
   onChange: (patch: Partial<Block>) => void;
 };
 
-/** Форма редактирования одного блока — один свитч на все шесть типов. */
+const FACT_ICON_OPTIONS = [
+  { value: "none", label: "Без иконки" },
+  { value: "clock", label: "Часы" },
+  { value: "phone", label: "Телефон" },
+  { value: "shield", label: "Щит" },
+] as const;
+
+/** Форма редактирования одного блока — один свитч на все семь типов. */
 export function BlockForm({ block, onChange }: BlockFormProps) {
   switch (block.type) {
+    case "hero":
+      return (
+        <div className="space-y-3">
+          <input
+            value={block.badge}
+            onChange={(e) => onChange({ badge: e.target.value })}
+            placeholder="Плашка над заголовком (необязательно)"
+            className="field-control"
+          />
+          <input
+            value={block.title}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Заголовок баннера"
+            className="field-control"
+          />
+          <textarea
+            value={block.subtitle}
+            onChange={(e) => onChange({ subtitle: e.target.value })}
+            placeholder="Подзаголовок (необязательно)"
+            className="field-control min-h-[88px] py-2"
+          />
+          <div className="space-y-2">
+            {block.facts.map((fact, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  value={fact.text}
+                  onChange={(e) => {
+                    const facts = [...block.facts];
+                    facts[i] = { ...facts[i], text: e.target.value };
+                    onChange({ facts });
+                  }}
+                  placeholder="Например, «Ответ в рабочее время»"
+                  className="field-control flex-1"
+                />
+                <select
+                  value={fact.icon}
+                  onChange={(e) => {
+                    const facts = [...block.facts];
+                    facts[i] = { ...facts[i], icon: e.target.value as typeof fact.icon };
+                    onChange({ facts });
+                  }}
+                  className="field-control w-36"
+                >
+                  {FACT_ICON_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => onChange({ facts: block.facts.filter((_, j) => j !== i) })}
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Убрать строку"
+                >
+                  <X className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => onChange({ facts: [...block.facts, { text: "", icon: "none" }] })}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden />
+            Добавить строку
+          </button>
+        </div>
+      );
+
     case "heading":
       return (
         <div className="space-y-3">

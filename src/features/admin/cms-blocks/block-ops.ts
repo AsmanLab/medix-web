@@ -16,6 +16,8 @@ export function createBlock(type: BlockType): Block {
       return { id, type: "stats", items: [] };
     case "text_image":
       return { id, type: "text_image", text: "", key: "", alt: "", imageSide: "right" };
+    case "hero":
+      return { id, type: "hero", badge: "", title: "", subtitle: "", facts: [] };
   }
 }
 

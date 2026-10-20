@@ -53,6 +53,25 @@ export const blockSchema = z.discriminatedUnion("type", [
     alt: z.string().default(""),
     imageSide: z.union([z.literal("left"), z.literal("right")]).default("right"),
   }),
+  z.object({
+    id: z.string(),
+    type: z.literal("hero"),
+    // Тёмный баннер в духе текущего /service — плашка над заголовком,
+    // заголовок, подзаголовок и строка коротких фактов с иконкой.
+    badge: z.string().default(""),
+    title: z.string(),
+    subtitle: z.string().default(""),
+    facts: z
+      .array(
+        z.object({
+          text: z.string(),
+          icon: z
+            .union([z.literal("none"), z.literal("clock"), z.literal("phone"), z.literal("shield")])
+            .default("none"),
+        }),
+      )
+      .default([]),
+  }),
 ]);
 
 export type Block = z.infer<typeof blockSchema>;

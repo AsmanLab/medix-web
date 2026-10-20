@@ -28,8 +28,16 @@ const TEXT_IMAGE: Block = {
   alt: "",
   imageSide: "right",
 };
+const HERO: Block = {
+  id: "7",
+  type: "hero",
+  badge: "Сервисный центр Medix",
+  title: "Поддерживаем оборудование в рабочем состоянии",
+  subtitle: "Техническое обслуживание и ремонт.",
+  facts: [{ text: "Ответ в рабочее время", icon: "clock" }],
+};
 
-const ALL_BLOCKS = [HEADING, TEXT, IMAGE, GALLERY, STATS, TEXT_IMAGE];
+const ALL_BLOCKS = [HEADING, TEXT, IMAGE, GALLERY, STATS, TEXT_IMAGE, HERO];
 
 describe("parsePageContent", () => {
   it("returns null for anything that is not an array", () => {
@@ -47,6 +55,11 @@ describe("parsePageContent", () => {
   it("drops blocks with an unrecognised type instead of failing the whole page", () => {
     const parsed = parsePageContent([HEADING, { id: "x", type: "video", url: "x" }]);
     expect(parsed).toEqual([HEADING]);
+  });
+
+  it("parses a hero block", () => {
+    const parsed = parsePageContent([HERO]);
+    expect(parsed).toEqual([HERO]);
   });
 });
 
@@ -118,6 +131,14 @@ describe("blocksToHtml", () => {
   it("renders images through the /raw redirect, not a presigned URL", () => {
     const html = blocksToHtml([IMAGE]);
     expect(html).toContain("/api/v1/media/cms/a.jpg/raw");
+  });
+
+  it("serializes a hero block into badge, heading, subtitle and facts", () => {
+    const html = blocksToHtml([HERO]);
+    expect(html).toContain("<h2>");
+    expect(html).toContain("Поддерживаем оборудование в рабочем состоянии");
+    expect(html).toContain("Техническое обслуживание и ремонт.");
+    expect(html).toContain("Ответ в рабочее время");
   });
 });
 

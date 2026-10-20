@@ -22,6 +22,13 @@ function blockHasContent(block: Block): boolean {
     case "gallery":
     case "stats":
       return block.items.length > 0;
+    case "hero":
+      return (
+        block.badge.trim().length > 0 ||
+        block.title.trim().length > 0 ||
+        block.subtitle.trim().length > 0 ||
+        block.facts.length > 0
+      );
   }
 }
 
